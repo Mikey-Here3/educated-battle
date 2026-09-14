@@ -1,0 +1,86 @@
+// Prisma Schema for Neon Database (PostgreSQL)
+// Storage for payment proof & user avatars powered by Cloudinary
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String         @id @default(cuid())
+  name          String
+  email         String         @unique
+  phone         String?        @unique
+  ign           String         // Free Fire In-Game Name
+  uid           String         // Free Fire Player UID
+  avatarUrl     String?        // Cloudinary Avatar URL
+  balancePKR    Float          @default(0.0)
+  winningsPKR   Float          @default(0.0)
+  bonusPKR      Float          @default(0.0)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  slots         Slot[]
+  transactions Transaction[]
+
+  @@map("users")
+}
+
+model Tournament {
+  id            String       @id @default(cuid())
+  title         String
+  game          String       @default("Free Fire MAX") // Free Fire | Free Fire MAX
+  type          String       // Solo | Duo | Squad | Clash Squad
+  map           String       // Bermuda | Purgatory | Kalahari | Nexterra
+  status        String       @default("upcoming") // live | upcoming | completed | special
+  prizePool     Float
+  perKill       Float        @default(0)
+  entryFee      Float        @default(0)
+  totalSlots    Int          @default(48)
+  startTime     DateTime
+  isFeatured    Boolean      @default(false)
+  roomId        String?
+  roomPassword  String?
+  bannerUrl     String?      // Cloudinary Banner URL
+  createdAt     DateTime     @default(now())
+
+  slots         Slot[]
+
+  @@map("tournaments")
+}
+
+model Slot {
+  id           String     @id @default(cuid())
+  tournamentId String
+  userId       String
+  slotNumber   Int
+  ign          String
+  uid          String
+  createdAt    DateTime   @default(now())
+
+  tournament   Tournament @relation(fields: [tournamentId], references: [id])
+  user         User       @relation(fields: [userId], references: [id])
+
+  @@unique([tournamentId, slotNumber])
+  @@map("slots")
+}
+
+model Transaction {
+  id           String   @id @default(cuid())
+  userId       String
+  type         String   // DEPOSIT | WITHDRAWAL | MATCH_FEE | PRIZE_WINNING
+  amountPKR    Float
+  status       String   @default("PENDING") // PENDING | APPROVED | REJECTED
+  method       String?  // EasyPaisa | JazzCash | BankTransfer
+  trxId        String?  // Reference ID
+  proofUrl     String?  // Cloudinary Payment Receipt Image URL
+  createdAt    DateTime @default(now())
+
+  user         User     @relation(fields: [userId], references: [id])
+
+  @@map("transactions")
+}
