@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { Tournament } from '../../data/mockData';
 import { useAuth } from '@/context/AuthContext';
-import { X, Key, Lock, Copy, Check, ShieldCheck, AlertCircle, LogIn, Youtube, Clock } from 'lucide-react';
+import { X, Key, Lock, Copy, Check, ShieldCheck, AlertCircle, LogIn, Youtube, Clock, Gamepad2 } from 'lucide-react';
 
 interface RoomDetailsModalProps {
   tournament: Tournament | null;
@@ -17,13 +17,14 @@ export const RoomDetailsModal: React.FC<RoomDetailsModalProps> = ({
   isOpen,
   onClose,
 }) => {
-  const { currentUser, registeredTournaments } = useAuth();
+  const { currentUser, registeredTournaments, bookedSlots } = useAuth();
   const [copiedId, setCopiedId] = useState(false);
   const [copiedPass, setCopiedPass] = useState(false);
 
   if (!isOpen || !tournament) return null;
 
   const isUserRegistered = registeredTournaments.includes(tournament.id) || currentUser?.role === 'admin';
+  const myBooking = bookedSlots[tournament.id];
 
   const handleCopy = (text: string, type: 'id' | 'pass') => {
     navigator.clipboard.writeText(text);
@@ -50,7 +51,7 @@ export const RoomDetailsModal: React.FC<RoomDetailsModalProps> = ({
 
         {/* Modal Header */}
         <div className="flex items-center space-x-3 mb-6">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-crimson/20 text-crimson border border-crimson/40">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-crimson/20 text-crimson border border-crimson/40 shrink-0">
             <Key className="h-6 w-6" />
           </div>
           <div>
@@ -67,6 +68,24 @@ export const RoomDetailsModal: React.FC<RoomDetailsModalProps> = ({
         {isUserRegistered ? (
           <div className="space-y-4">
             
+            {/* Player's Confirmed Slot Badge */}
+            {myBooking && (
+              <div className="rounded-2xl border border-neon-gold/40 bg-neon-gold/10 p-4 flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-neon-gold/20 text-neon-gold border border-neon-gold/40 shrink-0 font-black">
+                    #{myBooking.slotNumber}
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-black uppercase text-neon-gold">YOUR ASSIGNED ROOM SLOT</span>
+                    <p className="text-xs font-mono font-bold text-white">Free Fire UID: {myBooking.uid}</p>
+                  </div>
+                </div>
+                <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-black uppercase border border-emerald-500/40">
+                  Confirmed
+                </span>
+              </div>
+            )}
+
             {tournament.roomId ? (
               <>
                 {/* Room ID Box */}
@@ -101,21 +120,23 @@ export const RoomDetailsModal: React.FC<RoomDetailsModalProps> = ({
 
                 {/* Instructions */}
                 <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-xs text-emerald-300 space-y-1">
-                  <p className="font-bold">? Verified Registered Player</p>
-                  <p className="text-slate-300">Open Free Fire &gt; Custom &gt; Search Room ID &gt; Enter Password &gt; Occupy your assigned slot number matching your registered Free Fire UID ({currentUser?.uid}).</p>
+                  <p className="font-bold">? Room Joining Protocol:</p>
+                  <p className="text-slate-300">
+                    Open Free Fire &gt; Custom Room &gt; Search ID <strong>{tournament.roomId}</strong> &gt; Enter Password &gt; Sit in <strong>Slot #{myBooking?.slotNumber || 'Assigned'}</strong> matching your UID <strong>{currentUser?.uid}</strong>.
+                  </p>
                 </div>
               </>
             ) : (
               <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-6 text-center space-y-2">
                 <Clock className="mx-auto h-8 w-8 text-amber-400" />
-                <h4 className="text-base font-bold text-white uppercase">Room Credentials Releasing Soon</h4>
+                <h4 className="text-base font-bold text-white uppercase">Room Credentials Releasing 15 Mins Before Start</h4>
                 <p className="text-xs text-slate-300">
-                  Admin will publish the Room ID & Password 15 minutes prior to match schedule. Check back here!
+                  Your slot #{myBooking?.slotNumber || '1'} is secured with Free Fire UID {currentUser?.uid}. Room ID &amp; Password will automatically appear here 15 minutes before match start.
                 </p>
               </div>
             )}
 
-            {/* Live stream button if match is streaming */}
+            {/* Live stream button */}
             {tournament.liveStreamUrl && (
               <a
                 href={tournament.liveStreamUrl}
@@ -138,7 +159,7 @@ export const RoomDetailsModal: React.FC<RoomDetailsModalProps> = ({
             <div>
               <h4 className="text-lg font-black text-white font-display uppercase">Room Credentials Locked ??</h4>
               <p className="text-xs text-slate-300 mt-1">
-                Room ID and Password are encrypted and visible strictly to players who have registered for this tournament with their Free Fire UID.
+                Room ID and Password are encrypted and revealed exclusively after your slot is confirmed and verified with your Free Fire UID.
               </p>
             </div>
 
@@ -153,7 +174,7 @@ export const RoomDetailsModal: React.FC<RoomDetailsModalProps> = ({
               </Link>
             ) : (
               <p className="text-xs font-bold text-amber-400">
-                You have not joined this match yet. Please click &quot;Join Match&quot; on the card to secure your slot.
+                You have not registered for this tournament yet. Please click &quot;Join Match&quot; on the tournament card to lock your slot.
               </p>
             )}
           </div>

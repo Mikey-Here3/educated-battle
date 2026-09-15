@@ -14,6 +14,13 @@ export interface UserAccount {
   role: 'player' | 'admin';
 }
 
+export interface BookedSlotDetail {
+  slotNumber: number;
+  uid: string;
+  ign: string;
+  bookedAt: string;
+}
+
 export interface ContactQuery {
   id: string;
   name: string;
@@ -28,12 +35,14 @@ export interface ContactQuery {
 interface AuthContextType {
   currentUser: UserAccount | null;
   registeredTournaments: string[]; // IDs of matches the user joined
+  bookedSlots: Record<string, BookedSlotDetail>; // tournamentId -> slot details
   contactQueries: ContactQuery[];
   login: (email: string, pass: string) => Promise<{ success: boolean; role?: 'player' | 'admin'; error?: string }>;
   signup: (userData: { name: string; email: string; pass: string; phone: string; ign: string; uid: string }) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
-  joinTournament: (tournamentId: string) => { success: boolean; error?: string };
+  joinTournament: (tournamentId: string, entryFee: number, slotNumber: number) => { success: boolean; error?: string; remainingBalance?: number };
   submitContactQuery: (query: Omit<ContactQuery, 'id' | 'createdAt' | 'status'>) => void;
+  updateUserBalance: (newBalance: number) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -63,7 +72,8 @@ const INITIAL_QUERIES: ContactQuery[] = [
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<UserAccount | null>(null);
-  const [registeredTournaments, setRegisteredTournaments] = useState<string[]>(['eg-ff-101']); // Demo user joined match 101
+  const [registeredTournaments, setRegisteredTournaments] = useState<string[]>([]); // Starts EMPTY for fresh users
+  const [bookedSlots, setBookedSlots] = useState<Record<string, BookedSlotDetail>>({});
   const [contactQueries, setContactQueries] = useState<ContactQuery[]>(INITIAL_QUERIES);
 
   // Load from localStorage on mount
@@ -77,6 +87,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (savedMatches) {
         setRegisteredTournaments(JSON.parse(savedMatches));
       }
+      const savedSlots = localStorage.getItem('eg_booked_slots');
+      if (savedSlots) {
+        setBookedSlots(JSON.parse(savedSlots));
+      }
       const savedQueries = localStorage.getItem('eg_contact_queries');
       if (savedQueries) {
         setContactQueries(JSON.parse(savedQueries));
@@ -85,7 +99,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = async (email: string, pass: string): Promise<{ success: boolean; role?: 'player' | 'admin'; error?: string }> => {
-    // Check if admin login
+    // Admin login
     if (email === 'admin@educatedgamer.com' && pass === 'Password123!') {
       const adminUser: UserAccount = {
         id: 'admin-1',
@@ -104,7 +118,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { success: true, role: 'admin' };
     }
 
-    // Check mock/registered player
+    // Registered player lookup
     const storedUsersStr = localStorage.getItem('eg_registered_accounts');
     const storedUsers: (UserAccount & { pass: string })[] = storedUsersStr ? JSON.parse(storedUsersStr) : [];
     const matched = storedUsers.find(u => u.email.toLowerCase() === email.toLowerCase() && u.pass === pass);
@@ -126,7 +140,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { success: true, role: 'player' };
     }
 
-    // Default test player fallback if credentials match default player demo
+    // Demo test player
     if (email.toLowerCase() === 'player@educatedgamer.com' && pass === 'Player123!') {
       const demoPlayer: UserAccount = {
         id: 'usr-demo-1',
@@ -135,7 +149,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         phone: '03190799711',
         ign: 'PK_LEGEND_FF',
         uid: '592810482',
-        balancePKR: 1250,
+        balancePKR: 500, // PKR 500 balance for demo registration testing
         winningPKR: 850,
         role: 'player',
       };
@@ -144,7 +158,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { success: true, role: 'player' };
     }
 
-    return { success: false, error: 'Invalid email or password. Please sign up if you do not have an account.' };
+    return { success: false, error: 'Invalid email or password. Please create an account if you are new.' };
   };
 
   const signup = async (data: { name: string; email: string; pass: string; phone: string; ign: string; uid: string }) => {
@@ -159,7 +173,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       phone: data.phone,
       ign: data.ign,
       uid: data.uid,
-      balancePKR: 0,
+      balancePKR: 0, // Starts at 0 PKR (Needs JazzCash deposit)
       winningPKR: 0,
       role: 'player',
       pass: data.pass,
@@ -168,7 +182,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const storedUsersStr = localStorage.getItem('eg_registered_accounts');
     const storedUsers: (UserAccount & { pass: string })[] = storedUsersStr ? JSON.parse(storedUsersStr) : [];
     
-    // Check if email or UID already exists
     if (storedUsers.some(u => u.email.toLowerCase() === data.email.toLowerCase())) {
       return { success: false, error: 'An account with this email already exists.' };
     }
@@ -179,7 +192,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     storedUsers.push(newUser);
     localStorage.setItem('eg_registered_accounts', JSON.stringify(storedUsers));
 
-    // Auto login
     const sessionUser: UserAccount = {
       id: newUser.id,
       name: newUser.name,
@@ -203,17 +215,59 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     fetch('/api/auth/login', { method: 'DELETE' }).catch(() => {});
   };
 
-  const joinTournament = (tournamentId: string) => {
+  const updateUserBalance = (newBalance: number) => {
+    if (!currentUser) return;
+    const updated = { ...currentUser, balancePKR: newBalance };
+    setCurrentUser(updated);
+    localStorage.setItem('eg_user_session', JSON.stringify(updated));
+  };
+
+  const joinTournament = (tournamentId: string, entryFee: number, slotNumber: number) => {
     if (!currentUser) {
-      return { success: false, error: 'Please sign in or register to join tournaments.' };
+      return { success: false, error: 'Please sign in or create an account to join this match.' };
     }
+
+    // Check if already registered
     if (registeredTournaments.includes(tournamentId)) {
-      return { success: true };
+      return { success: false, error: 'You are already registered in this tournament!' };
     }
-    const updated = [...registeredTournaments, tournamentId];
-    setRegisteredTournaments(updated);
-    localStorage.setItem('eg_joined_matches', JSON.stringify(updated));
-    return { success: true };
+
+    // Check balance if paid entry
+    if (entryFee > 0 && currentUser.balancePKR < entryFee) {
+      return { 
+        success: false, 
+        error: `Insufficient balance! Your coin balance is PKR ${currentUser.balancePKR}, but this tournament entry fee is PKR ${entryFee}. Please add coins via JazzCash to join.` 
+      };
+    }
+
+    // Deduct entry fee
+    const newBalance = Math.max(0, currentUser.balancePKR - entryFee);
+    const updatedUser: UserAccount = {
+      ...currentUser,
+      balancePKR: newBalance,
+    };
+    setCurrentUser(updatedUser);
+    localStorage.setItem('eg_user_session', JSON.stringify(updatedUser));
+
+    // Update registered tournaments
+    const updatedMatches = [...registeredTournaments, tournamentId];
+    setRegisteredTournaments(updatedMatches);
+    localStorage.setItem('eg_joined_matches', JSON.stringify(updatedMatches));
+
+    // Update booked slots
+    const updatedSlots = {
+      ...bookedSlots,
+      [tournamentId]: {
+        slotNumber,
+        uid: currentUser.uid,
+        ign: currentUser.ign,
+        bookedAt: new Date().toLocaleTimeString(),
+      }
+    };
+    setBookedSlots(updatedSlots);
+    localStorage.setItem('eg_booked_slots', JSON.stringify(updatedSlots));
+
+    return { success: true, remainingBalance: newBalance };
   };
 
   const submitContactQuery = (query: Omit<ContactQuery, 'id' | 'createdAt' | 'status'>) => {
@@ -233,12 +287,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       value={{
         currentUser,
         registeredTournaments,
+        bookedSlots,
         contactQueries,
         login,
         signup,
         logout,
         joinTournament,
         submitContactQuery,
+        updateUserBalance,
       }}
     >
       {children}
