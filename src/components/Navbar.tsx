@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
+import { ThemePicker } from '@/components/ThemePicker';
+import { useTheme, THEME_PRESETS, ThemePreset } from '@/context/ThemeContext';
 import { 
   Trophy, 
   Wallet, 
@@ -17,11 +19,14 @@ import {
   LogIn,
   LogOut,
   User,
-  ShieldAlert
+  ShieldAlert,
+  Palette,
+  Check
 } from 'lucide-react';
 
 export const Navbar: React.FC = () => {
   const { currentUser, logout } = useAuth();
+  const { theme, setTheme } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdown, setUserDropdown] = useState(false);
   const pathname = usePathname();
@@ -75,7 +80,10 @@ export const Navbar: React.FC = () => {
         </nav>
 
         {/* Right Side Header Controls */}
-        <div className="flex items-center space-x-2 sm:space-x-3">
+        <div className="flex items-center space-x-1.5 sm:space-x-2.5">
+          {/* Theme Color Picker Button */}
+          <ThemePicker />
+
           {/* User Account / Balance Pill if Signed In */}
           {currentUser ? (
             <div className="relative flex items-center space-x-1.5 sm:space-x-2">
@@ -218,6 +226,38 @@ export const Navbar: React.FC = () => {
                     </Link>
                   );
                 })}
+              </div>
+
+              {/* Theme Color Selector in Mobile Drawer */}
+              <div className="rounded-2xl border border-white/10 bg-surface-200/50 p-3 mb-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                    <Palette className="w-3.5 h-3.5 text-primary" />
+                    <span>Theme Color</span>
+                  </span>
+                  <span className="text-[10px] uppercase font-mono text-white/50">{theme}</span>
+                </div>
+                <div className="flex items-center justify-between gap-2 pt-1">
+                  {([
+                    { key: 'electric-blue', color: '#0ea5e9', name: 'Blue' },
+                    { key: 'emerald', color: '#10b981', name: 'Green' },
+                    { key: 'violet', color: '#8b5cf6', name: 'Violet' },
+                    { key: 'amber', color: '#f59e0b', name: 'Gold' },
+                    { key: 'crimson', color: '#ff003c', name: 'Red' },
+                  ] as const).map((p) => (
+                    <button
+                      key={p.key}
+                      onClick={() => setTheme(p.key)}
+                      className={`h-7 w-7 rounded-full transition-transform flex items-center justify-center border ${
+                        theme === p.key ? 'scale-110 ring-2 ring-white border-white' : 'border-white/20'
+                      }`}
+                      style={{ backgroundColor: p.color }}
+                      title={p.name}
+                    >
+                      {theme === p.key && <Check className="w-3 h-3 text-white" />}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {currentUser ? (

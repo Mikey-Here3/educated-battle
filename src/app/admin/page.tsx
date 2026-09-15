@@ -117,6 +117,7 @@ export default function AdminPortalPage() {
   const [inspectingReceipt, setInspectingReceipt] = useState<DepositRequest | null>(null);
   const [editingPlayer, setEditingPlayer] = useState<PlayerRank | null>(null);
   const [showAddPlayerModal, setShowAddPlayerModal] = useState(false);
+  const [deletingTourney, setDeletingTourney] = useState<Tournament | null>(null);
   const [searchQ, setSearchQ] = useState('');
 
   // Tournament form state
@@ -553,7 +554,7 @@ export default function AdminPortalPage() {
                         </button>
                       )}
                       <button
-                        onClick={() => { if (confirm(`Delete "${t.title}"?`)) deleteTournament(t.id); }}
+                        onClick={() => setDeletingTourney(t)}
                         className="flex items-center gap-1 bg-red-500/20 hover:bg-red-500/30 text-red-400 px-3 py-1.5 rounded-lg text-xs transition-colors"
                       >
                         <Trash2 className="h-3 w-3" /> Delete
@@ -1020,6 +1021,54 @@ export default function AdminPortalPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* ── DELETE TOURNAMENT CONFIRMATION MODAL ── */}
+      {deletingTourney && (
+        <Modal title="Delete Tournament" onClose={() => setDeletingTourney(null)}>
+          <div className="space-y-4">
+            <div className="flex items-center gap-3 p-3.5 rounded-xl bg-red-500/10 border border-red-500/30">
+              <Trash2 className="h-6 w-6 text-red-500 shrink-0" />
+              <div>
+                <p className="text-sm font-bold text-white">Permanently delete this tournament?</p>
+                <p className="text-xs text-red-300/80">This tournament will be removed immediately from matches.</p>
+              </div>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-surface-100 border border-white/5 space-y-1">
+              <span className="text-[10px] font-bold text-white/50 uppercase tracking-wider">Tournament to Delete</span>
+              <p className="text-sm font-black text-white">{deletingTourney.title}</p>
+              <div className="flex items-center gap-3 text-xs text-white/40 pt-1">
+                <span>{deletingTourney.game}</span>
+                <span>•</span>
+                <span>{deletingTourney.type}</span>
+                <span>•</span>
+                <span>{deletingTourney.map}</span>
+                <span>•</span>
+                <span className="text-neon-gold font-bold">PKR {deletingTourney.prizePool.toLocaleString()}</span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                onClick={() => setDeletingTourney(null)}
+                className="flex-1 bg-surface-100 hover:bg-surface-300 border border-white/10 text-white/80 py-2.5 rounded-xl font-bold text-sm transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  deleteTournament(deletingTourney.id);
+                  setDeletingTourney(null);
+                }}
+                className="flex-1 bg-red-600 hover:bg-red-500 text-white py-2.5 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(239,68,68,0.4)]"
+              >
+                <Trash2 className="h-4 w-4" />
+                Yes, Delete
+              </button>
+            </div>
+          </div>
+        </Modal>
       )}
     </div>
   );

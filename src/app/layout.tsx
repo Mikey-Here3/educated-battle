@@ -19,11 +19,11 @@ const outfit = Outfit({
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://educated-battle.vercel.app'),
-  title: 'EDUCATED GAMER ? Free Fire Esports Arena Pakistan',
+  title: 'EDUCATED GAMER • Free Fire Esports Arena Pakistan',
   description: "Pakistan's premier esports platform for Free Fire & Free Fire MAX tournaments. Compete in daily custom rooms, win real PKR cash prizes, and build your gamer rank.",
   keywords: ['Educated Gamer', 'Free Fire Tournament Pakistan', 'Free Fire MAX', 'Esports Pakistan', 'PKR Cash Prizes', 'Custom Rooms'],
   openGraph: {
-    title: 'EDUCATED GAMER ARENA ? Free Fire Esports Pakistan',
+    title: 'EDUCATED GAMER ARENA • Free Fire Esports Pakistan',
     description: 'Compete in daily Free Fire tournaments, earn per-kill PKR rewards & cash out instantly via JazzCash.',
     type: 'website',
     images: ['/logo.svg'],
