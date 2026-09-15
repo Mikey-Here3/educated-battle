@@ -31,3 +31,6 @@ next-env.d.ts
 
 # scratch / temp files
 scratch/
+
+.env.local
+.env

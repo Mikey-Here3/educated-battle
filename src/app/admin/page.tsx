@@ -1,6 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { LogOut } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
@@ -26,6 +28,26 @@ import {
 } from 'lucide-react';
 
 export default function AdminPortalPage() {
+  const router = useRouter();
+  const [authorized, setAuthorized] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    // Check if session cookie is set
+    const hasAdminCookie = typeof document !== 'undefined' && document.cookie.includes('eg_admin=1');
+    if (!hasAdminCookie) {
+      router.push('/login');
+    } else {
+      setAuthorized(true);
+    }
+  }, [router]);
+
+  const handleSignOut = async () => {
+    try {
+      await fetch('/api/auth/login', { method: 'DELETE' });
+    } catch {}
+    router.push('/login');
+    router.refresh();
+  };
   const [activeTab, setActiveTab] = useState<'tournaments' | 'deposits' | 'leaderboard' | 'settings'>('tournaments');
 
   // Tournaments State
@@ -122,6 +144,17 @@ export default function AdminPortalPage() {
     setPendingDeposits((prev) => prev.filter((d) => d.id !== id));
   };
 
+  if (authorized === null) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="h-12 w-12 rounded-full border-4 border-crimson border-t-transparent animate-spin" />
+          <p className="text-sm font-bold uppercase tracking-widest text-slate-400">Verifying Admin Access...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col min-h-screen pb-20 md:pb-0">
       <Navbar userBalance={1250} />
@@ -141,6 +174,14 @@ export default function AdminPortalPage() {
               </h1>
             </div>
           </div>
+          
+          <button
+            onClick={handleSignOut}
+            className="flex items-center space-x-2 rounded-xl border border-crimson/50 bg-crimson/20 hover:bg-crimson px-4 py-2 text-xs font-black uppercase tracking-wider text-white transition shadow-[0_0_15px_rgba(255,0,60,0.3)] shrink-0 self-start md:self-auto"
+          >
+            <LogOut className="h-4 w-4" />
+            <span>Sign Out</span>
+          </button>
 
           <button
             onClick={() => setShowCreateModal(true)}
