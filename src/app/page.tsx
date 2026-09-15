@@ -16,11 +16,11 @@ import { JoinTournamentModal } from '@/components/modals/JoinTournamentModal';
 import { RoomDetailsModal } from '@/components/modals/RoomDetailsModal';
 import { TournamentDetailModal } from '@/components/modals/TournamentDetailModal';
 
-import { INITIAL_TOURNAMENTS, Tournament } from '@/data/mockData';
+import { useTournaments } from '@/context/TournamentContext';
+import { Tournament } from '@/data/mockData';
 
 export default function Home() {
-  const [loading, setLoading] = useState<boolean>(true);
-  const [tournaments, setTournaments] = useState<Tournament[]>(INITIAL_TOURNAMENTS);
+  const { tournaments } = useTournaments();
 
   // Modals state
   const [activeJoinTournament, setActiveJoinTournament] = useState<Tournament | null>(null);
@@ -31,7 +31,7 @@ export default function Home() {
     <div className="flex flex-col min-h-screen pb-20 md:pb-0">
       
       {/* Splash Entrance Loader */}
-      <EntranceLoader onComplete={() => setLoading(false)} />
+      <EntranceLoader onComplete={() => {}} />
 
       {/* Navbar */}
       <Navbar />

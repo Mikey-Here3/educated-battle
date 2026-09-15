@@ -47,28 +47,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const INITIAL_QUERIES: ContactQuery[] = [
-  {
-    id: 'query-1',
-    name: 'Hamza Khan',
-    phone: '03129841029',
-    uid: '489201948',
-    subject: 'Deposit Confirmation Delay',
-    message: 'I sent PKR 500 via JazzCash Trx ID 984120948. Please approve my coins for tonight squad match.',
-    createdAt: '10 mins ago',
-    status: 'new'
-  },
-  {
-    id: 'query-2',
-    name: 'Usman Tariq',
-    phone: '03459182301',
-    uid: '129481902',
-    subject: 'Slot 14 Free Fire Verification',
-    message: 'Registered in Night Warriors Solo tournament. Need to confirm my UID 129481902.',
-    createdAt: '25 mins ago',
-    status: 'new'
-  }
-];
+const INITIAL_QUERIES: ContactQuery[] = [];
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<UserAccount | null>(null);

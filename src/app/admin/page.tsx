@@ -5,18 +5,19 @@ import { useRouter } from 'next/navigation';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
-import { INITIAL_TOURNAMENTS, MOCK_LEADERBOARD, Tournament, PlayerRank } from '@/data/mockData';
-import { useAuth, ContactQuery } from '@/context/AuthContext';
-import { 
-  ShieldAlert, 
-  PlusCircle, 
-  Key, 
-  CheckCircle2, 
-  XCircle, 
-  Trophy, 
-  Wallet, 
-  Settings, 
-  Gamepad2, 
+import { Tournament, PlayerRank } from '@/data/mockData';
+import { useAuth } from '@/context/AuthContext';
+import { useTournaments, DepositRequest } from '@/context/TournamentContext';
+import {
+  ShieldAlert,
+  PlusCircle,
+  Key,
+  CheckCircle2,
+  XCircle,
+  Trophy,
+  Wallet,
+  Settings,
+  Gamepad2,
   Search,
   MessageSquareCode,
   Youtube,
@@ -30,12 +31,39 @@ import {
   Check,
   AlertCircle,
   Sparkles,
-  ExternalLink
+  ExternalLink,
+  Edit,
+  Trash2,
+  Image as ImageIcon,
+  ZoomIn,
+  X,
+  Save,
+  ChevronDown,
+  Award,
+  DollarSign,
+  Users,
 } from 'lucide-react';
 
 export default function AdminPortalPage() {
   const router = useRouter();
   const { currentUser, contactQueries } = useAuth();
+  const {
+    tournaments,
+    createTournament,
+    updateTournament,
+    deleteTournament,
+    setTournamentWinner,
+    deposits,
+    withdrawals,
+    approveDeposit,
+    rejectDeposit,
+    approveWithdrawal,
+    rejectWithdrawal,
+    leaderboard,
+    updateLeaderboardPlayer,
+    addLeaderboardPlayer,
+  } = useTournaments();
+
   const [authorized, setAuthorized] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -57,457 +85,455 @@ export default function AdminPortalPage() {
 
   const [activeTab, setActiveTab] = useState<'tournaments' | 'deposits' | 'queries' | 'leaderboard' | 'settings'>('tournaments');
 
-  const [tournamentsList, setTournamentsList] = useState<Tournament[]>(INITIAL_TOURNAMENTS);
+  // Modals
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingTourney, setEditingTourney] = useState<Tournament | null>(null);
   const [editingRoomIdTourney, setEditingRoomIdTourney] = useState<Tournament | null>(null);
   const [completingTourney, setCompletingTourney] = useState<Tournament | null>(null);
+  const [inspectingReceipt, setInspectingReceipt] = useState<DepositRequest | null>(null);
+  const [editingPlayer, setEditingPlayer] = useState<PlayerRank | null>(null);
+  const [showAddPlayerModal, setShowAddPlayerModal] = useState(false);
+  const [searchQ, setSearchQ] = useState('');
 
-  const [newTitle, setNewTitle] = useState('');
-  const [newGame, setNewGame] = useState<'Free Fire' | 'Free Fire MAX'>('Free Fire MAX');
-  const [newType, setNewType] = useState<'Solo' | 'Duo' | 'Squad' | 'Clash Squad'>('Squad');
-  const [newMap, setNewMap] = useState<'Bermuda' | 'Purgatory' | 'Kalahari' | 'Nexterra'>('Bermuda');
-  const [newPrize, setNewPrize] = useState(15000);
-  const [newBooyah, setNewBooyah] = useState(8000);
-  const [hasPerKill, setHasPerKill] = useState(true);
-  const [newPerKill, setNewPerKill] = useState(50);
-  const [newEntryFee, setNewEntryFee] = useState(100);
-  const [newSlots, setNewSlots] = useState(48);
-  const [newStartTime, setNewStartTime] = useState('Today, 9:00 PM PST');
-  const [newLiveStreamUrl, setNewLiveStreamUrl] = useState('https://www.youtube.com/channel/UCNCXkynVdk3Xt2MHjMwHXaw');
-  const [newBulletPoints, setNewBulletPoints] = useState(
-    '?? Official YouTube Live Broadcast\nMobile devices only (No Emulators)\nBooyah & Kill rewards paid via JazzCash'
-  );
+  // Tournament form state
+  const [tTitle, setTTitle] = useState('');
+  const [tGame, setTGame] = useState<'Free Fire' | 'Free Fire MAX'>('Free Fire MAX');
+  const [tType, setTType] = useState<'Solo' | 'Duo' | 'Squad' | 'Clash Squad'>('Squad');
+  const [tMap, setTMap] = useState<'Bermuda' | 'Purgatory' | 'Kalahari' | 'Nexterra'>('Bermuda');
+  const [tStatus, setTStatus] = useState<'upcoming' | 'live' | 'completed' | 'special'>('upcoming');
+  const [tPrize, setTPrize] = useState(15000);
+  const [tBooyah, setTBooyah] = useState(8000);
+  const [tHasPerKill, setTHasPerKill] = useState(true);
+  const [tPerKill, setTPerKill] = useState(50);
+  const [tEntryFee, setTEntryFee] = useState(100);
+  const [tSlots, setTSlots] = useState(48);
+  const [tStartTime, setTStartTime] = useState('Today, 9:00 PM PST');
+  const [tLiveUrl, setTLiveUrl] = useState('https://www.youtube.com/channel/UCNCXkynVdk3Xt2MHjMwHXaw');
+  const [tBullets, setTBullets] = useState('?? Official YouTube Live Broadcast\nMobile devices only (No Emulators)\nBooyah & Kill rewards paid via JazzCash');
 
+  // Room ID / Pass form
   const [editRoomId, setEditRoomId] = useState('');
   const [editRoomPass, setEditRoomPass] = useState('');
   const [editLiveUrl, setEditLiveUrl] = useState('');
 
+  // Winner form
   const [winnerName, setWinnerName] = useState('');
+  const [winnerIgn, setWinnerIgn] = useState('');
   const [winnerUid, setWinnerUid] = useState('');
   const [winnerKills, setWinnerKills] = useState(12);
   const [winnerPrize, setWinnerPrize] = useState(8000);
 
-  const [pendingDeposits, setPendingDeposits] = useState([
-    { id: 'dep-1', user: 'PK_CYBORG_FF', uid: '489201482', method: 'JazzCash', amt: 500, trxId: '29481029481', date: '5 mins ago' },
-    { id: 'dep-2', user: 'PK_PHANTOM_99', uid: '129481902', method: 'JazzCash', amt: 1000, trxId: '98412048102', date: '12 mins ago' },
-  ]);
+  // Leaderboard player form
+  const [lpName, setLpName] = useState('');
+  const [lpIgn, setLpIgn] = useState('');
+  const [lpUid, setLpUid] = useState('');
+  const [lpEarnings, setLpEarnings] = useState(50000);
+  const [lpMatches, setLpMatches] = useState(25);
+  const [lpKills, setLpKills] = useState(110);
 
+  // Settings
   const [whatsappLink, setWhatsappLink] = useState('https://whatsapp.com/channel/0029VbD6gJE3WHTOMOkx252G');
   const [youtubeLink, setYoutubeLink] = useState('https://www.youtube.com/channel/UCNCXkynVdk3Xt2MHjMwHXaw');
   const [jazzCashPhone, setJazzCashPhone] = useState('03190799711');
   const [jazzCashName, setJazzCashName] = useState('Ashan Akhtar');
   const [savedSettings, setSavedSettings] = useState(false);
 
-  const handleCreateTournament = (e: React.FormEvent) => {
-    e.preventDefault();
-    const bullets = newBulletPoints.split('\n').map(s => s.trim()).filter(Boolean);
-
-    const created: Tournament = {
-      id: `eg-ff-${Date.now().toString().slice(-4)}`,
-      title: newTitle.toUpperCase() || 'NEW BATTLE ARENA TOURNAMENT',
-      game: newGame,
-      type: newType,
-      map: newMap,
-      status: 'upcoming',
-      prizePool: Number(newPrize),
-      hasPerKill: hasPerKill,
-      perKill: hasPerKill ? Number(newPerKill) : 0,
-      booyahPrize: Number(newBooyah),
-      entryFee: Number(newEntryFee),
-      slotsFilled: 0,
-      totalSlots: Number(newSlots),
-      startTime: newStartTime,
-      isFeatured: false,
-      liveStreamUrl: newLiveStreamUrl,
-      bulletPoints: bullets.length > 0 ? bullets : [
-        'Verified Mobile tournament.',
-        'Room ID released 15 mins prior to start.',
-        'Instant payout on Booyah confirmation.'
-      ],
-      prizes: {
-        first: Number(newBooyah),
-        second: Math.round(Number(newPrize) * 0.25),
-        third: Math.round(Number(newPrize) * 0.15),
-        perKillBonus: hasPerKill ? Number(newPerKill) : 0,
-      },
-      rules: [
-        'Mobile devices only (Emulators banned).',
-        'Join assigned slot strictly matching registered Free Fire UID.',
-        'Room ID & Password released 15 mins before match start.',
-      ]
-    };
-
-    setTournamentsList([created, ...tournamentsList]);
-    setShowCreateModal(false);
-    setNewTitle('');
+  // helpers
+  const resetTournamentForm = () => {
+    setTTitle(''); setTGame('Free Fire MAX'); setTType('Squad'); setTMap('Bermuda');
+    setTStatus('upcoming'); setTPrize(15000); setTBooyah(8000); setTHasPerKill(true);
+    setTPerKill(50); setTEntryFee(100); setTSlots(48);
+    setTStartTime('Today, 9:00 PM PST');
+    setTLiveUrl('https://www.youtube.com/channel/UCNCXkynVdk3Xt2MHjMwHXaw');
+    setTBullets('?? Official YouTube Live Broadcast\nMobile devices only (No Emulators)\nBooyah & Kill rewards paid via JazzCash');
   };
 
-  const handleSaveRoomId = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingRoomIdTourney) return;
+  const openEditTourney = (t: Tournament) => {
+    setEditingTourney(t);
+    setTTitle(t.title); setTGame(t.game); setTType(t.type); setTMap(t.map);
+    setTStatus(t.status); setTPrize(t.prizePool); setTBooyah(t.booyahPrize);
+    setTHasPerKill(t.hasPerKill); setTPerKill(t.perKill); setTEntryFee(t.entryFee);
+    setTSlots(t.totalSlots); setTStartTime(t.startTime);
+    setTLiveUrl(t.liveStreamUrl || '');
+    setTBullets((t.bulletPoints || []).join('\n'));
+  };
 
-    setTournamentsList((prev) =>
-      prev.map((t) => {
-        if (t.id === editingRoomIdTourney.id) {
-          return {
-            ...t,
-            roomId: editRoomId || 'EG-998822',
-            roomPassword: editRoomPass || '777',
-            roomStatus: 'ready',
-            liveStreamUrl: editLiveUrl || t.liveStreamUrl,
-          };
-        }
-        return t;
-      })
-    );
+  const handleSaveTournament = () => {
+    const data = {
+      title: tTitle,
+      game: tGame,
+      type: tType,
+      map: tMap,
+      status: tStatus,
+      prizePool: tPrize,
+      booyahPrize: tBooyah,
+      hasPerKill: tHasPerKill,
+      perKill: tPerKill,
+      entryFee: tEntryFee,
+      totalSlots: tSlots,
+      startTime: tStartTime,
+      liveStreamUrl: tLiveUrl,
+      bulletPoints: tBullets.split('\n').map(s => s.trim()).filter(Boolean),
+      prizes: { first: tBooyah, second: Math.round(tBooyah * 0.5), third: Math.round(tBooyah * 0.25), perKillBonus: tPerKill },
+      rules: ['Mobile only. No emulators.', 'Registered Free Fire UIDs only.', 'Admin decisions are final.'],
+      isFeatured: false,
+    };
+    if (editingTourney) {
+      updateTournament(editingTourney.id, data);
+      setEditingTourney(null);
+    } else {
+      createTournament(data);
+      setShowCreateModal(false);
+    }
+    resetTournamentForm();
+  };
+
+  const handleSaveRoomId = () => {
+    if (!editingRoomIdTourney) return;
+    updateTournament(editingRoomIdTourney.id, {
+      roomId: editRoomId,
+      roomPassword: editRoomPass,
+      liveStreamUrl: editLiveUrl || editingRoomIdTourney.liveStreamUrl,
+      roomStatus: 'ready',
+    });
     setEditingRoomIdTourney(null);
   };
 
-  const handleCompleteTournamentSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!completingTourney) return;
-
-    setTournamentsList((prev) =>
-      prev.map((t) => {
-        if (t.id === completingTourney.id) {
-          return {
-            ...t,
-            status: 'completed',
-            winner: {
-              name: winnerName || 'PK_CHAMPION_FF',
-              ign: winnerName || 'PK_CHAMPION_FF',
-              uid: winnerUid || '489201948',
-              kills: Number(winnerKills),
-              prizePKR: Number(winnerPrize),
-              rank: '1st Place Booyah',
-            }
-          };
-        }
-        return t;
-      })
-    );
+  const handleSetWinner = () => {
+    if (!completingTourney || !winnerName || !winnerUid) return;
+    setTournamentWinner(completingTourney.id, {
+      name: winnerName,
+      ign: winnerIgn || winnerName,
+      uid: winnerUid,
+      kills: winnerKills,
+      prizePKR: winnerPrize,
+      rank: '1st Place Booyah',
+    });
     setCompletingTourney(null);
-    setWinnerName('');
-    setWinnerUid('');
+    setWinnerName(''); setWinnerIgn(''); setWinnerUid(''); setWinnerKills(12); setWinnerPrize(8000);
   };
 
-  const handleDepositAction = (id: string, action: 'approve' | 'reject') => {
-    setPendingDeposits((prev) => prev.filter((d) => d.id !== id));
+  const handleSavePlayer = () => {
+    if (editingPlayer) {
+      updateLeaderboardPlayer(editingPlayer.uid, {
+        name: lpName, ign: lpIgn, uid: lpUid,
+        earningsPKR: lpEarnings, matchesPlayed: lpMatches, totalKills: lpKills,
+      });
+      setEditingPlayer(null);
+    } else {
+      addLeaderboardPlayer({
+        rank: 0, name: lpName, ign: lpIgn, uid: lpUid,
+        avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${lpIgn || lpName}`,
+        earningsPKR: lpEarnings, matchesPlayed: lpMatches, totalKills: lpKills,
+        winRate: 50, badge: 'DIAMOND',
+      });
+      setShowAddPlayerModal(false);
+    }
+    setLpName(''); setLpIgn(''); setLpUid(''); setLpEarnings(50000); setLpMatches(25); setLpKills(110);
   };
+
+  const openEditPlayer = (p: PlayerRank) => {
+    setEditingPlayer(p);
+    setLpName(p.name); setLpIgn(p.ign); setLpUid(p.uid);
+    setLpEarnings(p.earningsPKR); setLpMatches(p.matchesPlayed); setLpKills(p.totalKills);
+  };
+
+  const handleSaveSettings = () => {
+    try {
+      localStorage.setItem('eg_settings', JSON.stringify({ whatsappLink, youtubeLink, jazzCashPhone, jazzCashName }));
+    } catch {}
+    setSavedSettings(true);
+    setTimeout(() => setSavedSettings(false), 2500);
+  };
+
+  const filteredTourneys = tournaments.filter(t =>
+    t.title.toLowerCase().includes(searchQ.toLowerCase())
+  );
+
+  const pendingDeposits = deposits.filter(d => d.status === 'pending');
+  const pendingWithdrawals = withdrawals.filter(w => w.status === 'pending');
+  const pendingCount = pendingDeposits.length + pendingWithdrawals.length + contactQueries.filter(q => q.status === 'new').length;
 
   if (authorized === null) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="h-12 w-12 rounded-full border-4 border-crimson border-t-transparent animate-spin" />
-          <p className="text-sm font-bold uppercase tracking-widest text-slate-400">Verifying Admin Access...</p>
+      <div className="min-h-screen bg-surface-100 flex items-center justify-center">
+        <div className="text-center">
+          <ShieldAlert className="h-12 w-12 text-crimson mx-auto mb-4 animate-pulse" />
+          <p className="text-white text-lg">Verifying admin access...</p>
         </div>
       </div>
     );
   }
 
+  const inputClass = "w-full bg-surface-200 border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder-white/30 focus:outline-none focus:border-crimson";
+  const labelClass = "block text-white/60 text-xs mb-1";
+  const selectClass = inputClass + " cursor-pointer";
+
+  const Modal = ({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) => (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
+      <div
+        className="relative bg-surface-200 border border-white/10 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between p-5 border-b border-white/10">
+          <h3 className="text-white font-bold text-lg">{title}</h3>
+          <button onClick={onClose} className="text-white/50 hover:text-white transition-colors">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+        <div className="p-5">{children}</div>
+      </div>
+    </div>
+  );
+
+  const TournamentFormFields = () => (
+    <div className="space-y-3">
+      <div>
+        <label className={labelClass}>Tournament Title *</label>
+        <input className={inputClass} value={tTitle} onChange={e => setTTitle(e.target.value)} placeholder="e.g. PAKISTAN CHAMPIONS CLASH #102" />
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className={labelClass}>Game</label>
+          <select className={selectClass} value={tGame} onChange={e => setTGame(e.target.value as typeof tGame)}>
+            <option>Free Fire MAX</option>
+            <option>Free Fire</option>
+          </select>
+        </div>
+        <div>
+          <label className={labelClass}>Type</label>
+          <select className={selectClass} value={tType} onChange={e => setTType(e.target.value as typeof tType)}>
+            <option>Solo</option><option>Duo</option><option>Squad</option><option>Clash Squad</option>
+          </select>
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className={labelClass}>Map</label>
+          <select className={selectClass} value={tMap} onChange={e => setTMap(e.target.value as typeof tMap)}>
+            <option>Bermuda</option><option>Purgatory</option><option>Kalahari</option><option>Nexterra</option>
+          </select>
+        </div>
+        <div>
+          <label className={labelClass}>Status</label>
+          <select className={selectClass} value={tStatus} onChange={e => setTStatus(e.target.value as typeof tStatus)}>
+            <option value="upcoming">Upcoming</option>
+            <option value="live">Live</option>
+            <option value="completed">Completed</option>
+            <option value="special">Special</option>
+          </select>
+        </div>
+      </div>
+      <div className="grid grid-cols-3 gap-3">
+        <div>
+          <label className={labelClass}>Prize Pool (PKR)</label>
+          <input type="number" className={inputClass} value={tPrize} onChange={e => setTPrize(Number(e.target.value))} />
+        </div>
+        <div>
+          <label className={labelClass}>Booyah Prize (PKR)</label>
+          <input type="number" className={inputClass} value={tBooyah} onChange={e => setTBooyah(Number(e.target.value))} />
+        </div>
+        <div>
+          <label className={labelClass}>Entry Fee (0=Free)</label>
+          <input type="number" className={inputClass} value={tEntryFee} onChange={e => setTEntryFee(Number(e.target.value))} />
+        </div>
+      </div>
+      <div className="grid grid-cols-3 gap-3">
+        <div>
+          <label className={labelClass}>Per Kill (PKR)</label>
+          <input type="number" className={inputClass} value={tPerKill} onChange={e => setTPerKill(Number(e.target.value))} />
+        </div>
+        <div>
+          <label className={labelClass}>Has Per Kill</label>
+          <select className={selectClass} value={tHasPerKill ? 'yes' : 'no'} onChange={e => setTHasPerKill(e.target.value === 'yes')}>
+            <option value="yes">Yes</option><option value="no">No</option>
+          </select>
+        </div>
+        <div>
+          <label className={labelClass}>Total Slots</label>
+          <input type="number" className={inputClass} value={tSlots} onChange={e => setTSlots(Number(e.target.value))} />
+        </div>
+      </div>
+      <div>
+        <label className={labelClass}>Start Time</label>
+        <input className={inputClass} value={tStartTime} onChange={e => setTStartTime(e.target.value)} placeholder="Today, 9:00 PM PST" />
+      </div>
+      <div>
+        <label className={labelClass}>YouTube Live URL</label>
+        <input className={inputClass} value={tLiveUrl} onChange={e => setTLiveUrl(e.target.value)} placeholder="https://youtube.com/..." />
+      </div>
+      <div>
+        <label className={labelClass}>Bullet Points (one per line)</label>
+        <textarea
+          className={inputClass + " resize-none h-24"}
+          value={tBullets}
+          onChange={e => setTBullets(e.target.value)}
+          placeholder="?? One bullet point per line"
+        />
+      </div>
+    </div>
+  );
+
   return (
-    <div className="flex flex-col min-h-screen pb-20 md:pb-0">
+    <div className="min-h-screen bg-surface-100">
       <Navbar />
 
-      <main className="flex-grow mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 w-full">
-        
-        {/* Admin Header Banner */}
-        <div className="relative overflow-hidden rounded-3xl border border-neon-gold/50 bg-gradient-to-r from-crimson/20 via-surface-200 to-black p-6 sm:p-8 mb-8 shadow-[0_0_40px_rgba(255,215,0,0.15)] flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center space-x-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-neon-gold/20 text-neon-gold border border-neon-gold/40 shrink-0">
-              <ShieldAlert className="h-7 w-7" />
+      <main className="max-w-7xl mx-auto px-4 py-6 pb-24">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-crimson/20 border border-crimson/40 flex items-center justify-center">
+              <ShieldAlert className="h-5 w-5 text-crimson" />
             </div>
             <div>
-              <span className="text-xs font-black uppercase text-neon-gold tracking-widest">ADMINISTRATOR CONTROL PORTAL</span>
-              <h1 className="text-2xl sm:text-4xl font-black text-white font-display uppercase tracking-tight">
-                EDUCATED GAMER MANAGER
-              </h1>
+              <h1 className="text-white font-bold text-xl">Admin Control Deck</h1>
+              <p className="text-white/50 text-xs">Educated Gamer — Full Platform Control</p>
             </div>
           </div>
-          
           <button
             onClick={handleSignOut}
-            className="flex items-center space-x-2 rounded-xl border border-crimson/50 bg-crimson/20 hover:bg-crimson px-4 py-2.5 text-xs font-black uppercase tracking-wider text-white transition shadow-[0_0_15px_rgba(255,0,60,0.3)] shrink-0 self-start md:self-auto"
+            className="flex items-center gap-2 bg-surface-200 border border-white/10 text-white/70 hover:text-white px-3 py-2 rounded-lg text-sm transition-colors"
           >
             <LogOut className="h-4 w-4" />
-            <span>Sign Out</span>
+            Sign Out
           </button>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="flex flex-wrap gap-2 mb-8 border-b border-white/10 pb-4">
-          <button
-            onClick={() => setActiveTab('tournaments')}
-            className={`flex items-center space-x-2 rounded-2xl px-5 py-3 text-xs font-black uppercase tracking-wider transition ${
-              activeTab === 'tournaments'
-                ? 'bg-crimson text-white shadow-[0_0_20px_rgba(255,0,60,0.4)]'
-                : 'bg-surface-200 text-slate-300 hover:text-white'
-            }`}
-          >
-            <Gamepad2 className="h-4 w-4" />
-            <span>Tournaments ({tournamentsList.length})</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('deposits')}
-            className={`flex items-center space-x-2 rounded-2xl px-5 py-3 text-xs font-black uppercase tracking-wider transition relative ${
-              activeTab === 'deposits'
-                ? 'bg-crimson text-white shadow-[0_0_20px_rgba(255,0,60,0.4)]'
-                : 'bg-surface-200 text-slate-300 hover:text-white'
-            }`}
-          >
-            <Wallet className="h-4 w-4" />
-            <span>Deposit Approvals</span>
-            {pendingDeposits.length > 0 && (
-              <span className="ml-1.5 h-5 w-5 rounded-full bg-neon-gold text-black text-[10px] font-black flex items-center justify-center">
-                {pendingDeposits.length}
-              </span>
-            )}
-          </button>
-
-          <button
-            onClick={() => setActiveTab('queries')}
-            className={`flex items-center space-x-2 rounded-2xl px-5 py-3 text-xs font-black uppercase tracking-wider transition relative ${
-              activeTab === 'queries'
-                ? 'bg-crimson text-white shadow-[0_0_20px_rgba(255,0,60,0.4)]'
-                : 'bg-surface-200 text-slate-300 hover:text-white'
-            }`}
-          >
-            <MessageSquareCode className="h-4 w-4" />
-            <span>Contact Queries ({contactQueries.length})</span>
-            {contactQueries.length > 0 && (
-              <span className="ml-1.5 h-5 w-5 rounded-full bg-crimson text-white text-[10px] font-black flex items-center justify-center">
-                {contactQueries.length}
-              </span>
-            )}
-          </button>
-
-          <button
-            onClick={() => setActiveTab('leaderboard')}
-            className={`flex items-center space-x-2 rounded-2xl px-5 py-3 text-xs font-black uppercase tracking-wider transition ${
-              activeTab === 'leaderboard'
-                ? 'bg-crimson text-white shadow-[0_0_20px_rgba(255,0,60,0.4)]'
-                : 'bg-surface-200 text-slate-300 hover:text-white'
-            }`}
-          >
-            <Trophy className="h-4 w-4" />
-            <span>Leaderboard & Payouts</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('settings')}
-            className={`flex items-center space-x-2 rounded-2xl px-5 py-3 text-xs font-black uppercase tracking-wider transition ${
-              activeTab === 'settings'
-                ? 'bg-crimson text-white shadow-[0_0_20px_rgba(255,0,60,0.4)]'
-                : 'bg-surface-200 text-slate-300 hover:text-white'
-            }`}
-          >
-            <Settings className="h-4 w-4" />
-            <span>Social & Site Settings</span>
-          </button>
+        {/* Stats Row */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+          {[
+            { label: 'Tournaments', value: tournaments.length, icon: Gamepad2, color: 'text-crimson' },
+            { label: 'Pending Payments', value: pendingDeposits.length + pendingWithdrawals.length, icon: Wallet, color: 'text-yellow-400' },
+            { label: 'New Queries', value: contactQueries.filter(q => q.status === 'new').length, icon: MessageSquareCode, color: 'text-blue-400' },
+            { label: 'Leaderboard Players', value: leaderboard.length, icon: Trophy, color: 'text-neon-gold' },
+          ].map(stat => (
+            <div key={stat.label} className="bg-surface-200 border border-white/10 rounded-xl p-4">
+              <stat.icon className={`h-5 w-5 ${stat.color} mb-2`} />
+              <p className="text-white font-bold text-2xl">{stat.value}</p>
+              <p className="text-white/50 text-xs">{stat.label}</p>
+            </div>
+          ))}
         </div>
 
-        {/* TAB 1: TOURNAMENTS MANAGER */}
+        {/* Tabs */}
+        <div className="flex gap-1 mb-6 overflow-x-auto pb-1">
+          {([
+            { key: 'tournaments', label: 'Tournaments', icon: Gamepad2 },
+            { key: 'deposits', label: `Payments ${pendingDeposits.length + pendingWithdrawals.length > 0 ? `(${pendingDeposits.length + pendingWithdrawals.length})` : ''}`, icon: Wallet },
+            { key: 'queries', label: `Queries ${contactQueries.filter(q => q.status === 'new').length > 0 ? `(${contactQueries.filter(q => q.status === 'new').length})` : ''}`, icon: MessageSquareCode },
+            { key: 'leaderboard', label: 'Leaderboard', icon: Trophy },
+            { key: 'settings', label: 'Settings', icon: Settings },
+          ] as const).map(tab => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
+                activeTab === tab.key
+                  ? 'bg-crimson text-white'
+                  : 'bg-surface-200 text-white/50 hover:text-white border border-white/10'
+              }`}
+            >
+              <tab.icon className="h-4 w-4" />
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* ─────────── TOURNAMENTS TAB ─────────── */}
         {activeTab === 'tournaments' && (
-          <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <div>
-                <h2 className="text-xl font-black text-white uppercase font-display">Manage Tournaments & Matches</h2>
-                <p className="text-xs text-slate-400">Create new tournaments, update YouTube live stream, publish Room ID/Pass, and set winners.</p>
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <div className="relative flex-1 max-w-sm">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30" />
+                <input
+                  className="w-full bg-surface-200 border border-white/10 rounded-lg pl-9 pr-3 py-2 text-white text-sm placeholder-white/30 focus:outline-none focus:border-crimson"
+                  placeholder="Search tournaments..."
+                  value={searchQ}
+                  onChange={e => setSearchQ(e.target.value)}
+                />
               </div>
-
               <button
-                onClick={() => setShowCreateModal(true)}
-                className="flex items-center space-x-2 rounded-2xl bg-gradient-to-r from-crimson to-crimson-dark px-6 py-3 text-xs font-black uppercase tracking-wider text-white shadow-[0_0_25px_rgba(255,0,60,0.4)] hover:shadow-[0_0_35px_rgba(255,0,60,0.6)] transition"
+                onClick={() => { resetTournamentForm(); setShowCreateModal(true); }}
+                className="flex items-center gap-2 bg-crimson hover:bg-crimson/80 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors ml-3"
               >
                 <PlusCircle className="h-4 w-4" />
-                <span>Create New Tournament</span>
+                New Tournament
               </button>
             </div>
 
-            <div className="overflow-hidden rounded-3xl border border-white/10 bg-surface-100">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="border-b border-white/10 bg-surface-200/80 text-[10px] font-black uppercase tracking-wider text-slate-400">
-                      <th className="p-4">Match Title & Game</th>
-                      <th className="p-4">Type / Map</th>
-                      <th className="p-4">Prize / Booyah</th>
-                      <th className="p-4">Slots</th>
-                      <th className="p-4">Status</th>
-                      <th className="p-4">Room & Stream</th>
-                      <th className="p-4 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white/5 text-xs font-bold text-slate-300">
-                    {tournamentsList.map((t) => (
-                      <tr key={t.id} className="hover:bg-surface-200/50 transition">
-                        <td className="p-4">
-                          <p className="font-black text-white">{t.title}</p>
-                          <span className="text-[10px] text-slate-400 font-normal">{t.game} ? {t.startTime}</span>
-                        </td>
-                        <td className="p-4">
-                          <span className="px-2 py-0.5 rounded bg-crimson/20 text-crimson text-[10px] mr-1">{t.type}</span>
-                          <span className="text-slate-400">{t.map}</span>
-                        </td>
-                        <td className="p-4">
-                          <p className="text-neon-gold font-black">PKR {t.prizePool.toLocaleString()}</p>
-                          <span className="text-[10px] text-slate-400">Booyah: PKR {t.booyahPrize || t.prizes.first}</span>
-                        </td>
-                        <td className="p-4">
-                          <span className="font-mono">{t.slotsFilled} / {t.totalSlots}</span>
-                        </td>
-                        <td className="p-4">
-                          <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase ${
-                            t.status === 'live'
-                              ? 'bg-crimson/20 text-crimson border border-crimson'
-                              : t.status === 'completed'
-                              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
-                              : 'bg-surface-300 text-slate-300'
-                          }`}>
-                            {t.status}
-                          </span>
-                        </td>
-                        <td className="p-4">
-                          {t.roomId ? (
-                            <span className="font-mono text-neon-gold">{t.roomId} (P: {t.roomPassword})</span>
-                          ) : (
-                            <span className="text-slate-500 italic">Not Published</span>
-                          )}
-                        </td>
-                        <td className="p-4 text-right space-x-2">
-                          <button
-                            onClick={() => {
-                              setEditingRoomIdTourney(t);
-                              setEditRoomId(t.roomId || '');
-                              setEditRoomPass(t.roomPassword || '');
-                              setEditLiveUrl(t.liveStreamUrl || '');
-                            }}
-                            className="rounded-xl border border-neon-gold/40 bg-neon-gold/10 px-3 py-1.5 text-[10px] font-black uppercase text-neon-gold hover:bg-neon-gold hover:text-black transition"
-                          >
-                            Room / Live
-                          </button>
-
-                          {t.status !== 'completed' && (
-                            <button
-                              onClick={() => {
-                                setCompletingTourney(t);
-                                setWinnerPrize(t.booyahPrize || t.prizes.first);
-                              }}
-                              className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-3 py-1.5 text-[10px] font-black uppercase text-emerald-400 hover:bg-emerald-500 hover:text-black transition"
-                            >
-                              Set Winner
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* TAB 2: DEPOSIT APPROVALS */}
-        {activeTab === 'deposits' && (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-xl font-black text-white uppercase font-display">Pending JazzCash Deposits</h2>
-              <p className="text-xs text-slate-400">Verify user transactions with JazzCash statement and credit their coin wallet.</p>
-            </div>
-
-            {pendingDeposits.length === 0 ? (
-              <div className="rounded-3xl border border-white/10 bg-surface-100 p-8 text-center text-slate-400">
-                <CheckCircle2 className="mx-auto h-10 w-10 text-emerald-400 mb-2" />
-                <p className="text-sm font-bold">All pending deposits have been processed!</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {pendingDeposits.map((dep) => (
-                  <div key={dep.id} className="rounded-3xl border border-white/10 bg-surface-100 p-6 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="px-2.5 py-1 rounded-full bg-neon-gold/20 text-neon-gold text-[10px] font-black uppercase border border-neon-gold/40">
-                        {dep.method} (PKR {dep.amt})
-                      </span>
-                      <span className="text-xs text-slate-400">{dep.date}</span>
+            <div className="space-y-3">
+              {filteredTourneys.length === 0 && (
+                <div className="text-center py-12 text-white/40">
+                  <Gamepad2 className="h-10 w-10 mx-auto mb-3 opacity-30" />
+                  <p>No tournaments yet. Create one above.</p>
+                </div>
+              )}
+              {filteredTourneys.map(t => (
+                <div key={t.id} className="bg-surface-200 border border-white/10 rounded-xl p-4">
+                  <div className="flex items-start justify-between gap-3 flex-wrap">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                          t.status === 'live' ? 'bg-green-500/20 text-green-400 animate-pulse' :
+                          t.status === 'upcoming' ? 'bg-blue-500/20 text-blue-400' :
+                          t.status === 'completed' ? 'bg-white/10 text-white/50' :
+                          'bg-neon-gold/20 text-neon-gold'
+                        }`}>
+                          {t.status.toUpperCase()}
+                        </span>
+                        <span className="text-xs text-white/40">{t.type} · {t.map} · {t.game}</span>
+                      </div>
+                      <h3 className="text-white font-bold text-sm truncate">{t.title}</h3>
+                      <div className="flex items-center gap-4 mt-1 text-xs text-white/50 flex-wrap">
+                        <span>PKR {t.prizePool.toLocaleString()} pool</span>
+                        <span>Entry: {t.entryFee === 0 ? 'FREE' : `PKR ${t.entryFee}`}</span>
+                        <span>{t.slotsFilled}/{t.totalSlots} slots</span>
+                        <span>{t.startTime}</span>
+                        {t.roomId && <span className="text-yellow-400">Room: {t.roomId} / {t.roomPassword}</span>}
+                      </div>
+                      {t.winner && (
+                        <div className="mt-1 text-xs text-neon-gold">
+                          🏆 Winner: {t.winner.name} (UID: {t.winner.uid}) — {t.winner.kills} kills, PKR {t.winner.prizePKR.toLocaleString()}
+                        </div>
+                      )}
                     </div>
-
-                    <div className="space-y-1">
-                      <p className="text-sm font-black text-white">{dep.user}</p>
-                      <p className="text-xs text-slate-400 font-mono">Player UID: {dep.uid}</p>
-                      <p className="text-xs text-neon-gold font-mono font-bold">Trx ID: {dep.trxId}</p>
-                    </div>
-
-                    <div className="flex gap-2 pt-2 border-t border-white/5">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <button
-                        onClick={() => handleDepositAction(dep.id, 'approve')}
-                        className="flex-1 rounded-xl bg-emerald-500 hover:bg-emerald-600 py-2.5 text-xs font-black uppercase text-black transition"
+                        onClick={() => openEditTourney(t)}
+                        className="flex items-center gap-1 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 px-3 py-1.5 rounded-lg text-xs transition-colors"
                       >
-                        Approve & Credit Coins
+                        <Edit className="h-3 w-3" /> Edit
                       </button>
                       <button
-                        onClick={() => handleDepositAction(dep.id, 'reject')}
-                        className="rounded-xl border border-crimson/50 bg-crimson/10 hover:bg-crimson px-4 py-2.5 text-xs font-bold text-crimson hover:text-white transition"
+                        onClick={() => {
+                          setEditingRoomIdTourney(t);
+                          setEditRoomId(t.roomId || '');
+                          setEditRoomPass(t.roomPassword || '');
+                          setEditLiveUrl(t.liveStreamUrl || '');
+                        }}
+                        className="flex items-center gap-1 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 px-3 py-1.5 rounded-lg text-xs transition-colors"
                       >
-                        Reject
+                        <Key className="h-3 w-3" /> Room/Live
+                      </button>
+                      {t.status !== 'completed' && (
+                        <button
+                          onClick={() => {
+                            setCompletingTourney(t);
+                            setWinnerPrize(t.booyahPrize);
+                          }}
+                          className="flex items-center gap-1 bg-neon-gold/20 hover:bg-neon-gold/30 text-neon-gold px-3 py-1.5 rounded-lg text-xs transition-colors"
+                        >
+                          <Trophy className="h-3 w-3" /> Set Winner
+                        </button>
+                      )}
+                      <button
+                        onClick={() => { if (confirm(`Delete "${t.title}"?`)) deleteTournament(t.id); }}
+                        className="flex items-center gap-1 bg-red-500/20 hover:bg-red-500/30 text-red-400 px-3 py-1.5 rounded-lg text-xs transition-colors"
+                      >
+                        <Trash2 className="h-3 w-3" /> Delete
                       </button>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* TAB 3: CONTACT QUERIES / SUPPORT TICKETS */}
-        {activeTab === 'queries' && (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-xl font-black text-white uppercase font-display">Player Inquiries & Support Tickets</h2>
-              <p className="text-xs text-slate-400">Support tickets submitted from the /contact page with user name, phone number, and Free Fire UID.</p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {contactQueries.map((q) => (
-                <div key={q.id} className="rounded-3xl border border-white/10 bg-surface-100 p-6 space-y-4 shadow-lg">
-                  <div className="flex items-center justify-between">
-                    <span className="px-2.5 py-1 rounded-full bg-crimson/20 text-crimson text-[10px] font-black uppercase border border-crimson/40">
-                      {q.subject}
-                    </span>
-                    <span className="text-xs text-slate-400">{q.createdAt}</span>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm font-black text-white">{q.name}</p>
-                      <a
-                        href={`https://wa.me/${q.phone.replace(/[^0-9]/g, '')}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-xs text-emerald-400 font-bold hover:underline"
-                      >
-                        <Phone className="w-3.5 h-3.5" />
-                        <span>{q.phone}</span>
-                      </a>
-                    </div>
-                    <p className="text-xs font-mono text-neon-gold">Free Fire UID: {q.uid}</p>
-                    <div className="rounded-xl bg-surface-200/80 p-3 text-xs text-slate-300 mt-2">
-                      {q.message}
-                    </div>
-                  </div>
-
-                  <div className="pt-2 border-t border-white/5 flex gap-2">
-                    <a
-                      href={`https://wa.me/${q.phone.replace(/[^0-9]/g, '')}?text=Hello%20${encodeURIComponent(q.name)},%20regarding%20your%20Educated%20Gamer%20inquiry:`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 py-2 text-xs font-black uppercase text-white transition"
-                    >
-                      <Phone className="w-3.5 h-3.5" />
-                      <span>Reply on WhatsApp</span>
-                    </a>
                   </div>
                 </div>
               ))}
@@ -515,431 +541,461 @@ export default function AdminPortalPage() {
           </div>
         )}
 
-        {/* TAB 4: LEADERBOARD & PAYOUTS */}
-        {activeTab === 'leaderboard' && (
+        {/* ─────────── DEPOSITS / WITHDRAWALS TAB ─────────── */}
+        {activeTab === 'deposits' && (
           <div className="space-y-6">
+            {/* Deposits */}
             <div>
-              <h2 className="text-xl font-black text-white uppercase font-display">Hall of Fame & Winner Payouts</h2>
-              <p className="text-xs text-slate-400">Manage player rankings and verified earnings.</p>
-            </div>
-
-            <div className="overflow-hidden rounded-3xl border border-white/10 bg-surface-100">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-white/10 bg-surface-200/80 text-[10px] font-black uppercase tracking-wider text-slate-400">
-                    <th className="p-4">Rank</th>
-                    <th className="p-4">Player & IGN</th>
-                    <th className="p-4">Free Fire UID</th>
-                    <th className="p-4">Total Earnings</th>
-                    <th className="p-4">Matches</th>
-                    <th className="p-4">Kills</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5 text-xs font-bold text-slate-300">
-                  {MOCK_LEADERBOARD.map((player) => (
-                    <tr key={player.rank} className="hover:bg-surface-200/50">
-                      <td className="p-4 font-black text-neon-gold">#{player.rank}</td>
-                      <td className="p-4">
-                        <p className="text-white font-black">{player.name}</p>
-                        <span className="text-[10px] text-slate-400">{player.ign}</span>
-                      </td>
-                      <td className="p-4 font-mono">{player.uid}</td>
-                      <td className="p-4 text-emerald-400 font-black">PKR {player.earningsPKR.toLocaleString()}</td>
-                      <td className="p-4 font-mono">{player.matchesPlayed}</td>
-                      <td className="p-4 font-mono">{player.totalKills}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* TAB 5: SOCIAL & SITE SETTINGS */}
-        {activeTab === 'settings' && (
-          <div className="max-w-2xl space-y-6 rounded-3xl border border-white/10 bg-surface-100 p-6 sm:p-8">
-            <div>
-              <h2 className="text-xl font-black text-white uppercase font-display">Platform & Social Settings</h2>
-              <p className="text-xs text-slate-400">Manage social channel links and official receiving wallet accounts.</p>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1.5">
-                  Official WhatsApp Channel Link
-                </label>
-                <input
-                  type="text"
-                  value={whatsappLink}
-                  onChange={(e) => setWhatsappLink(e.target.value)}
-                  className="w-full rounded-xl border border-white/10 bg-surface-200 py-3 px-4 text-xs font-mono text-white focus:border-crimson focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1.5">
-                  Official YouTube Broadcast Link
-                </label>
-                <input
-                  type="text"
-                  value={youtubeLink}
-                  onChange={(e) => setYoutubeLink(e.target.value)}
-                  className="w-full rounded-xl border border-white/10 bg-surface-200 py-3 px-4 text-xs font-mono text-white focus:border-crimson focus:outline-none"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1.5">
-                    JazzCash Account Number
-                  </label>
-                  <input
-                    type="text"
-                    value={jazzCashPhone}
-                    onChange={(e) => setJazzCashPhone(e.target.value)}
-                    className="w-full rounded-xl border border-white/10 bg-surface-200 py-3 px-4 text-xs font-mono text-white focus:border-crimson focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold uppercase text-slate-300 mb-1.5">
-                    JazzCash Account Title
-                  </label>
-                  <input
-                    type="text"
-                    value={jazzCashName}
-                    onChange={(e) => setJazzCashName(e.target.value)}
-                    className="w-full rounded-xl border border-white/10 bg-surface-200 py-3 px-4 text-xs text-white focus:border-crimson focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              {savedSettings && (
-                <div className="flex items-center gap-2 rounded-xl border border-emerald-500/50 bg-emerald-500/10 p-3 text-xs font-bold text-emerald-400">
-                  <CheckCircle2 className="h-4 w-4" />
-                  <span>Settings updated successfully!</span>
+              <h2 className="text-white font-bold text-base mb-3 flex items-center gap-2">
+                <Wallet className="h-4 w-4 text-green-400" />
+                Pending Deposits ({pendingDeposits.length})
+              </h2>
+              {pendingDeposits.length === 0 && (
+                <div className="text-center py-8 text-white/30 bg-surface-200 rounded-xl border border-white/10">
+                  <CheckCircle2 className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                  <p className="text-sm">No pending deposits</p>
                 </div>
               )}
+              <div className="space-y-3">
+                {pendingDeposits.map(dep => (
+                  <div key={dep.id} className="bg-surface-200 border border-white/10 rounded-xl p-4">
+                    <div className="flex items-start gap-4">
+                      {/* Receipt thumbnail */}
+                      {dep.proofUrl ? (
+                        <button
+                          onClick={() => setInspectingReceipt(dep)}
+                          className="relative flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border border-white/10 hover:border-crimson transition-colors group"
+                        >
+                          <img src={dep.proofUrl} alt="Receipt" className="w-full h-full object-cover" />
+                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                            <ZoomIn className="h-5 w-5 text-white" />
+                          </div>
+                        </button>
+                      ) : (
+                        <div className="flex-shrink-0 w-16 h-16 rounded-lg bg-surface-100 border border-white/10 flex items-center justify-center">
+                          <ImageIcon className="h-6 w-6 text-white/20" />
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="text-white font-medium text-sm">{dep.user}</p>
+                          <span className="text-xs text-white/40">UID: {dep.uid}</span>
+                        </div>
+                        <div className="flex items-center gap-4 text-xs text-white/50 flex-wrap">
+                          <span className="text-green-400 font-bold">PKR {dep.amt.toLocaleString()}</span>
+                          <span>{dep.method}</span>
+                          <span>Trx: {dep.trxId}</span>
+                          <span>{dep.date}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => approveDeposit(dep.id)}
+                          className="flex items-center gap-1 bg-green-500/20 hover:bg-green-500/30 text-green-400 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
+                        >
+                          <CheckCircle2 className="h-3 w-3" /> Approve
+                        </button>
+                        <button
+                          onClick={() => rejectDeposit(dep.id)}
+                          className="flex items-center gap-1 bg-red-500/20 hover:bg-red-500/30 text-red-400 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
+                        >
+                          <XCircle className="h-3 w-3" /> Reject
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
 
-              <button
-                onClick={() => {
-                  setSavedSettings(true);
-                  setTimeout(() => setSavedSettings(false), 3000);
-                }}
-                className="w-full rounded-xl bg-gradient-to-r from-crimson to-crimson-dark py-3.5 text-xs font-black uppercase tracking-wider text-white shadow-lg"
-              >
-                Save Platform Settings
-              </button>
+            {/* Withdrawals */}
+            <div>
+              <h2 className="text-white font-bold text-base mb-3 flex items-center gap-2">
+                <DollarSign className="h-4 w-4 text-yellow-400" />
+                Pending Withdrawals ({pendingWithdrawals.length})
+              </h2>
+              {pendingWithdrawals.length === 0 && (
+                <div className="text-center py-8 text-white/30 bg-surface-200 rounded-xl border border-white/10">
+                  <CheckCircle2 className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                  <p className="text-sm">No pending withdrawals</p>
+                </div>
+              )}
+              <div className="space-y-3">
+                {pendingWithdrawals.map(w => (
+                  <div key={w.id} className="bg-surface-200 border border-white/10 rounded-xl p-4">
+                    <div className="flex items-center justify-between gap-3 flex-wrap">
+                      <div>
+                        <p className="text-white font-medium text-sm">{w.user}</p>
+                        <div className="flex items-center gap-4 text-xs text-white/50 mt-1 flex-wrap">
+                          <span className="text-yellow-400 font-bold">PKR {w.amt.toLocaleString()}</span>
+                          <span>{w.method}</span>
+                          <span>{w.accountNumber}</span>
+                          <span>{w.accountTitle}</span>
+                          <span>UID: {w.uid}</span>
+                          <span>{w.date}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => approveWithdrawal(w.id)}
+                          className="flex items-center gap-1 bg-green-500/20 hover:bg-green-500/30 text-green-400 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
+                        >
+                          <CheckCircle2 className="h-3 w-3" /> Approve
+                        </button>
+                        <button
+                          onClick={() => rejectWithdrawal(w.id)}
+                          className="flex items-center gap-1 bg-red-500/20 hover:bg-red-500/30 text-red-400 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
+                        >
+                          <XCircle className="h-3 w-3" /> Reject
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         )}
 
+        {/* ─────────── QUERIES TAB ─────────── */}
+        {activeTab === 'queries' && (
+          <div>
+            <h2 className="text-white font-bold text-base mb-4 flex items-center gap-2">
+              <MessageSquareCode className="h-4 w-4 text-blue-400" />
+              Contact Queries ({contactQueries.length})
+            </h2>
+            {contactQueries.length === 0 && (
+              <div className="text-center py-12 text-white/30 bg-surface-200 rounded-xl border border-white/10">
+                <MessageSquareCode className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                <p className="text-sm">No contact queries yet</p>
+              </div>
+            )}
+            <div className="space-y-3">
+              {contactQueries.map(q => (
+                <div key={q.id} className="bg-surface-200 border border-white/10 rounded-xl p-4">
+                  <div className="flex items-start justify-between gap-3 flex-wrap">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${q.status === 'new' ? 'bg-blue-500/20 text-blue-400' : 'bg-white/10 text-white/40'}`}>
+                          {q.status === 'new' ? 'NEW' : 'RESOLVED'}
+                        </span>
+                        <span className="text-white font-medium text-sm">{q.name}</span>
+                        <span className="text-white/40 text-xs">UID: {q.uid}</span>
+                      </div>
+                      <p className="text-crimson text-xs font-medium mb-1">{q.subject}</p>
+                      <p className="text-white/70 text-sm">{q.message}</p>
+                      <div className="flex items-center gap-3 mt-2 text-xs text-white/30">
+                        <span>{q.createdAt}</span>
+                        {q.phone && (
+                          <a
+                            href={`https://wa.me/${q.phone.replace(/^0/, '92')}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 text-green-400 hover:text-green-300 transition-colors"
+                          >
+                            <Phone className="h-3 w-3" /> WhatsApp: {q.phone}
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ─────────── LEADERBOARD TAB ─────────── */}
+        {activeTab === 'leaderboard' && (
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-white font-bold text-base flex items-center gap-2">
+                <Trophy className="h-4 w-4 text-neon-gold" />
+                Leaderboard ({leaderboard.length} players)
+              </h2>
+              <button
+                onClick={() => {
+                  setEditingPlayer(null);
+                  setLpName(''); setLpIgn(''); setLpUid(''); setLpEarnings(50000); setLpMatches(25); setLpKills(110);
+                  setShowAddPlayerModal(true);
+                }}
+                className="flex items-center gap-2 bg-crimson hover:bg-crimson/80 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+              >
+                <PlusCircle className="h-4 w-4" />
+                Add Player
+              </button>
+            </div>
+            {leaderboard.length === 0 && (
+              <div className="text-center py-12 text-white/30 bg-surface-200 rounded-xl border border-white/10">
+                <Trophy className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                <p className="text-sm">No players yet</p>
+              </div>
+            )}
+            <div className="space-y-2">
+              {leaderboard.map((p, idx) => (
+                <div key={p.uid} className="bg-surface-200 border border-white/10 rounded-xl p-4 flex items-center gap-4">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 ${
+                    idx === 0 ? 'bg-neon-gold text-black' :
+                    idx === 1 ? 'bg-white/30 text-white' :
+                    idx === 2 ? 'bg-amber-700/40 text-amber-400' :
+                    'bg-surface-100 text-white/50'
+                  }`}>{p.rank}</div>
+                  <img src={p.avatar} alt={p.ign} className="w-10 h-10 rounded-full bg-surface-100 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white font-medium text-sm truncate">{p.name}</p>
+                    <div className="flex items-center gap-3 text-xs text-white/40 flex-wrap">
+                      <span className="text-crimson">{p.ign}</span>
+                      <span>UID: {p.uid}</span>
+                      <span className="text-green-400 font-medium">PKR {p.earningsPKR.toLocaleString()}</span>
+                      <span>{p.matchesPlayed} matches</span>
+                      <span>{p.totalKills} kills</span>
+                    </div>
+                  </div>
+                  <span className="text-xs bg-crimson/20 text-crimson px-2 py-0.5 rounded-full hidden sm:block">{p.badge}</span>
+                  <button
+                    onClick={() => openEditPlayer(p)}
+                    className="flex items-center gap-1 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 px-3 py-1.5 rounded-lg text-xs transition-colors flex-shrink-0"
+                  >
+                    <Edit className="h-3 w-3" /> Edit
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ─────────── SETTINGS TAB ─────────── */}
+        {activeTab === 'settings' && (
+          <div className="max-w-lg space-y-5">
+            <div className="bg-surface-200 border border-white/10 rounded-xl p-5 space-y-4">
+              <h3 className="text-white font-bold flex items-center gap-2 mb-2">
+                <Phone className="h-4 w-4 text-green-400" />
+                JazzCash Settings
+              </h3>
+              <div>
+                <label className={labelClass}>JazzCash Number</label>
+                <input className={inputClass} value={jazzCashPhone} onChange={e => setJazzCashPhone(e.target.value)} placeholder="03XXXXXXXXX" />
+              </div>
+              <div>
+                <label className={labelClass}>Account Name</label>
+                <input className={inputClass} value={jazzCashName} onChange={e => setJazzCashName(e.target.value)} placeholder="Account holder name" />
+              </div>
+            </div>
+            <div className="bg-surface-200 border border-white/10 rounded-xl p-5 space-y-4">
+              <h3 className="text-white font-bold flex items-center gap-2 mb-2">
+                <ExternalLink className="h-4 w-4 text-blue-400" />
+                Social Links
+              </h3>
+              <div>
+                <label className={labelClass}>WhatsApp Channel</label>
+                <input className={inputClass} value={whatsappLink} onChange={e => setWhatsappLink(e.target.value)} placeholder="https://whatsapp.com/channel/..." />
+              </div>
+              <div>
+                <label className={labelClass}>YouTube Channel</label>
+                <input className={inputClass} value={youtubeLink} onChange={e => setYoutubeLink(e.target.value)} placeholder="https://youtube.com/channel/..." />
+              </div>
+            </div>
+            <div className="bg-surface-200 border border-white/10 rounded-xl p-5 space-y-3">
+              <h3 className="text-white font-bold flex items-center gap-2 mb-2">
+                <ShieldAlert className="h-4 w-4 text-crimson" />
+                Admin Credentials
+              </h3>
+              <div className="text-xs text-white/50 space-y-1">
+                <p>Email: <span className="text-white font-mono">admin@educatedgamer.com</span></p>
+                <p>Password: <span className="text-white font-mono">Password123!</span></p>
+              </div>
+              <p className="text-yellow-400/70 text-xs">⚠ Credentials are hardcoded. Contact developer to change.</p>
+            </div>
+            <button
+              onClick={handleSaveSettings}
+              className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm transition-colors ${
+                savedSettings ? 'bg-green-500 text-white' : 'bg-crimson hover:bg-crimson/80 text-white'
+              }`}
+            >
+              {savedSettings ? <><Check className="h-4 w-4" /> Settings Saved!</> : <><Save className="h-4 w-4" /> Save Settings</>}
+            </button>
+          </div>
+        )}
       </main>
-
-      {/* CREATE TOURNAMENT MODAL */}
-      {showCreateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 backdrop-blur-md overflow-y-auto">
-          <div className="relative w-full max-w-2xl rounded-3xl border border-crimson/40 bg-surface-100 p-6 sm:p-8 shadow-2xl my-8">
-            <h3 className="text-xl font-black text-white uppercase font-display mb-4">Organize & Schedule New Tournament</h3>
-            
-            <form onSubmit={handleCreateTournament} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold uppercase text-slate-300 mb-1">Match Title *</label>
-                <input
-                  type="text"
-                  required
-                  value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
-                  placeholder="e.g. PAKISTAN CHAMPIONS CLASH #105"
-                  className="w-full rounded-xl border border-white/10 bg-surface-200 py-2.5 px-4 text-sm text-white"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div>
-                  <label className="block text-xs font-bold uppercase text-slate-300 mb-1">Game</label>
-                  <select
-                    value={newGame}
-                    onChange={(e) => setNewGame(e.target.value as any)}
-                    className="w-full rounded-xl border border-white/10 bg-surface-200 py-2.5 px-3 text-xs text-white"
-                  >
-                    <option value="Free Fire MAX">Free Fire MAX</option>
-                    <option value="Free Fire">Free Fire</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold uppercase text-slate-300 mb-1">Type</label>
-                  <select
-                    value={newType}
-                    onChange={(e) => setNewType(e.target.value as any)}
-                    className="w-full rounded-xl border border-white/10 bg-surface-200 py-2.5 px-3 text-xs text-white"
-                  >
-                    <option value="Squad">Squad</option>
-                    <option value="Solo">Solo</option>
-                    <option value="Duo">Duo</option>
-                    <option value="Clash Squad">Clash Squad</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold uppercase text-slate-300 mb-1">Map</label>
-                  <select
-                    value={newMap}
-                    onChange={(e) => setNewMap(e.target.value as any)}
-                    className="w-full rounded-xl border border-white/10 bg-surface-200 py-2.5 px-3 text-xs text-white"
-                  >
-                    <option value="Bermuda">Bermuda</option>
-                    <option value="Purgatory">Purgatory</option>
-                    <option value="Kalahari">Kalahari</option>
-                    <option value="Nexterra">Nexterra</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold uppercase text-slate-300 mb-1">Total Seats</label>
-                  <input
-                    type="number"
-                    value={newSlots}
-                    onChange={(e) => setNewSlots(Number(e.target.value))}
-                    className="w-full rounded-xl border border-white/10 bg-surface-200 py-2.5 px-3 text-xs text-white"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div>
-                  <label className="block text-xs font-bold uppercase text-neon-gold mb-1">Prize Pool (PKR)</label>
-                  <input
-                    type="number"
-                    value={newPrize}
-                    onChange={(e) => setNewPrize(Number(e.target.value))}
-                    className="w-full rounded-xl border border-white/10 bg-surface-200 py-2.5 px-3 text-xs text-white"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold uppercase text-neon-gold mb-1">Booyah 1st Prize</label>
-                  <input
-                    type="number"
-                    value={newBooyah}
-                    onChange={(e) => setNewBooyah(Number(e.target.value))}
-                    className="w-full rounded-xl border border-white/10 bg-surface-200 py-2.5 px-3 text-xs text-white"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold uppercase text-crimson mb-1">Per Kill (PKR)</label>
-                  <input
-                    type="number"
-                    value={newPerKill}
-                    onChange={(e) => setNewPerKill(Number(e.target.value))}
-                    className="w-full rounded-xl border border-white/10 bg-surface-200 py-2.5 px-3 text-xs text-white"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold uppercase text-slate-300 mb-1">Entry Fee (0=Free)</label>
-                  <input
-                    type="number"
-                    value={newEntryFee}
-                    onChange={(e) => setNewEntryFee(Number(e.target.value))}
-                    className="w-full rounded-xl border border-white/10 bg-surface-200 py-2.5 px-3 text-xs text-white"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold uppercase text-slate-300 mb-1">Schedule Timing</label>
-                <input
-                  type="text"
-                  value={newStartTime}
-                  onChange={(e) => setNewStartTime(e.target.value)}
-                  placeholder="e.g. Tonight, 9:30 PM PST"
-                  className="w-full rounded-xl border border-white/10 bg-surface-200 py-2.5 px-4 text-xs text-white"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold uppercase text-slate-300 mb-1">YouTube Live Stream URL</label>
-                <input
-                  type="text"
-                  value={newLiveStreamUrl}
-                  onChange={(e) => setNewLiveStreamUrl(e.target.value)}
-                  className="w-full rounded-xl border border-white/10 bg-surface-200 py-2.5 px-4 text-xs font-mono text-white"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold uppercase text-slate-300 mb-1">
-                  Match Bullet Points / Instructions (One per line)
-                </label>
-                <textarea
-                  rows={3}
-                  value={newBulletPoints}
-                  onChange={(e) => setNewBulletPoints(e.target.value)}
-                  className="w-full rounded-xl border border-white/10 bg-surface-200 py-2.5 px-4 text-xs text-white resize-none font-sans"
-                />
-              </div>
-
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowCreateModal(false)}
-                  className="flex-1 rounded-xl bg-surface-200 py-3 text-xs font-bold text-slate-300"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 rounded-xl bg-crimson py-3 text-xs font-black uppercase text-white shadow-lg"
-                >
-                  Publish Tournament
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* EDIT ROOM / LIVE MODAL */}
-      {editingRoomIdTourney && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 backdrop-blur-md">
-          <div className="relative w-full max-w-md rounded-3xl border border-neon-gold/40 bg-surface-100 p-6 sm:p-8 shadow-2xl">
-            <h3 className="text-lg font-black text-white uppercase font-display mb-1">Publish Room ID & Live Stream</h3>
-            <p className="text-xs text-slate-400 mb-4">{editingRoomIdTourney.title}</p>
-            
-            <form onSubmit={handleSaveRoomId} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold uppercase text-slate-300 mb-1">Room ID</label>
-                <input
-                  type="text"
-                  required
-                  value={editRoomId}
-                  onChange={(e) => setEditRoomId(e.target.value)}
-                  placeholder="e.g. 9842109"
-                  className="w-full rounded-xl border border-white/10 bg-surface-200 py-2.5 px-4 text-sm font-mono text-white"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold uppercase text-slate-300 mb-1">Room Password</label>
-                <input
-                  type="text"
-                  required
-                  value={editRoomPass}
-                  onChange={(e) => setEditRoomPass(e.target.value)}
-                  placeholder="e.g. 777"
-                  className="w-full rounded-xl border border-white/10 bg-surface-200 py-2.5 px-4 text-sm font-mono text-white"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold uppercase text-slate-300 mb-1">YouTube Live Broadcast URL</label>
-                <input
-                  type="text"
-                  value={editLiveUrl}
-                  onChange={(e) => setEditLiveUrl(e.target.value)}
-                  placeholder="https://youtube.com/..."
-                  className="w-full rounded-xl border border-white/10 bg-surface-200 py-2.5 px-4 text-xs font-mono text-white"
-                />
-              </div>
-
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setEditingRoomIdTourney(null)}
-                  className="flex-1 rounded-xl bg-surface-200 py-3 text-xs font-bold text-slate-300"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 rounded-xl bg-neon-gold py-3 text-xs font-black uppercase text-black shadow-lg"
-                >
-                  Save & Publish
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* COMPLETE MATCH & WINNER MODAL */}
-      {completingTourney && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 backdrop-blur-md">
-          <div className="relative w-full max-w-md rounded-3xl border border-emerald-500/40 bg-surface-100 p-6 sm:p-8 shadow-2xl">
-            <h3 className="text-lg font-black text-white uppercase font-display mb-1">Record Match Winner & Payout</h3>
-            <p className="text-xs text-slate-400 mb-4">{completingTourney.title}</p>
-            
-            <form onSubmit={handleCompleteTournamentSubmit} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold uppercase text-slate-300 mb-1">Winner Player Name / IGN *</label>
-                <input
-                  type="text"
-                  required
-                  value={winnerName}
-                  onChange={(e) => setWinnerName(e.target.value)}
-                  placeholder="e.g. PK_CYBORG_FF"
-                  className="w-full rounded-xl border border-white/10 bg-surface-200 py-2.5 px-4 text-sm text-white"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold uppercase text-neon-gold mb-1">Winner Free Fire UID *</label>
-                <input
-                  type="text"
-                  required
-                  value={winnerUid}
-                  onChange={(e) => setWinnerUid(e.target.value)}
-                  placeholder="e.g. 489201482"
-                  className="w-full rounded-xl border border-neon-gold/40 bg-surface-200 py-2.5 px-4 text-sm font-mono text-white"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold uppercase text-slate-300 mb-1">Kills</label>
-                  <input
-                    type="number"
-                    value={winnerKills}
-                    onChange={(e) => setWinnerKills(Number(e.target.value))}
-                    className="w-full rounded-xl border border-white/10 bg-surface-200 py-2.5 px-3 text-xs text-white"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold uppercase text-emerald-400 mb-1">Paid Cash (PKR)</label>
-                  <input
-                    type="number"
-                    value={winnerPrize}
-                    onChange={(e) => setWinnerPrize(Number(e.target.value))}
-                    className="w-full rounded-xl border border-emerald-500/40 bg-surface-200 py-2.5 px-3 text-xs text-white"
-                  />
-                </div>
-              </div>
-
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setCompletingTourney(null)}
-                  className="flex-1 rounded-xl bg-surface-200 py-3 text-xs font-bold text-slate-300"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 rounded-xl bg-emerald-500 hover:bg-emerald-600 py-3 text-xs font-black uppercase text-black shadow-lg"
-                >
-                  Confirm Winner
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       <Footer />
       <MobileBottomNav />
+
+      {/* ── CREATE TOURNAMENT MODAL ── */}
+      {showCreateModal && (
+        <Modal title="Create New Tournament" onClose={() => setShowCreateModal(false)}>
+          <TournamentFormFields />
+          <button
+            onClick={handleSaveTournament}
+            disabled={!tTitle}
+            className="mt-4 w-full bg-crimson hover:bg-crimson/80 disabled:opacity-40 text-white py-2.5 rounded-xl font-bold text-sm transition-colors"
+          >
+            Create Tournament
+          </button>
+        </Modal>
+      )}
+
+      {/* ── EDIT TOURNAMENT MODAL ── */}
+      {editingTourney && (
+        <Modal title={`Edit: ${editingTourney.title.slice(0, 30)}...`} onClose={() => setEditingTourney(null)}>
+          <TournamentFormFields />
+          <button
+            onClick={handleSaveTournament}
+            className="mt-4 w-full bg-blue-600 hover:bg-blue-500 text-white py-2.5 rounded-xl font-bold text-sm transition-colors"
+          >
+            Save Changes
+          </button>
+        </Modal>
+      )}
+
+      {/* ── SET ROOM ID MODAL ── */}
+      {editingRoomIdTourney && (
+        <Modal title="Set Room ID & Live Details" onClose={() => setEditingRoomIdTourney(null)}>
+          <div className="space-y-4">
+            <div>
+              <label className={labelClass}>Room ID</label>
+              <input className={inputClass} value={editRoomId} onChange={e => setEditRoomId(e.target.value)} placeholder="e.g. EG-984210" />
+            </div>
+            <div>
+              <label className={labelClass}>Room Password</label>
+              <input className={inputClass} value={editRoomPass} onChange={e => setEditRoomPass(e.target.value)} placeholder="e.g. 777" />
+            </div>
+            <div>
+              <label className={labelClass}>YouTube Live URL (optional)</label>
+              <input className={inputClass} value={editLiveUrl} onChange={e => setEditLiveUrl(e.target.value)} placeholder="https://youtube.com/live/..." />
+            </div>
+            <button
+              onClick={handleSaveRoomId}
+              className="w-full bg-yellow-600 hover:bg-yellow-500 text-white py-2.5 rounded-xl font-bold text-sm transition-colors"
+            >
+              <Key className="h-4 w-4 inline mr-2" />
+              Publish Room Credentials
+            </button>
+          </div>
+        </Modal>
+      )}
+
+      {/* ── SET WINNER MODAL ── */}
+      {completingTourney && (
+        <Modal title={`Set Winner: ${completingTourney.title.slice(0, 25)}...`} onClose={() => setCompletingTourney(null)}>
+          <div className="space-y-4">
+            <div>
+              <label className={labelClass}>Winner Name / IGN *</label>
+              <input className={inputClass} value={winnerName} onChange={e => setWinnerName(e.target.value)} placeholder="e.g. PK_CYBORG_FF" />
+            </div>
+            <div>
+              <label className={labelClass}>In-Game Name (IGN)</label>
+              <input className={inputClass} value={winnerIgn} onChange={e => setWinnerIgn(e.target.value)} placeholder="e.g. CYBORG_ESPORTS" />
+            </div>
+            <div>
+              <label className={labelClass}>Free Fire UID *</label>
+              <input className={inputClass} value={winnerUid} onChange={e => setWinnerUid(e.target.value)} placeholder="e.g. 489201482" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className={labelClass}>Total Kills</label>
+                <input type="number" className={inputClass} value={winnerKills} onChange={e => setWinnerKills(Number(e.target.value))} />
+              </div>
+              <div>
+                <label className={labelClass}>Prize (PKR)</label>
+                <input type="number" className={inputClass} value={winnerPrize} onChange={e => setWinnerPrize(Number(e.target.value))} />
+              </div>
+            </div>
+            <button
+              onClick={handleSetWinner}
+              disabled={!winnerName || !winnerUid}
+              className="w-full bg-neon-gold hover:bg-neon-gold/80 disabled:opacity-40 text-black font-bold py-2.5 rounded-xl text-sm transition-colors"
+            >
+              <Trophy className="h-4 w-4 inline mr-2" />
+              Confirm Winner & Update Leaderboard
+            </button>
+          </div>
+        </Modal>
+      )}
+
+      {/* ── LEADERBOARD PLAYER MODAL ── */}
+      {(editingPlayer || showAddPlayerModal) && (
+        <Modal
+          title={editingPlayer ? `Edit: ${editingPlayer.ign}` : 'Add Leaderboard Player'}
+          onClose={() => { setEditingPlayer(null); setShowAddPlayerModal(false); }}
+        >
+          <div className="space-y-3">
+            <div>
+              <label className={labelClass}>Full Name</label>
+              <input className={inputClass} value={lpName} onChange={e => setLpName(e.target.value)} placeholder="e.g. Hamza Khan" />
+            </div>
+            <div>
+              <label className={labelClass}>In-Game Name (IGN)</label>
+              <input className={inputClass} value={lpIgn} onChange={e => setLpIgn(e.target.value)} placeholder="e.g. PK_CYBORG_FF" />
+            </div>
+            <div>
+              <label className={labelClass}>Free Fire UID</label>
+              <input className={inputClass} value={lpUid} onChange={e => setLpUid(e.target.value)} placeholder="e.g. 489201482" />
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <label className={labelClass}>Earnings (PKR)</label>
+                <input type="number" className={inputClass} value={lpEarnings} onChange={e => setLpEarnings(Number(e.target.value))} />
+              </div>
+              <div>
+                <label className={labelClass}>Matches</label>
+                <input type="number" className={inputClass} value={lpMatches} onChange={e => setLpMatches(Number(e.target.value))} />
+              </div>
+              <div>
+                <label className={labelClass}>Total Kills</label>
+                <input type="number" className={inputClass} value={lpKills} onChange={e => setLpKills(Number(e.target.value))} />
+              </div>
+            </div>
+            <button
+              onClick={handleSavePlayer}
+              className="w-full bg-crimson hover:bg-crimson/80 text-white font-bold py-2.5 rounded-xl text-sm transition-colors"
+            >
+              <Save className="h-4 w-4 inline mr-2" />
+              {editingPlayer ? 'Save Changes' : 'Add to Leaderboard'}
+            </button>
+          </div>
+        </Modal>
+      )}
+
+      {/* ── RECEIPT FULL-SIZE MODAL ── */}
+      {inspectingReceipt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setInspectingReceipt(null)}>
+          <div className="absolute inset-0 bg-black/90 backdrop-blur-sm" />
+          <div className="relative max-w-sm w-full" onClick={e => e.stopPropagation()}>
+            <button
+              onClick={() => setInspectingReceipt(null)}
+              className="absolute -top-10 right-0 text-white/70 hover:text-white transition-colors"
+            >
+              <X className="h-6 w-6" />
+            </button>
+            <div className="bg-surface-200 border border-white/10 rounded-2xl overflow-hidden">
+              <div className="p-3 border-b border-white/10">
+                <p className="text-white text-sm font-medium">{inspectingReceipt.user}</p>
+                <p className="text-white/40 text-xs">PKR {inspectingReceipt.amt} · {inspectingReceipt.method} · Trx: {inspectingReceipt.trxId}</p>
+              </div>
+              <img
+                src={inspectingReceipt.proofUrl}
+                alt="Deposit Receipt"
+                className="w-full object-contain max-h-[70vh]"
+              />
+              <div className="p-3 flex gap-2">
+                <button
+                  onClick={() => { approveDeposit(inspectingReceipt.id); setInspectingReceipt(null); }}
+                  className="flex-1 bg-green-500/20 hover:bg-green-500/30 text-green-400 py-2 rounded-lg text-sm font-medium transition-colors"
+                >
+                  ✓ Approve
+                </button>
+                <button
+                  onClick={() => { rejectDeposit(inspectingReceipt.id); setInspectingReceipt(null); }}
+                  className="flex-1 bg-red-500/20 hover:bg-red-500/30 text-red-400 py-2 rounded-lg text-sm font-medium transition-colors"
+                >
+                  ✕ Reject
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

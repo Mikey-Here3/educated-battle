@@ -8,10 +8,11 @@ import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { JoinTournamentModal } from '@/components/modals/JoinTournamentModal';
 import { RoomDetailsModal } from '@/components/modals/RoomDetailsModal';
 import { TournamentDetailModal } from '@/components/modals/TournamentDetailModal';
-import { INITIAL_TOURNAMENTS, Tournament } from '@/data/mockData';
+import { useTournaments } from '@/context/TournamentContext';
+import { Tournament } from '@/data/mockData';
 
 export default function MatchesPage() {
-  const [tournaments, setTournaments] = useState<Tournament[]>(INITIAL_TOURNAMENTS);
+  const { tournaments } = useTournaments();
 
   const [activeJoinTournament, setActiveJoinTournament] = useState<Tournament | null>(null);
   const [activeRoomDetailsTournament, setActiveRoomDetailsTournament] = useState<Tournament | null>(null);

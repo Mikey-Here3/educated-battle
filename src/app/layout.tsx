@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter, Outfit } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/context/AuthContext';
+import { TournamentProvider } from '@/context/TournamentContext';
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -37,7 +38,9 @@ export default function RootLayout({
     <html lang="en" className={`${inter.variable} ${outfit.variable} dark scroll-smooth`}>
       <body className="bg-background text-slate-100 antialiased selection:bg-crimson/30 selection:text-crimson-light min-h-screen flex flex-col">
         <AuthProvider>
-          {children}
+          <TournamentProvider>
+            {children}
+          </TournamentProvider>
         </AuthProvider>
       </body>
     </html>
