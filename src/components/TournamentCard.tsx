@@ -55,13 +55,18 @@ export const TournamentCard: React.FC<TournamentCardProps> = ({
               <MapPin className="h-3 w-3 text-slate-400" />
               <span>{tournament.map}</span>
             </span>
+            {tournament.mapCode && (
+              <span className="rounded-lg bg-amber-500/20 px-2.5 py-1 text-[11px] font-mono text-amber-400 border border-amber-500/40">
+                Code: {tournament.mapCode}
+              </span>
+            )}
           </div>
 
           {/* Live / Status Indicator */}
           {isLive ? (
-            <span className="flex items-center space-x-1.5 rounded-lg bg-crimson/20 border border-crimson px-2.5 py-1 text-[11px] font-black text-crimson uppercase animate-pulse shadow-[0_0_15px_rgba(255,0,60,0.4)]">
-              <span className="h-2 w-2 rounded-full bg-crimson animate-ping" />
-              <span>?? LIVE MATCH</span>
+            <span className="flex items-center space-x-1.5 rounded-lg bg-primary/20 border border-primary px-2.5 py-1 text-[11px] font-black text-primary uppercase animate-pulse shadow-[0_0_15px_rgba(14,165,233,0.4)]">
+              <span className="h-2 w-2 rounded-full bg-primary animate-ping" />
+              <span>LIVE MATCH</span>
             </span>
           ) : isCompleted ? (
             <span className="flex items-center space-x-1 rounded-lg bg-emerald-500/20 px-2.5 py-1 text-[11px] font-black text-emerald-400 border border-emerald-500/40">
@@ -70,11 +75,11 @@ export const TournamentCard: React.FC<TournamentCardProps> = ({
             </span>
           ) : isSpecial ? (
             <span className="flex items-center space-x-1 rounded-lg bg-neon-gold/20 px-2.5 py-1 text-[11px] font-black text-neon-gold border border-neon-gold/50">
-              <span>? MAJOR EVENT</span>
+              <span>MAJOR EVENT</span>
             </span>
           ) : (
             <span className="flex items-center space-x-1 rounded-lg bg-surface-300 px-2.5 py-1 text-[11px] font-semibold text-slate-300">
-              <Clock className="h-3 w-3 text-crimson" />
+              <Clock className="h-3 w-3 text-primary" />
               <span>{tournament.startTime}</span>
             </span>
           )}
@@ -84,7 +89,7 @@ export const TournamentCard: React.FC<TournamentCardProps> = ({
         {/* Tournament Title */}
         <h3 
           onClick={() => onViewDetails(tournament)}
-          className="text-lg sm:text-xl font-black text-white font-display uppercase tracking-wide group-hover:text-neon-gold transition-colors cursor-pointer line-clamp-1"
+          className="text-lg sm:text-xl font-black text-white font-display uppercase tracking-wide group-hover:text-primary transition-colors cursor-pointer line-clamp-1"
         >
           {tournament.title}
         </h3>
@@ -94,7 +99,7 @@ export const TournamentCard: React.FC<TournamentCardProps> = ({
           <div className="mt-2.5 space-y-1">
             {tournament.bulletPoints.slice(0, 2).map((bp, idx) => (
               <p key={idx} className="text-xs text-slate-300 flex items-start space-x-1.5">
-                <span className="text-crimson font-black">?</span>
+                <span className="text-primary font-black">•</span>
                 <span className="line-clamp-1">{bp}</span>
               </p>
             ))}
@@ -111,9 +116,9 @@ export const TournamentCard: React.FC<TournamentCardProps> = ({
               <Trophy className="h-5 w-5 animate-bounce" />
             </div>
             <div>
-              <span className="text-[10px] font-black uppercase text-neon-gold tracking-wider">?? BOOYAH CHAMPION</span>
+              <span className="text-[10px] font-black uppercase text-neon-gold tracking-wider">★ BOOYAH CHAMPION</span>
               <p className="text-sm font-black text-white">{tournament.winner.name}</p>
-              <p className="text-[10px] font-mono text-slate-300">FF UID: {tournament.winner.uid} ? {tournament.winner.kills} Kills</p>
+              <p className="text-[10px] font-mono text-slate-300">FF UID: {tournament.winner.uid} • {tournament.winner.kills} Kills</p>
             </div>
           </div>
           <div className="text-right">

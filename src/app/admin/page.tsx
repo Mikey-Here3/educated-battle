@@ -44,6 +44,30 @@ import {
   Users,
 } from 'lucide-react';
 
+interface ModalProps {
+  title: string;
+  onClose: () => void;
+  children: React.ReactNode;
+}
+
+const Modal: React.FC<ModalProps> = ({ title, onClose, children }) => (
+  <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
+    <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
+    <div
+      className="relative bg-surface-200 border border-white/10 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl"
+      onClick={e => e.stopPropagation()}
+    >
+      <div className="flex items-center justify-between p-5 border-b border-white/10">
+        <h3 className="text-white font-bold text-lg">{title}</h3>
+        <button onClick={onClose} className="text-white/50 hover:text-white transition-colors">
+          <X className="h-5 w-5" />
+        </button>
+      </div>
+      <div className="p-5">{children}</div>
+    </div>
+  </div>
+);
+
 export default function AdminPortalPage() {
   const router = useRouter();
   const { currentUser, contactQueries } = useAuth();
@@ -99,7 +123,8 @@ export default function AdminPortalPage() {
   const [tTitle, setTTitle] = useState('');
   const [tGame, setTGame] = useState<'Free Fire' | 'Free Fire MAX'>('Free Fire MAX');
   const [tType, setTType] = useState<'Solo' | 'Duo' | 'Squad' | 'Clash Squad'>('Squad');
-  const [tMap, setTMap] = useState<'Bermuda' | 'Purgatory' | 'Kalahari' | 'Nexterra'>('Bermuda');
+  const [tMap, setTMap] = useState<'Bermuda' | 'Purgatory' | 'Kalahari' | 'Nexterra' | 'Solara' | 'Custom/Craftland'>('Bermuda');
+  const [tMapCode, setTMapCode] = useState('');
   const [tStatus, setTStatus] = useState<'upcoming' | 'live' | 'completed' | 'special'>('upcoming');
   const [tPrize, setTPrize] = useState(15000);
   const [tBooyah, setTBooyah] = useState(8000);
@@ -109,7 +134,9 @@ export default function AdminPortalPage() {
   const [tSlots, setTSlots] = useState(48);
   const [tStartTime, setTStartTime] = useState('Today, 9:00 PM PST');
   const [tLiveUrl, setTLiveUrl] = useState('https://www.youtube.com/channel/UCNCXkynVdk3Xt2MHjMwHXaw');
-  const [tBullets, setTBullets] = useState('?? Official YouTube Live Broadcast\nMobile devices only (No Emulators)\nBooyah & Kill rewards paid via JazzCash');
+  const [tBullets, setTBullets] = useState(
+    '?? Official YouTube Live Broadcast\nMobile devices only (No Emulators)\nBooyah & Kill rewards paid via JazzCash'
+  );
 
   // Room ID / Pass form
   const [editRoomId, setEditRoomId] = useState('');
@@ -141,6 +168,7 @@ export default function AdminPortalPage() {
   // helpers
   const resetTournamentForm = () => {
     setTTitle(''); setTGame('Free Fire MAX'); setTType('Squad'); setTMap('Bermuda');
+    setTMapCode('');
     setTStatus('upcoming'); setTPrize(15000); setTBooyah(8000); setTHasPerKill(true);
     setTPerKill(50); setTEntryFee(100); setTSlots(48);
     setTStartTime('Today, 9:00 PM PST');
@@ -151,6 +179,7 @@ export default function AdminPortalPage() {
   const openEditTourney = (t: Tournament) => {
     setEditingTourney(t);
     setTTitle(t.title); setTGame(t.game); setTType(t.type); setTMap(t.map);
+    setTMapCode(t.mapCode || '');
     setTStatus(t.status); setTPrize(t.prizePool); setTBooyah(t.booyahPrize);
     setTHasPerKill(t.hasPerKill); setTPerKill(t.perKill); setTEntryFee(t.entryFee);
     setTSlots(t.totalSlots); setTStartTime(t.startTime);
@@ -164,6 +193,7 @@ export default function AdminPortalPage() {
       game: tGame,
       type: tType,
       map: tMap,
+      mapCode: tMap === 'Custom/Craftland' ? tMapCode : undefined,
       status: tStatus,
       prizePool: tPrize,
       booyahPrize: tBooyah,
@@ -269,25 +299,8 @@ export default function AdminPortalPage() {
   const labelClass = "block text-white/60 text-xs mb-1";
   const selectClass = inputClass + " cursor-pointer";
 
-  const Modal = ({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) => (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
-      <div
-        className="relative bg-surface-200 border border-white/10 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl"
-        onClick={e => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between p-5 border-b border-white/10">
-          <h3 className="text-white font-bold text-lg">{title}</h3>
-          <button onClick={onClose} className="text-white/50 hover:text-white transition-colors">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-        <div className="p-5">{children}</div>
-      </div>
-    </div>
-  );
-
-  const TournamentFormFields = () => (
+  // ── Plain function (NOT a React component) to avoid remounting on every keystroke ──
+  const renderTournamentForm = () => (
     <div className="space-y-3">
       <div>
         <label className={labelClass}>Tournament Title *</label>
@@ -312,7 +325,12 @@ export default function AdminPortalPage() {
         <div>
           <label className={labelClass}>Map</label>
           <select className={selectClass} value={tMap} onChange={e => setTMap(e.target.value as typeof tMap)}>
-            <option>Bermuda</option><option>Purgatory</option><option>Kalahari</option><option>Nexterra</option>
+            <option>Bermuda</option>
+            <option>Purgatory</option>
+            <option>Kalahari</option>
+            <option>Nexterra</option>
+            <option>Solara</option>
+            <option>Custom/Craftland</option>
           </select>
         </div>
         <div>
@@ -325,13 +343,20 @@ export default function AdminPortalPage() {
           </select>
         </div>
       </div>
+      {/* Custom/Craftland Map Code field */}
+      {tMap === 'Custom/Craftland' && (
+        <div>
+          <label className={labelClass}>Craftland Map Code (players will see this)</label>
+          <input className={inputClass} value={tMapCode} onChange={e => setTMapCode(e.target.value)} placeholder="e.g. CRAFT-ABC123" />
+        </div>
+      )}
       <div className="grid grid-cols-3 gap-3">
         <div>
-          <label className={labelClass}>Prize Pool (PKR)</label>
+          <label className={labelClass}>Overall Prize Pool (PKR)</label>
           <input type="number" className={inputClass} value={tPrize} onChange={e => setTPrize(Number(e.target.value))} />
         </div>
         <div>
-          <label className={labelClass}>Booyah Prize (PKR)</label>
+          <label className={labelClass}>Booyah 1st Place (PKR)</label>
           <input type="number" className={inputClass} value={tBooyah} onChange={e => setTBooyah(Number(e.target.value))} />
         </div>
         <div>
@@ -341,11 +366,11 @@ export default function AdminPortalPage() {
       </div>
       <div className="grid grid-cols-3 gap-3">
         <div>
-          <label className={labelClass}>Per Kill (PKR)</label>
+          <label className={labelClass}>Per Kill Bonus (PKR)</label>
           <input type="number" className={inputClass} value={tPerKill} onChange={e => setTPerKill(Number(e.target.value))} />
         </div>
         <div>
-          <label className={labelClass}>Has Per Kill</label>
+          <label className={labelClass}>Has Per Kill?</label>
           <select className={selectClass} value={tHasPerKill ? 'yes' : 'no'} onChange={e => setTHasPerKill(e.target.value === 'yes')}>
             <option value="yes">Yes</option><option value="no">No</option>
           </select>
@@ -824,7 +849,7 @@ export default function AdminPortalPage() {
       {/* ── CREATE TOURNAMENT MODAL ── */}
       {showCreateModal && (
         <Modal title="Create New Tournament" onClose={() => setShowCreateModal(false)}>
-          <TournamentFormFields />
+          {renderTournamentForm()}
           <button
             onClick={handleSaveTournament}
             disabled={!tTitle}
@@ -838,7 +863,7 @@ export default function AdminPortalPage() {
       {/* ── EDIT TOURNAMENT MODAL ── */}
       {editingTourney && (
         <Modal title={`Edit: ${editingTourney.title.slice(0, 30)}...`} onClose={() => setEditingTourney(null)}>
-          <TournamentFormFields />
+          {renderTournamentForm()}
           <button
             onClick={handleSaveTournament}
             className="mt-4 w-full bg-blue-600 hover:bg-blue-500 text-white py-2.5 rounded-xl font-bold text-sm transition-colors"

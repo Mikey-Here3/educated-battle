@@ -79,9 +79,32 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       if (savedWithdrawals) {
         setWithdrawals(JSON.parse(savedWithdrawals));
       }
+
+      // Leaderboard: load saved OR seed bots fresh
       const savedLeaderboard = localStorage.getItem('eg_leaderboard_list');
+      const botSeedDate = localStorage.getItem('eg_bot_seed_date');
+      const now = Date.now();
+      const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
       if (savedLeaderboard) {
-        setLeaderboard(JSON.parse(savedLeaderboard));
+        let board = JSON.parse(savedLeaderboard) as typeof MOCK_LEADERBOARD;
+        // If 1 week has passed, randomise bot earnings (1–1000 PKR each)
+        if (botSeedDate && now - parseInt(botSeedDate, 10) > ONE_WEEK_MS) {
+          board = board.map(p =>
+            p.isBot
+              ? { ...p, earningsPKR: Math.floor(Math.random() * 1000) + 1 }
+              : p
+          );
+          board.sort((a, b) => b.earningsPKR - a.earningsPKR);
+          board = board.map((p, i) => ({ ...p, rank: i + 1 }));
+          localStorage.setItem('eg_leaderboard_list', JSON.stringify(board));
+          localStorage.setItem('eg_bot_seed_date', String(now));
+        }
+        setLeaderboard(board);
+      } else {
+        // First time: persist initial bots and record seed date
+        localStorage.setItem('eg_leaderboard_list', JSON.stringify(MOCK_LEADERBOARD));
+        localStorage.setItem('eg_bot_seed_date', String(now));
       }
     } catch {}
   }, []);

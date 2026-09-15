@@ -46,9 +46,14 @@ export const TournamentDetailModal: React.FC<TournamentDetailModalProps> = ({
             {tournament.game}
           </span>
           <span className="flex items-center space-x-1 rounded-lg bg-surface-300 px-3 py-1 text-xs font-bold text-slate-300">
-            <MapPin className="h-3 w-3 text-slate-400" />
+            <MapPin className="h-3 w-3" />
             <span>{tournament.map}</span>
           </span>
+          {tournament.mapCode && (
+            <span className="flex items-center space-x-1 rounded-md bg-amber-500/20 px-2 py-0.5 text-[11px] font-mono text-amber-400 border border-amber-500/40">
+              <span>Code: {tournament.mapCode}</span>
+            </span>
+          )}
         </div>
 
         <h2 className="text-2xl sm:text-3xl font-black text-white uppercase font-display tracking-wide">
@@ -64,9 +69,9 @@ export const TournamentDetailModal: React.FC<TournamentDetailModalProps> = ({
                 <Trophy className="h-6 w-6" />
               </div>
               <div>
-                <span className="text-[10px] font-black uppercase text-neon-gold tracking-wider">?? BOOYAH WINNER</span>
+                <span className="text-[10px] font-black uppercase text-neon-gold tracking-wider">★ BOOYAH WINNER</span>
                 <p className="text-base font-black text-white">{tournament.winner.name}</p>
-                <p className="text-xs font-mono text-slate-300">FF UID: {tournament.winner.uid} ? Total Kills: {tournament.winner.kills}</p>
+                <p className="text-xs font-mono text-slate-300">FF UID: {tournament.winner.uid} • Total Kills: {tournament.winner.kills}</p>
               </div>
             </div>
             <div className="text-right">
@@ -107,7 +112,7 @@ export const TournamentDetailModal: React.FC<TournamentDetailModalProps> = ({
             {tournament.bulletPoints && tournament.bulletPoints.length > 0 ? (
               tournament.bulletPoints.map((bp, i) => (
                 <div key={i} className="flex items-start space-x-2 text-xs text-slate-200">
-                  <span className="text-crimson font-black text-sm leading-none">?</span>
+                  <span className="text-primary font-black text-sm leading-none">•</span>
                   <span>{bp}</span>
                 </div>
               ))

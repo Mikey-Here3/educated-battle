@@ -2,71 +2,126 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Theme CSS Variables (defaults: Electric Blue) ── */
 :root {
   --font-inter: 'Inter', system-ui, sans-serif;
   --font-outfit: 'Outfit', 'Montserrat', sans-serif;
+  --color-primary: #0ea5e9;
+  --color-primary-rgb: 14, 165, 233;
+  --color-secondary: #0369a1;
+  --color-glow: rgba(14, 165, 233, 0.45);
 }
 
 body {
   color: #e2e8f0;
-  background-color: #070406;
-  background-image: 
-    radial-gradient(ellipse 80% 80% at 50% -20%, rgba(255, 0, 60, 0.22), rgba(7, 4, 6, 0)),
-    radial-gradient(circle at 100% 60%, rgba(255, 215, 0, 0.05), transparent 40%);
+  background-color: #060810;
+  background-image:
+    radial-gradient(ellipse 80% 70% at 50% -20%, rgba(var(--color-primary-rgb), 0.18), rgba(6, 8, 16, 0)),
+    radial-gradient(circle at 100% 60%, rgba(255, 215, 0, 0.04), transparent 40%);
   background-attachment: fixed;
   font-family: var(--font-inter);
   overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
 }
 
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-}
-::-webkit-scrollbar-track {
-  background: #070406;
-}
+/* ── Custom Scrollbar ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #060810; }
 ::-webkit-scrollbar-thumb {
-  background: #321629;
+  background: rgba(var(--color-primary-rgb), 0.35);
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #ff003c;
+  background: var(--color-primary);
 }
 
-/* Neon & Glass Utilities */
-.neon-glow-purple, .neon-glow-crimson {
-  text-shadow: 0 0 14px rgba(255, 0, 60, 0.8), 0 0 28px rgba(255, 0, 60, 0.5);
+/* ── Theme-aware Glow / Glass Utilities ── */
+.neon-glow-primary {
+  text-shadow: 0 0 14px rgba(var(--color-primary-rgb), 0.8),
+               0 0 28px rgba(var(--color-primary-rgb), 0.4);
 }
+/* legacy aliases */
+.neon-glow-purple,
+.neon-glow-crimson { @apply neon-glow-primary; }
 
-.box-glow-purple, .box-glow-crimson {
-  box-shadow: 0 0 30px rgba(255, 0, 60, 0.3), inset 0 0 15px rgba(255, 0, 60, 0.15);
+.box-glow-primary {
+  box-shadow: 0 0 30px rgba(var(--color-primary-rgb), 0.3),
+              inset 0 0 15px rgba(var(--color-primary-rgb), 0.1);
 }
+.box-glow-purple,
+.box-glow-crimson { @apply box-glow-primary; }
 
 .card-glass {
-  background: rgba(24, 11, 19, 0.85);
+  background: rgba(8, 12, 22, 0.85);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 0, 60, 0.25);
+  border: 1px solid rgba(var(--color-primary-rgb), 0.18);
 }
 
 .card-glass-hover {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .card-glass-hover:hover {
-  background: rgba(36, 16, 29, 0.9);
-  border-color: rgba(255, 0, 60, 0.65);
+  background: rgba(12, 18, 34, 0.92);
+  border-color: rgba(var(--color-primary-rgb), 0.55);
   transform: translateY(-3px);
-  box-shadow: 0 12px 35px rgba(255, 0, 60, 0.3);
+  box-shadow: 0 14px 38px rgba(var(--color-primary-rgb), 0.22);
 }
 
 .cyber-badge {
-  background: linear-gradient(135deg, rgba(255, 0, 60, 0.25) 0%, rgba(255, 215, 0, 0.1) 100%);
-  border: 1px solid rgba(255, 0, 60, 0.45);
+  background: linear-gradient(135deg, rgba(var(--color-primary-rgb), 0.22) 0%, rgba(255, 215, 0, 0.08) 100%);
+  border: 1px solid rgba(var(--color-primary-rgb), 0.4);
   backdrop-filter: blur(4px);
 }
 
 .badge-live {
-  background: rgba(255, 0, 60, 0.25);
-  border: 1px solid rgba(255, 0, 60, 0.7);
-  box-shadow: 0 0 15px rgba(255, 0, 60, 0.5);
+  background: rgba(var(--color-primary-rgb), 0.22);
+  border: 1px solid rgba(var(--color-primary-rgb), 0.65);
+  box-shadow: 0 0 15px rgba(var(--color-primary-rgb), 0.45);
+}
+
+/* ── Smooth Animations ── */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 12px rgba(var(--color-primary-rgb), 0.4); }
+  50%       { box-shadow: 0 0 28px rgba(var(--color-primary-rgb), 0.75); }
+}
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-fade-in-up { animation: fadeInUp 0.45s ease both; }
+.animate-fade-in    { animation: fadeIn 0.3s ease both; }
+.animate-slide-right { animation: slideInRight 0.4s ease both; }
+.animate-pulse-glow { animation: pulseGlow 2s ease-in-out infinite; }
+
+/* ── Touch / Mobile Improvements ── */
+button, a {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* Minimum touch target 44px on mobile */
+@media (max-width: 768px) {
+  button, [role="button"] { min-height: 40px; }
+}
+
+/* Safe area bottom padding for notch phones */
+.pb-safe {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+.mb-safe {
+  margin-bottom: max(1rem, env(safe-area-inset-bottom));
 }

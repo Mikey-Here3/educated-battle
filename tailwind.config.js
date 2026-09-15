@@ -9,12 +9,16 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        background: "#070406",
+        background: "#060810",
+        // Theme-driven primary (uses CSS var)
+        primary: 'var(--color-primary)',
+        secondary: 'var(--color-secondary)',
+        // Legacy crimson kept for backward compat
         surface: {
-          100: "#0e080d",
-          200: "#180b13",
-          300: "#24101d",
-          400: "#321629",
+          100: "#080c16",
+          200: "#0e1424",
+          300: "#141d32",
+          400: "#1c2840",
         },
         crimson: {
           DEFAULT: "#ff003c",
@@ -24,17 +28,17 @@ module.exports = {
           glow: "rgba(255, 0, 60, 0.5)",
         },
         neon: {
-          purple: "#ff003c", // Red override
-          "purple-light": "#ff335c",
-          "purple-dark": "#b3002a",
+          purple: "var(--color-primary)",
+          "purple-light": "var(--color-primary)",
+          "purple-dark": "var(--color-secondary)",
           cyan: "#00f0ff",
           gold: "#ffd700",
-          fire: "#ff003c",
+          fire: "#ff6b00",
           green: "#00ff88",
         },
         border: {
-          glass: "rgba(255, 0, 60, 0.25)",
-          "glass-hover": "rgba(255, 0, 60, 0.6)",
+          glass: "rgba(var(--color-primary-rgb), 0.2)",
+          "glass-hover": "rgba(var(--color-primary-rgb), 0.55)",
         }
       },
       fontFamily: {
@@ -42,18 +46,24 @@ module.exports = {
         sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
-        'neon-purple': '0 0 30px rgba(255, 0, 60, 0.45)',
+        'neon-primary': '0 0 30px var(--color-glow)',
+        'neon-purple': '0 0 30px var(--color-glow)',
         'neon-crimson': '0 0 35px rgba(255, 0, 60, 0.55)',
         'neon-cyan': '0 0 25px rgba(0, 240, 255, 0.35)',
         'neon-gold': '0 0 25px rgba(255, 215, 0, 0.35)',
-        'card-glow': '0 8px 32px 0 rgba(255, 0, 60, 0.2)',
+        'card-glow': '0 8px 32px 0 rgba(var(--color-primary-rgb), 0.18)',
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-        'esports-hero': 'radial-gradient(ellipse 80% 80% at 50% -20%, rgba(255, 0, 60, 0.25), rgba(7, 4, 6, 0))',
-        'card-gradient': 'linear-gradient(135deg, rgba(24, 11, 19, 0.85) 0%, rgba(14, 8, 13, 0.95) 100%)',
-        'metallic-crimson': 'linear-gradient(180deg, rgba(255, 0, 60, 0.25) 0%, rgba(179, 0, 42, 0.05) 100%)',
-      }
+        'esports-hero': 'radial-gradient(ellipse 80% 80% at 50% -20%, rgba(var(--color-primary-rgb), 0.22), rgba(6, 8, 16, 0))',
+        'card-gradient': 'linear-gradient(135deg, rgba(8, 12, 22, 0.85) 0%, rgba(6, 8, 16, 0.95) 100%)',
+      },
+      animation: {
+        'fade-in-up': 'fadeInUp 0.45s ease both',
+        'fade-in': 'fadeIn 0.3s ease both',
+        'slide-right': 'slideInRight 0.4s ease both',
+        'pulse-glow': 'pulseGlow 2s ease-in-out infinite',
+      },
     },
   },
   plugins: [],

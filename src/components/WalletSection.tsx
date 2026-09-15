@@ -215,17 +215,17 @@ export const WalletSection: React.FC<WalletSectionProps> = () => {
                 </div>
                 <div>
                   <h3 className="text-lg font-black text-white uppercase font-display flex items-center space-x-2">
-                    <span>DEPOSIT OFFER ??</span>
+                    <span>10% Extra Deposit Bonus</span>
                   </h3>
                   <p className="text-xs text-slate-300 font-medium mt-0.5">
-                    ?? 10% EXTRA Deposit Bonus LIVE ? Minimum 100 Deposit
+                    10% Extra Bonus Coins Live • Minimum PKR 100 Deposit
                   </p>
                   
                   <div className="flex items-center space-x-3 mt-2">
                     <span className="rounded-md bg-surface-300 px-2 py-0.5 text-[10px] font-bold text-slate-300">
-                      Min ?? 100
+                      Min PKR 100
                     </span>
-                    <span className="rounded-md bg-crimson/20 px-2 py-0.5 text-[10px] font-bold text-crimson border border-crimson/30 flex items-center space-x-1">
+                    <span className="rounded-md bg-primary/20 px-2 py-0.5 text-[10px] font-bold text-primary border border-primary/30 flex items-center space-x-1">
                       <Clock className="h-3 w-3" />
                       <span>Active Offer</span>
                     </span>
@@ -249,7 +249,7 @@ export const WalletSection: React.FC<WalletSectionProps> = () => {
                 onClick={() => setPaymentMethod('jazzcash')}
                 className={`rounded-2xl border p-5 text-left transition-all duration-300 ${
                   paymentMethod === 'jazzcash'
-                    ? 'border-crimson bg-surface-200 shadow-[0_0_25px_rgba(255,0,60,0.35)] ring-2 ring-crimson/50'
+                    ? 'border-primary bg-surface-200 shadow-[0_0_25px_rgba(14,165,233,0.3)] ring-2 ring-primary/50'
                     : 'border-white/10 bg-surface-100/60 hover:bg-surface-200'
                 }`}
               >
@@ -260,7 +260,7 @@ export const WalletSection: React.FC<WalletSectionProps> = () => {
                     <span>ACTIVE</span>
                   </span>
                 </div>
-                <p className="text-xs text-slate-300 font-mono mt-1">{jazzCashNumber} ? {jazzCashName}</p>
+                <p className="text-xs text-slate-300 font-mono mt-1">{jazzCashNumber} • {jazzCashName}</p>
               </button>
 
               {/* Easypaisa Option Card (DISABLED) */}
@@ -274,7 +274,7 @@ export const WalletSection: React.FC<WalletSectionProps> = () => {
                     <span>IN PROCESS</span>
                   </span>
                 </div>
-                <p className="text-xs text-slate-500 font-mono mt-1">Temporarily Under Maintenance ? Use JazzCash</p>
+                <p className="text-xs text-slate-500 font-mono mt-1">Temporarily Under Maintenance • Use JazzCash</p>
               </div>
 
             </div>

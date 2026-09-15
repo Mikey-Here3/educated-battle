@@ -12,12 +12,12 @@ export interface Tournament {
   title: string;
   game: 'Free Fire' | 'Free Fire MAX';
   type: 'Solo' | 'Duo' | 'Squad' | 'Clash Squad';
-  map: 'Bermuda' | 'Purgatory' | 'Kalahari' | 'Nexterra';
+  map: 'Bermuda' | 'Purgatory' | 'Kalahari' | 'Nexterra' | 'Solara' | 'Custom/Craftland';
   status: 'live' | 'upcoming' | 'completed' | 'special';
-  prizePool: number; // PKR
-  perKill: number; // PKR
+  prizePool: number; // PKR — Overall prize pool
+  perKill: number; // PKR — Per kill bonus amount
   hasPerKill: boolean;
-  booyahPrize: number;
+  booyahPrize: number; // PKR — 1st place Booyah prize
   entryFee: number; // PKR (0 = Free)
   slotsFilled: number;
   totalSlots: number;
@@ -31,6 +31,7 @@ export interface Tournament {
   description?: string;
   bulletPoints?: string[];
   winner?: TournamentWinner;
+  mapCode?: string; // For Custom/Craftland maps
   prizes: {
     first: number;
     second: number;
@@ -51,6 +52,7 @@ export interface PlayerRank {
   totalKills: number;
   winRate: number;
   badge: string;
+  isBot?: boolean; // marks demo/promotional entries
 }
 
 export interface PromoBanner {
@@ -94,10 +96,10 @@ export const INITIAL_TOURNAMENTS: Tournament[] = [
     liveStreamUrl: 'https://www.youtube.com/channel/UCNCXkynVdk3Xt2MHjMwHXaw',
     description: 'Premier 48-slot championship match featuring top squads across Pakistan.',
     bulletPoints: [
-      '?? Live official YouTube shoutcasting & spectator broadcast.',
-      'Mobile devices strictly verified (Zero emulators permitted).',
-      'Booyah payout: PKR 8,000 + PKR 50 per kill distributed instantly.',
-      'Room ID & Password available only to verified registered squads.'
+      '• Official YouTube Live shoutcasting & spectator broadcast.',
+      '• Mobile devices strictly verified (Zero emulators permitted).',
+      '• Booyah payout: PKR 8,000 + PKR 50 per kill distributed instantly.',
+      '• Room ID & Password available only to verified registered squads.'
     ],
     prizes: {
       first: 8000,
@@ -134,10 +136,10 @@ export const INITIAL_TOURNAMENTS: Tournament[] = [
     liveStreamUrl: 'https://www.youtube.com/channel/UCNCXkynVdk3Xt2MHjMwHXaw',
     description: 'High-speed Free Fire Solo battleground with zero entry fee and cash prizes.',
     bulletPoints: [
-      '?? FREE ENTRY tournament ? 48/48 Slots Full (Promotional Match).',
-      'PKR 2,500 Booyah cash prize + PKR 30 per verified kill.',
-      'Room credentials unlock 15 minutes before 8:00 PM PST.',
-      'Join with your registered Free Fire in-game UID.'
+      '• 100% FREE ENTRY tournament — 48/48 Slots Full (Promotional Match).',
+      '• PKR 2,500 Booyah cash prize + PKR 30 per verified kill.',
+      '• Room credentials unlock 15 minutes before 8:00 PM PST.',
+      '• Join with your registered Free Fire in-game UID.'
     ],
     prizes: {
       first: 2500,
@@ -173,10 +175,10 @@ export const INITIAL_TOURNAMENTS: Tournament[] = [
     liveStreamUrl: 'https://www.youtube.com/channel/UCNCXkynVdk3Xt2MHjMwHXaw',
     description: 'Intense 2v2 tactical battle across Kalahari with high per-kill multipliers.',
     bulletPoints: [
-      '?? Fast filling match: 22/24 Duos confirmed.',
-      'PKR 4,500 1st place prize + PKR 40 bounty per kill.',
-      'Custom room ID & Pass given strictly to joined players.',
-      'Screenshot winning leaderboard & submit via contact support if needed.'
+      '• Fast filling match: 22/24 Duos confirmed.',
+      '• PKR 4,500 1st place prize + PKR 40 bounty per kill.',
+      '• Custom room ID & Pass given strictly to joined players.',
+      '• Screenshot winning leaderboard & submit via contact support if needed.'
     ],
     prizes: {
       first: 4500,
@@ -208,10 +210,10 @@ export const INITIAL_TOURNAMENTS: Tournament[] = [
     liveStreamUrl: 'https://www.youtube.com/channel/UCNCXkynVdk3Xt2MHjMwHXaw',
     description: 'Mega Squad Championship successfully concluded with verified JazzCash payouts.',
     bulletPoints: [
-      '?? WINNER: Team CYBORG ? UID: 489201482 (PK_CYBORG_FF)',
-      'Total Kills: 17 Squad Kills | Booyah Prize: PKR 14,000',
-      'All payments confirmed & distributed via JazzCash by Admin.',
-      'Full match replay available on EDUCATED GAMER YouTube channel.'
+      '• WINNER: Team CYBORG — UID: 489201482 (PK_CYBORG_FF)',
+      '• Total Kills: 17 Squad Kills | Booyah Prize: PKR 14,000',
+      '• All payments confirmed & distributed via JazzCash by Admin.',
+      '• Full match replay available on EDUCATED GAMER YouTube channel.'
     ],
     winner: {
       name: 'PK_CYBORG_FF',
@@ -250,9 +252,9 @@ export const INITIAL_TOURNAMENTS: Tournament[] = [
     liveStreamUrl: 'https://www.youtube.com/channel/UCNCXkynVdk3Xt2MHjMwHXaw',
     description: 'High adrenaline 4v4 Clash Squad series.',
     bulletPoints: [
-      '?? WINNER: EG_SHADOW_99 (UID: 773918204)',
-      'Final Score: 7 - 4 | Prize Paid: PKR 7,000',
-      'Verified payout via JazzCash (Trx ID: 98412048102).'
+      '• WINNER: EG_SHADOW_99 (UID: 773918204)',
+      '• Final Score: 7 - 4 | Prize Paid: PKR 7,000',
+      '• Verified payout via JazzCash (Trx ID: 98412048102).'
     ],
     winner: {
       name: 'EG_SHADOW_99',
@@ -277,71 +279,76 @@ export const INITIAL_TOURNAMENTS: Tournament[] = [
 export const MOCK_LEADERBOARD: PlayerRank[] = [
   {
     rank: 1,
-    name: 'Ashan Akhtar (Admin)',
-    ign: 'EG_COMMANDER_PK',
-    uid: '100000001',
-    avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=EG_COMMANDER',
-    earningsPKR: 125400,
-    matchesPlayed: 88,
-    totalKills: 412,
-    winRate: 68.5,
-    badge: 'GRANDMASTER'
+    name: 'Bilal Rehman',
+    ign: 'PK_BLAZE_99',
+    uid: '549182073',
+    avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=PKBLAZE99',
+    earningsPKR: 1850,
+    matchesPlayed: 14,
+    totalKills: 62,
+    winRate: 57.1,
+    badge: 'HEROIC',
+    isBot: true,
   },
   {
     rank: 2,
-    name: 'Hamza Khan',
-    ign: 'PK_CYBORG_FF',
-    uid: '489201482',
-    avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=CYBORG',
-    earningsPKR: 84200,
-    matchesPlayed: 64,
-    totalKills: 320,
-    winRate: 59.2,
-    badge: 'HEROIC ELITE'
+    name: 'Saad Farooq',
+    ign: 'REAPER_ESPORTS',
+    uid: '773018492',
+    avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=REAPERFF',
+    earningsPKR: 1420,
+    matchesPlayed: 11,
+    totalKills: 48,
+    winRate: 45.5,
+    badge: 'DIAMOND I',
+    isBot: true,
   },
   {
     rank: 3,
-    name: 'Ali Raza',
-    ign: 'EG_SHADOW_99',
-    uid: '773918204',
-    avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=SHADOW',
-    earningsPKR: 62500,
-    matchesPlayed: 51,
-    totalKills: 245,
-    winRate: 54.0,
-    badge: 'MASTER III'
+    name: 'Noman Arshad',
+    ign: 'PHANTOM_VIP_PK',
+    uid: '334019283',
+    avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=PHANTOMVIP',
+    earningsPKR: 980,
+    matchesPlayed: 9,
+    totalKills: 37,
+    winRate: 44.4,
+    badge: 'DIAMOND II',
+    isBot: true,
   },
   {
     rank: 4,
-    name: 'Zain Malik',
-    ign: 'PK_DEADSHOT',
-    uid: '984120931',
-    avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=DEADSHOT',
-    earningsPKR: 43100,
-    matchesPlayed: 42,
-    totalKills: 198,
-    winRate: 48.7,
-    badge: 'DIAMOND IV'
+    name: 'Arslan Khan',
+    ign: 'GHOSTKILL_PK',
+    uid: '918203748',
+    avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=GHOSTKILL',
+    earningsPKR: 650,
+    matchesPlayed: 7,
+    totalKills: 28,
+    winRate: 42.9,
+    badge: 'PLATINUM IV',
+    isBot: true,
   },
   {
     rank: 5,
-    name: 'Daniyal Ahmed',
-    ign: 'NO_MERCY_PK',
-    uid: '334918203',
-    avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=NOMERCY',
-    earningsPKR: 31800,
-    matchesPlayed: 35,
-    totalKills: 142,
-    winRate: 44.1,
-    badge: 'DIAMOND II'
-  }
+    name: 'Umer Javed',
+    ign: 'SHADOW_SNIPER_FF',
+    uid: '201938475',
+    avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=SHADOWSNIPER',
+    earningsPKR: 280,
+    matchesPlayed: 5,
+    totalKills: 19,
+    winRate: 40.0,
+    badge: 'GOLD I',
+    isBot: true,
+  },
 ];
 
 export const PROMO_BANNERS: PromoBanner[] = [
   {
     id: 'banner-1',
-    title: 'WEEKLY MEGA SQUAD CUP ??',
-    subtitle: 'PKR 25,000 PRIZE POOL ? LIVE BROADCAST ON YOUTUBE',
+    title: 'WEEKLY MEGA SQUAD CUP',
+    subtitle: 'PKR 25,000 PRIZE POOL • LIVE BROADCAST ON YOUTUBE',
     badge: 'OFFICIAL TOURNAMENT',
     ctaText: 'JOIN SQUAD NOW',
     ctaAction: '/matches',
@@ -350,8 +357,8 @@ export const PROMO_BANNERS: PromoBanner[] = [
   },
   {
     id: 'banner-2',
-    title: 'FREE ENTRY FRIDAY BATTLE ??',
-    subtitle: '0 ENTRY FEE ? REAL PKR CASH REWARDS TO JAZZCASH',
+    title: 'FREE ENTRY FRIDAY BATTLE',
+    subtitle: '0 ENTRY FEE • REAL PKR CASH REWARDS TO JAZZCASH',
     badge: '100% FREE',
     ctaText: 'RESERVE FREE SLOT',
     ctaAction: '/matches',

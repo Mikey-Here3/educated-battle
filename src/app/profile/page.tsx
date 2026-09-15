@@ -35,7 +35,7 @@ export default function ProfilePage() {
                 <div className="relative h-24 w-24 rounded-full border-4 border-crimson p-1 shadow-[0_0_25px_rgba(255,0,60,0.5)] bg-surface-100 shrink-0 flex items-center justify-center text-3xl font-black text-white uppercase">
                   {currentUser.ign.slice(0, 2)}
                   <span className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-neon-gold text-xs font-black text-black shadow-md">
-                    ??
+                    ★
                   </span>
                 </div>
 
@@ -45,7 +45,7 @@ export default function ProfilePage() {
                       {currentUser.role === 'admin' ? 'ADMINISTRATOR' : 'VERIFIED PRO PLAYER'}
                     </span>
                     <span className="rounded-lg bg-neon-gold/20 px-2.5 py-0.5 text-[11px] font-black uppercase text-neon-gold border border-neon-gold/40">
-                      PAKISTAN ????
+                      PAKISTAN
                     </span>
                   </div>
 
@@ -53,7 +53,7 @@ export default function ProfilePage() {
                     {currentUser.ign}
                   </h1>
                   <p className="text-xs font-semibold text-slate-300 font-mono mt-0.5">
-                    Free Fire UID: <strong className="text-neon-gold">{currentUser.uid}</strong> ? {currentUser.name}
+                    Free Fire UID: <strong className="text-neon-gold">{currentUser.uid}</strong> • {currentUser.name}
                   </p>
                 </div>
 
