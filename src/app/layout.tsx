@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Inter, Outfit } from 'next/font/google';
 import './globals.css';
+import { AuthProvider } from '@/context/AuthContext';
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -15,12 +16,13 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: 'EDUCATED GAMER — Free Fire Esports Arena Pakistan',
-  description: 'Pakistan\'s premier esports platform for Free Fire & Free Fire MAX tournaments. Compete in daily custom rooms, win real PKR cash prizes, and build your gamer rank.',
+  metadataBase: new URL('https://educated-battle.vercel.app'),
+  title: 'EDUCATED GAMER ? Free Fire Esports Arena Pakistan',
+  description: "Pakistan's premier esports platform for Free Fire & Free Fire MAX tournaments. Compete in daily custom rooms, win real PKR cash prizes, and build your gamer rank.",
   keywords: ['Educated Gamer', 'Free Fire Tournament Pakistan', 'Free Fire MAX', 'Esports Pakistan', 'PKR Cash Prizes', 'Custom Rooms'],
   openGraph: {
-    title: 'EDUCATED GAMER ARENA — Free Fire Esports Pakistan',
-    description: 'Compete in daily Free Fire tournaments, earn per-kill PKR rewards & cash out instantly via EasyPaisa or JazzCash.',
+    title: 'EDUCATED GAMER ARENA ? Free Fire Esports Pakistan',
+    description: 'Compete in daily Free Fire tournaments, earn per-kill PKR rewards & cash out instantly via JazzCash.',
     type: 'website',
     images: ['/logo.svg'],
   },
@@ -33,8 +35,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${inter.variable} ${outfit.variable} dark scroll-smooth`}>
-      <body className="bg-background text-slate-100 antialiased selection:bg-neon-purple/30 selection:text-neon-purple-light min-h-screen flex flex-col">
-        {children}
+      <body className="bg-background text-slate-100 antialiased selection:bg-crimson/30 selection:text-crimson-light min-h-screen flex flex-col">
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

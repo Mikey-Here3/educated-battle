@@ -1,3 +1,12 @@
+export interface TournamentWinner {
+  name: string;
+  ign: string;
+  uid: string;
+  kills: number;
+  prizePKR: number;
+  rank: string;
+}
+
 export interface Tournament {
   id: string;
   title: string;
@@ -7,15 +16,21 @@ export interface Tournament {
   status: 'live' | 'upcoming' | 'completed' | 'special';
   prizePool: number; // PKR
   perKill: number; // PKR
+  hasPerKill: boolean;
+  booyahPrize: number;
   entryFee: number; // PKR (0 = Free)
   slotsFilled: number;
   totalSlots: number;
-  startTime: string; // ISO or readable
+  startTime: string;
   isFeatured?: boolean;
   roomId?: string;
   roomPassword?: string;
   roomStatus?: 'waiting' | 'ready' | 'started';
+  liveStreamUrl?: string;
   bannerImage?: string;
+  description?: string;
+  bulletPoints?: string[];
+  winner?: TournamentWinner;
   prizes: {
     first: number;
     second: number;
@@ -49,6 +64,13 @@ export interface PromoBanner {
   image: string;
 }
 
+export const SOCIAL_LINKS = {
+  whatsapp: 'https://whatsapp.com/channel/0029VbD6gJE3WHTOMOkx252G',
+  youtube: 'https://www.youtube.com/channel/UCNCXkynVdk3Xt2MHjMwHXaw',
+  phone: '03190799711',
+  accountName: 'Ashan Akhtar',
+};
+
 export const INITIAL_TOURNAMENTS: Tournament[] = [
   {
     id: 'eg-ff-101',
@@ -58,15 +80,25 @@ export const INITIAL_TOURNAMENTS: Tournament[] = [
     map: 'Bermuda',
     status: 'live',
     prizePool: 15000,
+    hasPerKill: true,
     perKill: 50,
+    booyahPrize: 8000,
     entryFee: 100,
     slotsFilled: 48,
     totalSlots: 48,
-    startTime: 'LIVE NOW',
+    startTime: 'LIVE STREAMING NOW',
     isFeatured: true,
     roomId: 'EG-984210',
     roomPassword: '777',
-    roomStatus: 'ready',
+    roomStatus: 'started',
+    liveStreamUrl: 'https://www.youtube.com/channel/UCNCXkynVdk3Xt2MHjMwHXaw',
+    description: 'Premier 48-slot championship match featuring top squads across Pakistan.',
+    bulletPoints: [
+      '?? Live official YouTube shoutcasting & spectator broadcast.',
+      'Mobile devices strictly verified (Zero emulators permitted).',
+      'Booyah payout: PKR 8,000 + PKR 50 per kill distributed instantly.',
+      'Room ID & Password available only to verified registered squads.'
+    ],
     prizes: {
       first: 8000,
       second: 4000,
@@ -76,8 +108,8 @@ export const INITIAL_TOURNAMENTS: Tournament[] = [
     rules: [
       'Emulators strictly prohibited (Mobile devices only).',
       'Teammates must join using registered Free Fire UIDs.',
-      'No teaming or cheating allowed. Violators will face immediate ban and balance forfeiture.',
-      'Room ID & Password will lock 5 minutes before match start.',
+      'No teaming or cheating. Violators face permanent ban and forfeiture.',
+      'Match results and kills recorded live by admin spectators.',
     ]
   },
   {
@@ -88,129 +120,156 @@ export const INITIAL_TOURNAMENTS: Tournament[] = [
     map: 'Purgatory',
     status: 'upcoming',
     prizePool: 5000,
+    hasPerKill: true,
     perKill: 30,
+    booyahPrize: 2500,
     entryFee: 0, // FREE ENTRY
-    slotsFilled: 38,
+    slotsFilled: 48, // FULL Promotional
     totalSlots: 48,
     startTime: 'Today, 8:00 PM PST',
     isFeatured: true,
     roomId: 'EG-SOLO-304',
     roomPassword: '555',
     roomStatus: 'waiting',
+    liveStreamUrl: 'https://www.youtube.com/channel/UCNCXkynVdk3Xt2MHjMwHXaw',
+    description: 'High-speed Free Fire Solo battleground with zero entry fee and cash prizes.',
+    bulletPoints: [
+      '?? FREE ENTRY tournament ? 48/48 Slots Full (Promotional Match).',
+      'PKR 2,500 Booyah cash prize + PKR 30 per verified kill.',
+      'Room credentials unlock 15 minutes before 8:00 PM PST.',
+      'Join with your registered Free Fire in-game UID.'
+    ],
     prizes: {
       first: 2500,
       second: 1500,
-      third: 1000,
+      third: 500,
       perKillBonus: 30,
     },
     rules: [
-      'Free Entry tournament sponsored by Educated Gamer Arena.',
-      'All players must submit valid Pakistan Mobile Number for cash delivery.',
-      'Room ID will be revealed 15 minutes before launch.',
+      'Free Fire mobile only.',
+      'Do not share Room ID or Password with outsiders.',
+      'Top 3 survivors + top fraggers receive instant JazzCash payout.',
     ]
   },
   {
     id: 'eg-ff-103',
-    title: 'CLASH SQUAD 4V4 SHOWDOWN',
-    game: 'Free Fire',
-    type: 'Clash Squad',
-    map: 'Bermuda',
-    status: 'upcoming',
-    prizePool: 8000,
-    perKill: 0,
-    entryFee: 200,
-    slotsFilled: 6,
-    totalSlots: 8, // Teams
-    startTime: 'Today, 9:30 PM PST',
-    isFeatured: false,
-    prizes: {
-      first: 5500,
-      second: 2500,
-      third: 0,
-      perKillBonus: 0,
-    },
-    rules: [
-      'CS 4v4 format, Best of 7 Rounds.',
-      'Character Skills: Turned ON.',
-      'Gun Property: Turned OFF.',
-      'Custom Room Referee decision is final.',
-    ]
-  },
-  {
-    id: 'eg-ff-104',
-    title: 'KALAHARI DESERT DUOS #45',
+    title: 'EDUCATED ARENA GRAND DUO CUP',
     game: 'Free Fire MAX',
     type: 'Duo',
     map: 'Kalahari',
     status: 'upcoming',
-    prizePool: 6500,
+    prizePool: 8000,
+    hasPerKill: true,
     perKill: 40,
-    entryFee: 80,
-    slotsFilled: 18,
-    totalSlots: 24, // 24 teams
-    startTime: 'Tomorrow, 6:00 PM PST',
+    booyahPrize: 4500,
+    entryFee: 50,
+    slotsFilled: 22,
+    totalSlots: 24,
+    startTime: 'Tonight, 10:30 PM PST',
     isFeatured: false,
+    roomId: 'EG-DUO-882',
+    roomPassword: '999',
+    roomStatus: 'waiting',
+    liveStreamUrl: 'https://www.youtube.com/channel/UCNCXkynVdk3Xt2MHjMwHXaw',
+    description: 'Intense 2v2 tactical battle across Kalahari with high per-kill multipliers.',
+    bulletPoints: [
+      '?? Fast filling match: 22/24 Duos confirmed.',
+      'PKR 4,500 1st place prize + PKR 40 bounty per kill.',
+      'Custom room ID & Pass given strictly to joined players.',
+      'Screenshot winning leaderboard & submit via contact support if needed.'
+    ],
     prizes: {
-      first: 3500,
-      second: 1800,
-      third: 1200,
+      first: 4500,
+      second: 2000,
+      third: 1000,
       perKillBonus: 40,
     },
     rules: [
-      'Duo Survival match on Kalahari map.',
-      'Both players must register together with accurate UIDs.',
-      'Per kill cash bonus awarded automatically after room verification.',
+      'Duo partners must both be registered on Educated Gamer.',
+      'Gun attributes default / competitive settings.',
+    ]
+  },
+  {
+    id: 'eg-ff-104',
+    title: 'WEEKLY MEGA SQUAD SHOWDOWN #99',
+    game: 'Free Fire MAX',
+    type: 'Squad',
+    map: 'Bermuda',
+    status: 'completed',
+    prizePool: 25000,
+    hasPerKill: true,
+    perKill: 75,
+    booyahPrize: 14000,
+    entryFee: 150,
+    slotsFilled: 48,
+    totalSlots: 48,
+    startTime: 'Yesterday, 9:00 PM PST',
+    isFeatured: false,
+    liveStreamUrl: 'https://www.youtube.com/channel/UCNCXkynVdk3Xt2MHjMwHXaw',
+    description: 'Mega Squad Championship successfully concluded with verified JazzCash payouts.',
+    bulletPoints: [
+      '?? WINNER: Team CYBORG ? UID: 489201482 (PK_CYBORG_FF)',
+      'Total Kills: 17 Squad Kills | Booyah Prize: PKR 14,000',
+      'All payments confirmed & distributed via JazzCash by Admin.',
+      'Full match replay available on EDUCATED GAMER YouTube channel.'
+    ],
+    winner: {
+      name: 'PK_CYBORG_FF',
+      ign: 'CYBORG_ESPORTS',
+      uid: '489201482',
+      kills: 17,
+      prizePKR: 15275,
+      rank: '1st Place Booyah',
+    },
+    prizes: {
+      first: 14000,
+      second: 7000,
+      third: 3000,
+      perKillBonus: 75,
+    },
+    rules: [
+      'Tournament completed and prize money dispatched.',
     ]
   },
   {
     id: 'eg-ff-105',
-    title: 'WEEKLY GRAND FINALE - PKR 50,000',
-    game: 'Free Fire MAX',
-    type: 'Squad',
-    map: 'Nexterra',
-    status: 'special',
-    prizePool: 50000,
-    perKill: 100,
-    entryFee: 350,
-    slotsFilled: 41,
-    totalSlots: 48,
-    startTime: 'Sunday, 7:00 PM PST',
-    isFeatured: true,
-    prizes: {
-      first: 25000,
-      second: 12000,
-      third: 8000,
-      perKillBonus: 100,
-    },
-    rules: [
-      'Official Educated Gamer Weekly Major Event.',
-      'Live streamed on YouTube with shoutcasting.',
-      'Room credentials sent directly via SMS & App notification.',
-    ]
-  },
-  {
-    id: 'eg-ff-106',
-    title: 'MIDNIGHT PRO SQUAD BATTLE',
+    title: 'PRO CLASH SQUAD ULTIMATE 4v4',
     game: 'Free Fire',
-    type: 'Squad',
-    map: 'Bermuda',
+    type: 'Clash Squad',
+    map: 'Nexterra',
     status: 'completed',
-    prizePool: 12000,
-    perKill: 45,
-    entryFee: 150,
-    slotsFilled: 48,
-    totalSlots: 48,
-    startTime: 'Yesterday, 11:00 PM',
+    prizePool: 10000,
+    hasPerKill: false,
+    perKill: 0,
+    booyahPrize: 7000,
+    entryFee: 100,
+    slotsFilled: 16,
+    totalSlots: 16,
+    startTime: '2 Days Ago',
     isFeatured: false,
+    liveStreamUrl: 'https://www.youtube.com/channel/UCNCXkynVdk3Xt2MHjMwHXaw',
+    description: 'High adrenaline 4v4 Clash Squad series.',
+    bulletPoints: [
+      '?? WINNER: EG_SHADOW_99 (UID: 773918204)',
+      'Final Score: 7 - 4 | Prize Paid: PKR 7,000',
+      'Verified payout via JazzCash (Trx ID: 98412048102).'
+    ],
+    winner: {
+      name: 'EG_SHADOW_99',
+      ign: 'SHADOW_VIP',
+      uid: '773918204',
+      kills: 14,
+      prizePKR: 7000,
+      rank: '1st Place Booyah',
+    },
     prizes: {
-      first: 6000,
-      second: 3500,
-      third: 2500,
-      perKillBonus: 45,
+      first: 7000,
+      second: 3000,
+      third: 0,
+      perKillBonus: 0,
     },
     rules: [
-      'Completed tournament.',
-      'All rewards disbursed to winner wallets via JazzCash/EasyPaisa.',
+      'Official verified match completed.',
     ]
   }
 ];
@@ -218,138 +277,104 @@ export const INITIAL_TOURNAMENTS: Tournament[] = [
 export const MOCK_LEADERBOARD: PlayerRank[] = [
   {
     rank: 1,
-    name: 'Shahzaib "CYBORG" Khan',
-    ign: 'EG_CYBORG_FF',
-    uid: '489210482',
-    avatar: 'https://images.unsplash.com/photo-1566492031773-4f4e44671857?w=150&auto=format&fit=crop&q=80',
-    earningsPKR: 142500,
-    matchesPlayed: 184,
-    totalKills: 612,
-    winRate: 38.4,
-    badge: '👑 CHAMPION'
+    name: 'Ashan Akhtar (Admin)',
+    ign: 'EG_COMMANDER_PK',
+    uid: '100000001',
+    avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=EG_COMMANDER',
+    earningsPKR: 125400,
+    matchesPlayed: 88,
+    totalKills: 412,
+    winRate: 68.5,
+    badge: 'GRANDMASTER'
   },
   {
     rank: 2,
-    name: 'Hamza "PHANTOM" Ali',
-    ign: 'PK_PHANTOM_99',
-    uid: '129481902',
-    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
-    earningsPKR: 118000,
-    matchesPlayed: 162,
-    totalKills: 540,
-    winRate: 34.1,
-    badge: '🥈 ELITE LEGEND'
+    name: 'Hamza Khan',
+    ign: 'PK_CYBORG_FF',
+    uid: '489201482',
+    avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=CYBORG',
+    earningsPKR: 84200,
+    matchesPlayed: 64,
+    totalKills: 320,
+    winRate: 59.2,
+    badge: 'HEROIC ELITE'
   },
   {
     rank: 3,
-    name: 'Bilal "VIPER" Tariq',
-    ign: 'VIPER_OP_PK',
-    uid: '984120481',
-    avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150&auto=format&fit=crop&q=80',
-    earningsPKR: 96400,
-    matchesPlayed: 140,
-    totalKills: 482,
-    winRate: 31.0,
-    badge: '🥉 MASTER WARRIOR'
+    name: 'Ali Raza',
+    ign: 'EG_SHADOW_99',
+    uid: '773918204',
+    avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=SHADOW',
+    earningsPKR: 62500,
+    matchesPlayed: 51,
+    totalKills: 245,
+    winRate: 54.0,
+    badge: 'MASTER III'
   },
   {
     rank: 4,
-    name: 'Usman "SNIPER" Riaz',
-    ign: 'SNIPER_GOD_77',
-    uid: '741928341',
-    avatar: 'https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=150&auto=format&fit=crop&q=80',
-    earningsPKR: 78500,
-    matchesPlayed: 128,
-    totalKills: 410,
-    winRate: 28.5,
-    badge: 'TOP 5 PRO'
+    name: 'Zain Malik',
+    ign: 'PK_DEADSHOT',
+    uid: '984120931',
+    avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=DEADSHOT',
+    earningsPKR: 43100,
+    matchesPlayed: 42,
+    totalKills: 198,
+    winRate: 48.7,
+    badge: 'DIAMOND IV'
   },
   {
     rank: 5,
-    name: 'Zain "SKULL" Ahmed',
-    ign: 'SKULL_REAPER',
-    uid: '631982741',
-    avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80',
-    earningsPKR: 64200,
-    matchesPlayed: 110,
-    totalKills: 375,
-    winRate: 26.2,
-    badge: 'TOP 5 PRO'
-  },
-  {
-    rank: 6,
-    name: 'Arslan "GLITCH" Butt',
-    ign: 'GLITCH_X_FF',
-    uid: '381928471',
-    avatar: 'https://images.unsplash.com/photo-1628157582853-a796fa650a6a?w=150&auto=format&fit=crop&q=80',
-    earningsPKR: 52100,
-    matchesPlayed: 95,
-    totalKills: 310,
-    winRate: 24.8,
-    badge: 'GRANDMASTER'
-  },
-  {
-    rank: 7,
-    name: 'Danish "SLAYER" Malik',
-    ign: 'SLAYER_BOY_PK',
-    uid: '849182374',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
-    earningsPKR: 44000,
-    matchesPlayed: 88,
-    totalKills: 285,
-    winRate: 22.5,
-    badge: 'GRANDMASTER'
+    name: 'Daniyal Ahmed',
+    ign: 'NO_MERCY_PK',
+    uid: '334918203',
+    avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=NOMERCY',
+    earningsPKR: 31800,
+    matchesPlayed: 35,
+    totalKills: 142,
+    winRate: 44.1,
+    badge: 'DIAMOND II'
   }
 ];
 
 export const PROMO_BANNERS: PromoBanner[] = [
   {
-    id: 'promo-1',
-    title: 'WELCOME 100% DEPOSIT BONUS',
-    subtitle: 'Deposit PKR 500 or more via EasyPaisa / JazzCash & get double tournament credits instantly!',
-    badge: '⚡ LIMITED TIME OFFER',
-    ctaText: 'CLAIM BONUS NOW',
-    ctaAction: 'deposit',
-    gradient: 'from-purple-900/90 via-purple-950 to-slate-950',
-    image: '/logo.svg'
+    id: 'banner-1',
+    title: 'WEEKLY MEGA SQUAD CUP ??',
+    subtitle: 'PKR 25,000 PRIZE POOL ? LIVE BROADCAST ON YOUTUBE',
+    badge: 'OFFICIAL TOURNAMENT',
+    ctaText: 'JOIN SQUAD NOW',
+    ctaAction: '/matches',
+    gradient: 'from-crimson via-surface-200 to-black',
+    image: '/hero-ff.webp'
   },
   {
-    id: 'promo-2',
-    title: 'WEEKLY SQUAD GRAND FINALE',
-    subtitle: 'PKR 50,000 Guaranteed Prize Pool • Broadcast Live on YouTube with Shoutcasting',
-    badge: '🏆 MAJOR TOURNAMENT',
-    ctaText: 'REGISTER SQUAD',
-    ctaAction: 'register',
-    gradient: 'from-indigo-900/90 via-purple-950 to-slate-950',
-    image: '/logo.svg'
-  },
-  {
-    id: 'promo-3',
-    title: 'JOIN PAKISTAN FREE FIRE COMMUNITY',
-    subtitle: 'Get daily room passwords, instant support, and tournament announcements on WhatsApp & Discord!',
-    badge: '📱 25,000+ GAMERS JOINED',
-    ctaText: 'JOIN WHATSAPP GROUP',
-    ctaAction: 'community',
-    gradient: 'from-cyan-950/90 via-purple-950 to-slate-950',
-    image: '/logo.svg'
+    id: 'banner-2',
+    title: 'FREE ENTRY FRIDAY BATTLE ??',
+    subtitle: '0 ENTRY FEE ? REAL PKR CASH REWARDS TO JAZZCASH',
+    badge: '100% FREE',
+    ctaText: 'RESERVE FREE SLOT',
+    ctaAction: '/matches',
+    gradient: 'from-neon-gold/30 via-surface-200 to-black',
+    image: '/hero-ff.webp'
   }
 ];
 
 export const FAQ_ITEMS = [
   {
-    q: 'How do I join a Free Fire tournament on Educated Gamer?',
-    a: 'Simply browse the active tournaments grid, select your preferred match (Solo, Duo, or Squad), select an open slot, enter your Free Fire UID and In-Game Name, and click Join. Your slot will be locked instantly.'
+    q: 'How do I receive Room ID & Password?',
+    a: 'Room ID and Password are published on the website 15 minutes before match start time. Only logged in players who joined the match can see the credentials.'
   },
   {
-    q: 'Where do I get the Custom Room ID and Password?',
-    a: 'Room credentials (ID and Password) are published directly on your joined tournament card 15 minutes before the match start time. You will also receive an SMS and App Notification.'
+    q: 'What are the JazzCash payment details?',
+    a: 'Send deposits to JazzCash: 03190799711 (Account Name: Ashan Akhtar). EasyPaisa is currently in maintenance. Upload your transaction screenshot on the wallet page.'
   },
   {
-    q: 'How are prize money and per-kill rewards disbursed in Pakistan?',
-    a: 'All earnings are credited to your Educated Gamer Wallet in PKR immediately after match verification. You can withdraw directly to your EasyPaisa, JazzCash, or Pakistan Bank Account anytime.'
+    q: 'Can emulator or PC players join?',
+    a: 'No. Educated Gamer is strictly 100% mobile-only Free Fire & Free Fire MAX. Any emulator player is automatically detected, kicked, and banned.'
   },
   {
-    q: 'Are emulators allowed in tournaments?',
-    a: 'No! Unless explicitly marked as an "Emulator Friendly" special room, emulators are strictly banned to ensure fair mobile competitive play.'
+    q: 'How are prizes and per-kill bonuses paid?',
+    a: 'Prizes are confirmed by the admin immediately after match conclusion and transferred directly to your winning wallet or JazzCash account.'
   }
 ];

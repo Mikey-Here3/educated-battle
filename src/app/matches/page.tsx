@@ -11,35 +11,15 @@ import { TournamentDetailModal } from '@/components/modals/TournamentDetailModal
 import { INITIAL_TOURNAMENTS, Tournament } from '@/data/mockData';
 
 export default function MatchesPage() {
-  const [userBalance, setUserBalance] = useState<number>(1250);
   const [tournaments, setTournaments] = useState<Tournament[]>(INITIAL_TOURNAMENTS);
 
   const [activeJoinTournament, setActiveJoinTournament] = useState<Tournament | null>(null);
   const [activeRoomDetailsTournament, setActiveRoomDetailsTournament] = useState<Tournament | null>(null);
   const [activeDetailTournament, setActiveDetailTournament] = useState<Tournament | null>(null);
 
-  const handleConfirmJoin = (tournamentId: string, slotNumber: number, ign: string, uid: string) => {
-    setTournaments((prev) =>
-      prev.map((t) => {
-        if (t.id === tournamentId) {
-          const newFee = t.entryFee;
-          if (newFee > 0) {
-            setUserBalance((b) => Math.max(0, b - newFee));
-          }
-          return {
-            ...t,
-            slotsFilled: Math.min(t.totalSlots, t.slotsFilled + 1),
-          };
-        }
-        return t;
-      })
-    );
-    setActiveJoinTournament(null);
-  };
-
   return (
     <div className="flex flex-col min-h-screen pb-20 md:pb-0">
-      <Navbar userBalance={userBalance} />
+      <Navbar />
       
       <main className="flex-grow pt-6">
         <TournamentGrid
@@ -55,20 +35,25 @@ export default function MatchesPage() {
 
       <JoinTournamentModal
         tournament={activeJoinTournament}
-        userBalance={userBalance}
+        isOpen={Boolean(activeJoinTournament)}
         onClose={() => setActiveJoinTournament(null)}
-        onConfirmJoin={handleConfirmJoin}
+        onSuccess={() => setActiveJoinTournament(null)}
       />
 
       <RoomDetailsModal
         tournament={activeRoomDetailsTournament}
+        isOpen={Boolean(activeRoomDetailsTournament)}
         onClose={() => setActiveRoomDetailsTournament(null)}
       />
 
       <TournamentDetailModal
         tournament={activeDetailTournament}
+        isOpen={Boolean(activeDetailTournament)}
         onClose={() => setActiveDetailTournament(null)}
-        onJoin={(t) => setActiveJoinTournament(t)}
+        onJoin={(t) => {
+          setActiveDetailTournament(null);
+          setActiveJoinTournament(t);
+        }}
       />
     </div>
   );

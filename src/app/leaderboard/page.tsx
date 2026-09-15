@@ -9,7 +9,7 @@ import { MobileBottomNav } from '@/components/MobileBottomNav';
 export default function LeaderboardPage() {
   return (
     <div className="flex flex-col min-h-screen pb-20 md:pb-0">
-      <Navbar userBalance={1250} />
+      <Navbar />
       
       <main className="flex-grow pt-4">
         <Leaderboard />

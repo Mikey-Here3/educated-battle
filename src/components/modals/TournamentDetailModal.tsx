@@ -2,129 +2,165 @@
 
 import React from 'react';
 import { Tournament } from '../../data/mockData';
-import { X, Trophy, Swords, MapPin, Clock, ShieldCheck, Flame } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import { X, Trophy, Swords, Shield, Clock, MapPin, Users, CheckCircle2, Youtube, Flame, Award } from 'lucide-react';
 
 interface TournamentDetailModalProps {
   tournament: Tournament | null;
+  isOpen: boolean;
   onClose: () => void;
   onJoin: (tournament: Tournament) => void;
 }
 
 export const TournamentDetailModal: React.FC<TournamentDetailModalProps> = ({
   tournament,
+  isOpen,
   onClose,
   onJoin,
 }) => {
-  if (!tournament) return null;
+  const { currentUser, registeredTournaments } = useAuth();
+  if (!isOpen || !tournament) return null;
+
+  const isFull = tournament.slotsFilled >= tournament.totalSlots;
+  const isCompleted = tournament.status === 'completed';
+  const isUserRegistered = registeredTournaments.includes(tournament.id);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-2xl overflow-hidden rounded-3xl border border-neon-purple/50 bg-surface-100 p-6 shadow-[0_0_60px_rgba(168,85,247,0.3)] sm:p-8 max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 backdrop-blur-md overflow-y-auto">
+      <div className="relative w-full max-w-2xl rounded-3xl border border-crimson/40 bg-surface-100 p-6 sm:p-8 shadow-[0_0_50px_rgba(255,0,60,0.3)] my-8">
         
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute right-5 top-5 rounded-full border border-purple-900/40 bg-surface-200 p-2 text-slate-400 hover:text-white hover:border-neon-purple"
+          className="absolute right-5 top-5 rounded-full p-2 text-slate-400 hover:bg-surface-200 hover:text-white transition-colors"
         >
           <X className="h-5 w-5" />
         </button>
 
-        {/* Modal Header */}
-        <div className="space-y-2 mb-6 border-b border-purple-900/40 pb-5">
-          <div className="flex items-center space-x-2">
-            <span className="rounded-lg bg-neon-purple/20 px-2.5 py-1 text-[11px] font-black uppercase text-neon-purple-light border border-neon-purple/40">
-              {tournament.type}
-            </span>
-            <span className="rounded-lg bg-neon-cyan/20 px-2.5 py-1 text-[11px] font-black uppercase text-neon-cyan border border-neon-cyan/40">
-              {tournament.game}
-            </span>
-          </div>
-          
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-white uppercase font-display">
-            {tournament.title}
-          </h2>
-
-          <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-slate-300 pt-1">
-            <span className="flex items-center space-x-1">
-              <MapPin className="h-4 w-4 text-neon-purple-light" />
-              <span>Map: {tournament.map}</span>
-            </span>
-            <span className="flex items-center space-x-1">
-              <Clock className="h-4 w-4 text-neon-cyan" />
-              <span>Time: {tournament.startTime}</span>
-            </span>
-          </div>
+        {/* Modal Title & Badges */}
+        <div className="flex flex-wrap items-center gap-2 mb-3">
+          <span className="rounded-lg bg-crimson/20 px-3 py-1 text-xs font-black uppercase text-crimson border border-crimson/40">
+            {tournament.type}
+          </span>
+          <span className="rounded-lg bg-neon-gold/20 px-3 py-1 text-xs font-black uppercase text-neon-gold border border-neon-gold/40">
+            {tournament.game}
+          </span>
+          <span className="flex items-center space-x-1 rounded-lg bg-surface-300 px-3 py-1 text-xs font-bold text-slate-300">
+            <MapPin className="h-3 w-3 text-slate-400" />
+            <span>{tournament.map}</span>
+          </span>
         </div>
 
-        {/* Prize Pool Distribution Breakdown Table */}
-        <div className="mb-6 space-y-3">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center space-x-1.5">
-            <Trophy className="h-4 w-4 text-neon-gold" />
-            <span>Prize Pool Distribution (PKR)</span>
-          </h3>
+        <h2 className="text-2xl sm:text-3xl font-black text-white uppercase font-display tracking-wide">
+          {tournament.title}
+        </h2>
+        <p className="text-xs text-slate-400 mt-1">{tournament.description || 'Official competitive Free Fire custom match'}</p>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
-            
-            <div className="rounded-2xl border border-neon-gold/40 bg-surface-200 p-3">
-              <span className="text-[10px] font-bold text-slate-400 uppercase">1st Place 🥇</span>
-              <p className="text-base font-black text-neon-gold font-display mt-0.5">
-                PKR {tournament.prizes.first.toLocaleString()}
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-slate-400/30 bg-surface-200 p-3">
-              <span className="text-[10px] font-bold text-slate-400 uppercase">2nd Place 🥈</span>
-              <p className="text-base font-black text-slate-200 font-display mt-0.5">
-                PKR {tournament.prizes.second.toLocaleString()}
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-amber-600/30 bg-surface-200 p-3">
-              <span className="text-[10px] font-bold text-slate-400 uppercase">3rd Place 🥉</span>
-              <p className="text-base font-black text-amber-500 font-display mt-0.5">
-                PKR {tournament.prizes.third.toLocaleString()}
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-neon-purple/40 bg-surface-200 p-3">
-              <span className="text-[10px] font-bold text-slate-400 uppercase">Per Kill Bonus 🎯</span>
-              <p className="text-base font-black text-neon-purple-light font-display mt-0.5">
-                {tournament.prizes.perKillBonus > 0 ? `PKR ${tournament.prizes.perKillBonus}` : 'N/A'}
-              </p>
-            </div>
-
-          </div>
-        </div>
-
-        {/* Tournament Rules List */}
-        <div className="mb-6 space-y-2">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center space-x-1.5">
-            <ShieldCheck className="h-4 w-4 text-neon-cyan" />
-            <span>Official Match Rules</span>
-          </h3>
-
-          <div className="rounded-2xl border border-purple-900/30 bg-surface-200/60 p-4 space-y-2 text-xs text-slate-300">
-            {tournament.rules.map((rule, idx) => (
-              <div key={idx} className="flex items-start space-x-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-neon-purple-light mt-1.5 shrink-0" />
-                <p>{rule}</p>
+        {/* Winner Highlight if match completed */}
+        {isCompleted && tournament.winner && (
+          <div className="mt-4 rounded-2xl border border-neon-gold/50 bg-gradient-to-r from-neon-gold/20 via-surface-200 to-black p-4 flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-neon-gold/20 text-neon-gold border border-neon-gold/40">
+                <Trophy className="h-6 w-6" />
               </div>
-            ))}
+              <div>
+                <span className="text-[10px] font-black uppercase text-neon-gold tracking-wider">?? BOOYAH WINNER</span>
+                <p className="text-base font-black text-white">{tournament.winner.name}</p>
+                <p className="text-xs font-mono text-slate-300">FF UID: {tournament.winner.uid} ? Total Kills: {tournament.winner.kills}</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <span className="text-[10px] font-bold text-slate-400 uppercase">Confirmed Payout</span>
+              <p className="text-lg font-black text-emerald-400">PKR {tournament.winner.prizePKR.toLocaleString()}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Prize Pool Breakdown Cards */}
+        <div className="mt-5 grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+          <div className="rounded-xl border border-neon-gold/40 bg-surface-200 p-3">
+            <span className="text-[10px] font-bold uppercase text-neon-gold">1st Place (Booyah)</span>
+            <p className="text-base font-black text-white">PKR {tournament.prizes.first.toLocaleString()}</p>
+          </div>
+          <div className="rounded-xl border border-white/10 bg-surface-200 p-3">
+            <span className="text-[10px] font-bold uppercase text-slate-400">2nd Place</span>
+            <p className="text-base font-black text-slate-200">PKR {tournament.prizes.second.toLocaleString()}</p>
+          </div>
+          <div className="rounded-xl border border-white/10 bg-surface-200 p-3">
+            <span className="text-[10px] font-bold uppercase text-slate-400">3rd Place</span>
+            <p className="text-base font-black text-slate-200">PKR {tournament.prizes.third.toLocaleString()}</p>
+          </div>
+          <div className="rounded-xl border border-crimson/40 bg-surface-200 p-3">
+            <span className="text-[10px] font-bold uppercase text-crimson">Per Kill Bonus</span>
+            <p className="text-base font-black text-crimson">
+              {tournament.hasPerKill && tournament.perKill > 0 ? `PKR ${tournament.perKill}` : 'N/A'}
+            </p>
           </div>
         </div>
 
-        {/* Bottom CTA Join Button */}
-        <div className="pt-2">
-          <button
-            onClick={() => {
-              onClose();
-              onJoin(tournament);
-            }}
-            className="w-full flex items-center justify-center space-x-2 rounded-xl bg-gradient-to-r from-neon-purple-dark via-neon-purple to-neon-purple-light py-3.5 text-sm font-black uppercase tracking-wider text-white shadow-[0_0_25px_rgba(168,85,247,0.4)] transition-all hover:scale-102 active:scale-95"
-          >
-            <Swords className="h-5 w-5 text-neon-cyan" />
-            <span>PROCEED TO JOIN MATCH</span>
-          </button>
+        {/* Match Guidelines & Bullet Points */}
+        <div className="mt-6 space-y-3">
+          <h4 className="text-xs font-black uppercase text-neon-gold tracking-wider">
+            MATCH HIGHLIGHTS & DETAILS
+          </h4>
+          <div className="space-y-2 rounded-2xl border border-white/10 bg-surface-200/60 p-4">
+            {tournament.bulletPoints && tournament.bulletPoints.length > 0 ? (
+              tournament.bulletPoints.map((bp, i) => (
+                <div key={i} className="flex items-start space-x-2 text-xs text-slate-200">
+                  <span className="text-crimson font-black text-sm leading-none">?</span>
+                  <span>{bp}</span>
+                </div>
+              ))
+            ) : (
+              <p className="text-xs text-slate-400">Standard competitive rules apply.</p>
+            )}
+          </div>
+        </div>
+
+        {/* Fair Play Rules */}
+        <div className="mt-4 space-y-2">
+          <h4 className="text-xs font-black uppercase text-slate-400 tracking-wider">
+            FAIR PLAY RULES
+          </h4>
+          <ul className="list-disc pl-5 space-y-1 text-xs text-slate-300">
+            {tournament.rules.map((rule, idx) => (
+              <li key={idx}>{rule}</li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Live Stream & Action Buttons */}
+        <div className="mt-6 pt-4 border-t border-white/10 flex flex-col sm:flex-row gap-3">
+          {tournament.liveStreamUrl && (
+            <a
+              href={tournament.liveStreamUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center space-x-2 rounded-xl bg-red-600 hover:bg-red-700 px-5 py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg transition"
+            >
+              <Youtube className="h-4 w-4" />
+              <span>Watch on YouTube</span>
+            </a>
+          )}
+
+          {!isCompleted && !isFull && !isUserRegistered && (
+            <button
+              onClick={() => {
+                onClose();
+                onJoin(tournament);
+              }}
+              className="flex-grow rounded-xl bg-gradient-to-r from-crimson to-crimson-dark py-3 text-xs font-black uppercase tracking-wider text-white shadow-[0_0_25px_rgba(255,0,60,0.4)] transition hover:shadow-[0_0_35px_rgba(255,0,60,0.6)]"
+            >
+              Join Tournament Slot
+            </button>
+          )}
+
+          {isUserRegistered && (
+            <div className="flex-grow flex items-center justify-center space-x-2 rounded-xl bg-emerald-500/20 border border-emerald-500/40 py-3 text-xs font-black text-emerald-400 uppercase">
+              <CheckCircle2 className="h-4 w-4" />
+              <span>You Are Registered in this Tournament</span>
+            </div>
+          )}
         </div>
 
       </div>

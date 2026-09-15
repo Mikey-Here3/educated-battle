@@ -2,77 +2,82 @@
 
 import React from 'react';
 import Image from 'next/image';
-import { Gamepad2, ShieldCheck, Heart, Circle } from 'lucide-react';
+import Link from 'next/link';
+import { Youtube, Phone, ShieldCheck, Trophy, Wallet, HelpCircle, Heart } from 'lucide-react';
+import { SOCIAL_LINKS } from '@/data/mockData';
 
 export const Footer: React.FC = () => {
   return (
-    <footer className="mt-auto border-t border-purple-900/30 bg-surface-100/90 pt-12 pb-8">
+    <footer className="mt-auto border-t border-crimson/30 bg-background/95 pt-12 pb-8">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 pb-10 border-b border-purple-900/30">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
           
-          {/* Col 1: Brand & Logo */}
+          {/* Brand Info */}
           <div className="md:col-span-2 space-y-4">
             <div className="relative h-12 w-56">
               <Image 
                 src="/logo.svg" 
                 alt="Educated Gamer Logo" 
                 fill 
-                className="object-contain object-left"
+                className="object-contain object-left" 
               />
             </div>
-            <p className="text-xs text-slate-400 max-w-sm leading-relaxed">
-              EDUCATED GAMER is Pakistan's leading esports tournament platform for Free Fire & Free Fire MAX. Join daily custom matches, earn per-kill rewards, and withdraw cash via EasyPaisa and JazzCash.
+            <p className="text-xs text-slate-400 max-w-md leading-relaxed">
+              Pakistan&apos;s most competitive esports arena for Free Fire &amp; Free Fire MAX custom rooms. Built with 100% fair play, secure payouts, and verified anti-cheat standards.
             </p>
-            
-            <div className="flex items-center space-x-2 text-xs text-slate-400">
-              <span className="flex h-2.5 w-2.5 rounded-full bg-neon-green animate-pulse" />
-              <span className="font-semibold text-slate-300">All Custom Room Servers Operational</span>
+            <div className="flex items-center space-x-3 pt-2">
+              <a
+                href={SOCIAL_LINKS.youtube}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-600/20 text-red-400 border border-red-600/40 hover:bg-red-600 hover:text-white transition-colors"
+                aria-label="YouTube"
+              >
+                <Youtube className="h-5 w-5 fill-current" />
+              </a>
+              <a
+                href={SOCIAL_LINKS.whatsapp}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 hover:bg-emerald-600 hover:text-white transition-colors"
+                aria-label="WhatsApp Channel"
+              >
+                <Phone className="h-5 w-5" />
+              </a>
             </div>
           </div>
 
-          {/* Col 2: Navigation Links */}
+          {/* Quick Links */}
           <div className="space-y-3">
-            <h4 className="text-xs font-black uppercase text-neon-purple-light tracking-wider font-display">
-              QUICK NAVIGATION
-            </h4>
-            <ul className="space-y-2 text-xs text-slate-400 font-medium">
-              <li><a href="#tournaments" className="hover:text-white transition-colors">Daily Tournaments</a></li>
-              <li><a href="#leaderboard" className="hover:text-white transition-colors">Pakistan Leaderboard</a></li>
-              <li><a href="#wallet" className="hover:text-white transition-colors">Wallet & Cash Cashout</a></li>
-              <li><a href="#rules" className="hover:text-white transition-colors">Rules & Fair Play</a></li>
-              <li><a href="#community" className="hover:text-white transition-colors">WhatsApp & Discord</a></li>
+            <h4 className="text-xs font-black uppercase text-neon-gold tracking-widest font-display">Arena Navigation</h4>
+            <ul className="space-y-2 text-xs font-semibold text-slate-400">
+              <li><Link href="/" className="hover:text-white transition">Home Arena</Link></li>
+              <li><Link href="/matches" className="hover:text-white transition">Tournaments &amp; Matches</Link></li>
+              <li><Link href="/leaderboard" className="hover:text-white transition">Hall of Fame</Link></li>
+              <li><Link href="/wallet" className="hover:text-white transition">Wallet &amp; JazzCash</Link></li>
             </ul>
           </div>
 
-          {/* Col 3: Payment Partners */}
+          {/* Fair Play & Support */}
           <div className="space-y-3">
-            <h4 className="text-xs font-black uppercase text-neon-cyan tracking-wider font-display">
-              PAKISTAN PAYMENTS
-            </h4>
-            <div className="space-y-2 text-xs text-slate-300">
-              <div className="flex items-center space-x-2 rounded-xl bg-surface-200 p-2.5 border border-purple-900/30">
-                <span className="text-neon-green font-bold">📲 EasyPaisa</span>
-                <span className="text-[10px] text-slate-400">Instant Escrow</span>
-              </div>
-              <div className="flex items-center space-x-2 rounded-xl bg-surface-200 p-2.5 border border-purple-900/30">
-                <span className="text-neon-fire font-bold">📲 JazzCash</span>
-                <span className="text-[10px] text-slate-400">24/7 Cashout</span>
-              </div>
-              <div className="flex items-center space-x-2 rounded-xl bg-surface-200 p-2.5 border border-purple-900/30">
-                <span className="text-neon-cyan font-bold">🏦 Bank Transfer</span>
-                <span className="text-[10px] text-slate-400">All PK Banks</span>
-              </div>
-            </div>
+            <h4 className="text-xs font-black uppercase text-neon-gold tracking-widest font-display">Support &amp; Rules</h4>
+            <ul className="space-y-2 text-xs font-semibold text-slate-400">
+              <li><Link href="/rules" className="hover:text-white transition">Fair Play &amp; Anti-Cheat</Link></li>
+              <li><Link href="/contact" className="hover:text-white transition">Contact Admin Desk</Link></li>
+              <li><Link href="/login" className="hover:text-white transition">Player / Admin Login</Link></li>
+              <li className="text-[11px] text-slate-500">JazzCash: {SOCIAL_LINKS.phone}</li>
+            </ul>
           </div>
 
         </div>
 
-        {/* Bottom Rights & Region Footer */}
-        <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
-          <p>© {new Date().getFullYear()} EDUCATED GAMER ARENA. All Rights Reserved.</p>
-          <p className="flex items-center space-x-1 font-semibold text-slate-300">
-            <span>Crafted for Free Fire Gamers in Pakistan 🇵🇰</span>
+        {/* Bottom Copyright */}
+        <div className="border-t border-white/5 pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-3">
+          <p>? {new Date().getFullYear()} EDUCATED GAMER ARENA. All rights reserved.</p>
+          <p className="flex items-center space-x-1">
+            <span>Powered for Pakistan Free Fire Esports</span>
+            <Heart className="h-3.5 w-3.5 text-crimson fill-crimson" />
           </p>
         </div>
 

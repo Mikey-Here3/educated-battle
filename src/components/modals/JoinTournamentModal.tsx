@@ -1,203 +1,148 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { Tournament } from '../../data/mockData';
-import { X, Swords, User, ShieldCheck, AlertCircle, CheckCircle2, Zap } from 'lucide-react';
-import confetti from 'canvas-confetti';
+import { useAuth } from '@/context/AuthContext';
+import { X, Trophy, Swords, ShieldCheck, CheckCircle2, AlertCircle, LogIn, Gamepad2, User } from 'lucide-react';
 
 interface JoinTournamentModalProps {
   tournament: Tournament | null;
-  userBalance: number;
+  isOpen: boolean;
   onClose: () => void;
-  onConfirmJoin: (tournamentId: string, slotNumber: number, ign: string, uid: string) => void;
+  onSuccess: () => void;
 }
 
 export const JoinTournamentModal: React.FC<JoinTournamentModalProps> = ({
   tournament,
-  userBalance,
+  isOpen,
   onClose,
-  onConfirmJoin,
+  onSuccess,
 }) => {
-  if (!tournament) return null;
+  const { currentUser, joinTournament } = useAuth();
+  const [selectedSlot, setSelectedSlot] = useState<number>(1);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const [selectedSlot, setSelectedSlot] = useState<number | null>(1);
-  const [ign, setIgn] = useState<string>('PK_CYBORG');
-  const [uid, setUid] = useState<string>('489201482');
-  const [errorMsg, setErrorMsg] = useState<string>('');
-  const [isSuccess, setIsSuccess] = useState<boolean>(false);
+  if (!isOpen || !tournament) return null;
 
-  const isFree = tournament.entryFee === 0;
-  const canAfford = isFree || userBalance >= tournament.entryFee;
+  const handleConfirmJoin = () => {
+    if (!currentUser) return;
+    setLoading(true);
+    setError('');
 
-  const handleJoin = (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrorMsg('');
-
-    if (!selectedSlot) {
-      setErrorMsg('Please select an open slot from the grid below.');
-      return;
+    const res = joinTournament(tournament.id);
+    setLoading(false);
+    if (res.success) {
+      onSuccess();
+      onClose();
+    } else {
+      setError(res.error || 'Failed to join match');
     }
-    if (!ign.trim()) {
-      setErrorMsg('Please enter your Free Fire In-Game Name (IGN).');
-      return;
-    }
-    if (!uid.trim() || uid.length < 6) {
-      setErrorMsg('Please enter a valid Free Fire UID (minimum 6 digits).');
-      return;
-    }
-    if (!canAfford) {
-      setErrorMsg(`Insufficient balance. Entry fee is PKR ${tournament.entryFee}, your balance is PKR ${userBalance}. Please deposit first.`);
-      return;
-    }
-
-    // Trigger Confetti Celebration!
-    confetti({
-      particleCount: 100,
-      spread: 70,
-      origin: { y: 0.6 },
-    });
-
-    setIsSuccess(true);
-    setTimeout(() => {
-      onConfirmJoin(tournament.id, selectedSlot, ign, uid);
-    }, 1500);
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-lg overflow-hidden rounded-3xl border border-neon-purple/50 bg-surface-100 p-6 shadow-[0_0_50px_rgba(168,85,247,0.35)] sm:p-8">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 backdrop-blur-md">
+      <div className="relative w-full max-w-lg rounded-3xl border border-crimson/40 bg-surface-100 p-6 sm:p-8 shadow-[0_0_50px_rgba(255,0,60,0.3)]">
         
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute right-5 top-5 rounded-full border border-purple-900/40 bg-surface-200 p-2 text-slate-400 hover:text-white hover:border-neon-purple"
+          className="absolute right-5 top-5 rounded-full p-2 text-slate-400 hover:bg-surface-200 hover:text-white transition-colors"
         >
           <X className="h-5 w-5" />
         </button>
 
-        {isSuccess ? (
-          <div className="py-10 text-center space-y-4">
-            <CheckCircle2 className="mx-auto h-16 w-16 text-neon-green animate-bounce" />
-            <h3 className="text-2xl font-black text-white uppercase font-display">SLOT RESERVED SUCCESSFULLY!</h3>
-            <p className="text-sm text-slate-300">
-              You are registered in slot <strong className="text-neon-cyan">#{selectedSlot}</strong> for {tournament.title}.
-            </p>
-            <p className="text-xs text-neon-purple-light">
-              Room credentials will unlock on your tournament card 15 mins before launch.
-            </p>
+        {/* Modal Header */}
+        <div className="flex items-center space-x-3 mb-6">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-crimson/20 text-crimson border border-crimson/40">
+            <Swords className="h-6 w-6" />
           </div>
-        ) : (
-          <form onSubmit={handleJoin} className="space-y-5">
+          <div>
+            <span className="text-[10px] font-black uppercase text-neon-gold tracking-widest">
+              CONFIRM REGISTRATION
+            </span>
+            <h3 className="text-xl font-extrabold text-white uppercase font-display line-clamp-1">
+              {tournament.title}
+            </h3>
+          </div>
+        </div>
+
+        {/* Authenticated Flow */}
+        {currentUser ? (
+          <div className="space-y-4">
             
-            {/* Header Title */}
+            {/* Player UID & IGN Verification Box */}
+            <div className="rounded-2xl border border-white/10 bg-surface-200 p-4 space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-400 font-bold uppercase">Registered Free Fire IGN:</span>
+                <span className="text-white font-black">{currentUser.ign}</span>
+              </div>
+              <div className="flex items-center justify-between text-xs border-t border-white/5 pt-2">
+                <span className="text-slate-400 font-bold uppercase">Player Free Fire UID:</span>
+                <span className="text-neon-gold font-mono font-bold">{currentUser.uid}</span>
+              </div>
+              <div className="flex items-center justify-between text-xs border-t border-white/5 pt-2">
+                <span className="text-slate-400 font-bold uppercase">Entry Fee:</span>
+                <span className="text-emerald-400 font-black">
+                  {tournament.entryFee === 0 ? 'FREE ENTRY' : `PKR ${tournament.entryFee}`}
+                </span>
+              </div>
+            </div>
+
+            {/* Select Slot */}
             <div>
-              <span className="text-xs font-bold uppercase text-neon-cyan tracking-wider">REGISTRATION</span>
-              <h2 className="text-xl sm:text-2xl font-black text-white uppercase font-display leading-snug">
-                JOIN {tournament.title}
-              </h2>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">
+                Select Your Desired Slot / Position
+              </label>
+              <select
+                value={selectedSlot}
+                onChange={(e) => setSelectedSlot(Number(e.target.value))}
+                className="w-full rounded-xl border border-white/10 bg-surface-200 px-4 py-3 text-sm font-bold text-white focus:border-crimson focus:outline-none"
+              >
+                {Array.from({ length: Math.min(tournament.totalSlots, 48) }, (_, i) => i + 1).map((slot) => (
+                  <option key={slot} value={slot} className="bg-surface-100">
+                    Slot #{slot} ? Open for Registration
+                  </option>
+                ))}
+              </select>
             </div>
 
-            {/* Entry & Balance Summary Banner */}
-            <div className="flex items-center justify-between rounded-2xl border border-neon-purple/30 bg-surface-200/90 p-4">
-              <div>
-                <span className="text-xs font-medium text-slate-400">Entry Fee:</span>
-                <p className="text-lg font-black text-white font-display">
-                  {isFree ? <span className="text-neon-green">FREE ENTRY</span> : `PKR ${tournament.entryFee}`}
-                </p>
-              </div>
-              <div className="text-right">
-                <span className="text-xs font-medium text-slate-400">Your PKR Balance:</span>
-                <p className={`text-lg font-black font-display ${canAfford ? 'text-neon-purple-light' : 'text-neon-fire'}`}>
-                  PKR {userBalance.toLocaleString()}
-                </p>
-              </div>
-            </div>
-
-            {/* Error Message Alert */}
-            {errorMsg && (
-              <div className="flex items-center space-x-2 rounded-xl border border-neon-fire/40 bg-neon-fire/10 p-3 text-xs font-bold text-neon-fire">
-                <AlertCircle className="h-4 w-4 shrink-0" />
-                <span>{errorMsg}</span>
+            {error && (
+              <div className="flex items-center gap-2 rounded-xl border border-crimson/50 bg-crimson/10 p-3 text-xs font-semibold text-crimson">
+                <AlertCircle className="h-4 w-4" />
+                <span>{error}</span>
               </div>
             )}
 
-            {/* Free Fire Profile Inputs */}
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
-                  Free Fire In-Game Name (IGN) *
-                </label>
-                <div className="relative">
-                  <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                  <input
-                    type="text"
-                    required
-                    value={ign}
-                    onChange={(e) => setIgn(e.target.value)}
-                    placeholder="Exact IGN in game (e.g. EG_CYBORG_FF)"
-                    className="w-full rounded-xl border border-purple-900/40 bg-surface-200 pl-10 pr-4 py-2.5 text-sm text-white focus:border-neon-purple focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
-                  Free Fire UID (Numeric Player ID) *
-                </label>
-                <div className="relative">
-                  <ShieldCheck className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                  <input
-                    type="text"
-                    required
-                    value={uid}
-                    onChange={(e) => setUid(e.target.value)}
-                    placeholder="e.g. 489201482"
-                    className="w-full rounded-xl border border-purple-900/40 bg-surface-200 pl-10 pr-4 py-2.5 text-sm text-white focus:border-neon-purple focus:outline-none"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Select Slot Grid */}
-            <div>
-              <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
-                Select Your Room Slot (1 - {tournament.totalSlots})
-              </label>
-              <div className="grid grid-cols-6 sm:grid-cols-8 gap-1.5 max-h-36 overflow-y-auto pr-1">
-                {Array.from({ length: tournament.totalSlots }, (_, i) => i + 1).map((slotNum) => {
-                  const isTaken = slotNum <= 5; // Mock taken slots
-                  const isSelected = selectedSlot === slotNum;
-                  return (
-                    <button
-                      key={slotNum}
-                      type="button"
-                      disabled={isTaken}
-                      onClick={() => setSelectedSlot(slotNum)}
-                      className={`rounded-lg py-1.5 text-xs font-black transition-all ${
-                        isTaken
-                          ? 'bg-surface-300 text-slate-600 cursor-not-allowed border border-slate-800'
-                          : isSelected
-                          ? 'bg-neon-purple text-white shadow-[0_0_10px_#a855f7] border border-neon-purple-light'
-                          : 'bg-surface-200 text-slate-300 hover:bg-surface-300 hover:text-white border border-purple-900/30'
-                      }`}
-                    >
-                      #{slotNum}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Submit Join Button */}
             <button
-              type="submit"
-              className="w-full flex items-center justify-center space-x-2 rounded-xl bg-gradient-to-r from-neon-purple-dark via-neon-purple to-neon-purple-light py-3.5 text-sm font-black uppercase tracking-wider text-white shadow-[0_0_25px_rgba(168,85,247,0.4)] transition-all hover:scale-102 active:scale-95"
+              onClick={handleConfirmJoin}
+              disabled={loading}
+              className="w-full rounded-xl bg-gradient-to-r from-crimson to-crimson-dark py-3.5 text-sm font-black uppercase tracking-wider text-white shadow-[0_0_25px_rgba(255,0,60,0.4)] transition hover:shadow-[0_0_35px_rgba(255,0,60,0.6)] disabled:opacity-60"
             >
-              <Swords className="h-5 w-5 text-neon-cyan" />
-              <span>CONFIRM MATCH REGISTRATION</span>
+              {loading ? 'Confirming Slot...' : `Confirm & Join Match (Slot #${selectedSlot})`}
             </button>
 
-          </form>
+          </div>
+        ) : (
+          /* Must Sign In First */
+          <div className="rounded-2xl border border-crimson/40 bg-surface-200 p-6 text-center space-y-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-crimson/20 text-crimson border border-crimson/40 mx-auto">
+              <User className="h-6 w-6" />
+            </div>
+            <h4 className="text-lg font-black text-white font-display uppercase">Sign In to Join Tournament</h4>
+            <p className="text-xs text-slate-300">
+              You must be registered with your verified Free Fire UID to occupy a slot in custom matches.
+            </p>
+            <Link
+              href="/login"
+              onClick={onClose}
+              className="inline-flex items-center justify-center gap-2 w-full rounded-xl bg-crimson py-3 text-xs font-black uppercase text-white shadow-[0_0_20px_rgba(255,0,60,0.4)] hover:bg-crimson-dark transition"
+            >
+              <LogIn className="w-4 h-4" />
+              <span>Sign In / Create Account</span>
+            </Link>
+          </div>
         )}
 
       </div>
