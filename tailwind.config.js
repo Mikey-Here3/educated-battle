@@ -10,35 +10,45 @@ module.exports = {
     extend: {
       colors: {
         background: "#060810",
-        // Theme-driven primary (uses CSS var)
-        primary: 'var(--color-primary)',
-        secondary: 'var(--color-secondary)',
-        // Legacy crimson kept for backward compat
+        // Theme-driven dynamic color system
+        primary: {
+          DEFAULT: "var(--color-primary)",
+          dark: "var(--color-secondary)",
+          light: "var(--color-accent)",
+        },
+        secondary: {
+          DEFAULT: "var(--color-secondary)",
+        },
+        accent: {
+          DEFAULT: "var(--color-accent)",
+        },
+        // Mapped to dynamic theme variables so ALL existing components transform with theme!
+        crimson: {
+          DEFAULT: "var(--color-primary)",
+          dark: "var(--color-secondary)",
+          light: "var(--color-accent)",
+          bright: "var(--color-accent)",
+          glow: "var(--color-glow)",
+        },
         surface: {
           100: "#080c16",
           200: "#0e1424",
           300: "#141d32",
           400: "#1c2840",
         },
-        crimson: {
-          DEFAULT: "#ff003c",
-          dark: "#b3002a",
-          light: "#ff335c",
-          bright: "#ff1a4b",
-          glow: "rgba(255, 0, 60, 0.5)",
-        },
         neon: {
           purple: "var(--color-primary)",
-          "purple-light": "var(--color-primary)",
+          "purple-light": "var(--color-accent)",
           "purple-dark": "var(--color-secondary)",
-          cyan: "#00f0ff",
+          cyan: "var(--color-accent)",
           gold: "#ffd700",
-          fire: "#ff6b00",
+          fire: "var(--color-primary)",
           green: "#00ff88",
         },
         border: {
           glass: "rgba(var(--color-primary-rgb), 0.2)",
           "glass-hover": "rgba(var(--color-primary-rgb), 0.55)",
+          crimson: "var(--color-primary)",
         }
       },
       fontFamily: {
@@ -48,7 +58,7 @@ module.exports = {
       boxShadow: {
         'neon-primary': '0 0 30px var(--color-glow)',
         'neon-purple': '0 0 30px var(--color-glow)',
-        'neon-crimson': '0 0 35px rgba(255, 0, 60, 0.55)',
+        'neon-crimson': '0 0 35px var(--color-glow)',
         'neon-cyan': '0 0 25px rgba(0, 240, 255, 0.35)',
         'neon-gold': '0 0 25px rgba(255, 215, 0, 0.35)',
         'card-glow': '0 8px 32px 0 rgba(var(--color-primary-rgb), 0.18)',

@@ -80,7 +80,7 @@ export const TournamentCard: React.FC<TournamentCardProps> = ({
           ) : (
             <span className="flex items-center space-x-1 rounded-lg bg-surface-300 px-2.5 py-1 text-[11px] font-semibold text-slate-300">
               <Clock className="h-3 w-3 text-primary" />
-              <span>{tournament.startTime}</span>
+              <span>{tournament.matchDate ? `${tournament.matchDate} · ${tournament.matchTime || tournament.startTime}` : tournament.startTime}</span>
             </span>
           )}
 

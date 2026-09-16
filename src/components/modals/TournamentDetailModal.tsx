@@ -54,6 +54,10 @@ export const TournamentDetailModal: React.FC<TournamentDetailModalProps> = ({
               <span>Code: {tournament.mapCode}</span>
             </span>
           )}
+          <span className="flex items-center space-x-1 rounded-lg bg-primary/20 border border-primary/40 px-2.5 py-1 text-xs font-bold text-primary">
+            <Clock className="h-3.5 w-3.5" />
+            <span>{tournament.matchDate || 'Sat/Sun'} · {tournament.matchTime || tournament.startTime}</span>
+          </span>
         </div>
 
         <h2 className="text-2xl sm:text-3xl font-black text-white uppercase font-display tracking-wide">
@@ -81,57 +85,108 @@ export const TournamentDetailModal: React.FC<TournamentDetailModalProps> = ({
           </div>
         )}
 
-        {/* Prize Pool Breakdown Cards */}
-        <div className="mt-5 grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
-          <div className="rounded-xl border border-neon-gold/40 bg-surface-200 p-3">
-            <span className="text-[10px] font-bold uppercase text-neon-gold">1st Place (Booyah)</span>
-            <p className="text-base font-black text-white">PKR {tournament.prizes.first.toLocaleString()}</p>
+        {/* Prize Pool Breakdown Cards (1st to 6th) */}
+        <div className="mt-5 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-black uppercase text-neon-gold tracking-wider">
+              🏆 Prize Distribution (Pool: PKR {tournament.prizePool.toLocaleString()})
+            </span>
+            {tournament.hasPerKill && tournament.perKill > 0 && (
+              <span className="text-xs font-bold text-crimson">
+                Per Kill: PKR {tournament.perKill}
+              </span>
+            )}
           </div>
-          <div className="rounded-xl border border-white/10 bg-surface-200 p-3">
-            <span className="text-[10px] font-bold uppercase text-slate-400">2nd Place</span>
-            <p className="text-base font-black text-slate-200">PKR {tournament.prizes.second.toLocaleString()}</p>
-          </div>
-          <div className="rounded-xl border border-white/10 bg-surface-200 p-3">
-            <span className="text-[10px] font-bold uppercase text-slate-400">3rd Place</span>
-            <p className="text-base font-black text-slate-200">PKR {tournament.prizes.third.toLocaleString()}</p>
-          </div>
-          <div className="rounded-xl border border-crimson/40 bg-surface-200 p-3">
-            <span className="text-[10px] font-bold uppercase text-crimson">Per Kill Bonus</span>
-            <p className="text-base font-black text-crimson">
-              {tournament.hasPerKill && tournament.perKill > 0 ? `PKR ${tournament.perKill}` : 'N/A'}
-            </p>
-          </div>
-        </div>
-
-        {/* Match Guidelines & Bullet Points */}
-        <div className="mt-6 space-y-3">
-          <h4 className="text-xs font-black uppercase text-neon-gold tracking-wider">
-            MATCH HIGHLIGHTS & DETAILS
-          </h4>
-          <div className="space-y-2 rounded-2xl border border-white/10 bg-surface-200/60 p-4">
-            {tournament.bulletPoints && tournament.bulletPoints.length > 0 ? (
-              tournament.bulletPoints.map((bp, i) => (
-                <div key={i} className="flex items-start space-x-2 text-xs text-slate-200">
-                  <span className="text-primary font-black text-sm leading-none">•</span>
-                  <span>{bp}</span>
-                </div>
-              ))
-            ) : (
-              <p className="text-xs text-slate-400">Standard competitive rules apply.</p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 text-center">
+            <div className="rounded-xl border border-neon-gold/50 bg-neon-gold/10 p-2.5">
+              <span className="text-[10px] font-black uppercase text-neon-gold block">🥇 1st (Booyah)</span>
+              <p className="text-sm font-black text-white mt-0.5">PKR {tournament.prizes.first.toLocaleString()}</p>
+            </div>
+            <div className="rounded-xl border border-white/20 bg-surface-200 p-2.5">
+              <span className="text-[10px] font-bold uppercase text-slate-300 block">🥈 2nd Place</span>
+              <p className="text-sm font-black text-white mt-0.5">PKR {tournament.prizes.second.toLocaleString()}</p>
+            </div>
+            <div className="rounded-xl border border-white/10 bg-surface-200 p-2.5">
+              <span className="text-[10px] font-bold uppercase text-slate-400 block">🥉 3rd Place</span>
+              <p className="text-sm font-black text-slate-200 mt-0.5">PKR {tournament.prizes.third.toLocaleString()}</p>
+            </div>
+            {tournament.prizes.fourth !== undefined && (
+              <div className="rounded-xl border border-white/10 bg-surface-200 p-2.5">
+                <span className="text-[10px] font-bold uppercase text-slate-400 block">4th Place</span>
+                <p className="text-sm font-black text-slate-200 mt-0.5">PKR {tournament.prizes.fourth.toLocaleString()}</p>
+              </div>
+            )}
+            {tournament.prizes.fifth !== undefined && (
+              <div className="rounded-xl border border-white/10 bg-surface-200 p-2.5">
+                <span className="text-[10px] font-bold uppercase text-slate-400 block">5th Place</span>
+                <p className="text-sm font-black text-slate-200 mt-0.5">PKR {tournament.prizes.fifth.toLocaleString()}</p>
+              </div>
+            )}
+            {tournament.prizes.sixth !== undefined && (
+              <div className="rounded-xl border border-white/10 bg-surface-200 p-2.5">
+                <span className="text-[10px] font-bold uppercase text-slate-400 block">6th Place</span>
+                <p className="text-sm font-black text-slate-200 mt-0.5">PKR {tournament.prizes.sixth.toLocaleString()}</p>
+              </div>
             )}
           </div>
         </div>
 
-        {/* Fair Play Rules */}
-        <div className="mt-4 space-y-2">
-          <h4 className="text-xs font-black uppercase text-slate-400 tracking-wider">
-            FAIR PLAY RULES
-          </h4>
-          <ul className="list-disc pl-5 space-y-1 text-xs text-slate-300">
+        {/* Match Highlights & Details */}
+        {tournament.bulletPoints && tournament.bulletPoints.length > 0 && (
+          <div className="mt-5 space-y-2">
+            <h4 className="text-xs font-black uppercase text-slate-400 tracking-wider">
+              MATCH HIGHLIGHTS
+            </h4>
+            <div className="space-y-1.5 rounded-xl border border-white/10 bg-surface-200/50 p-3.5">
+              {tournament.bulletPoints.map((bp, i) => (
+                <div key={i} className="flex items-start space-x-2 text-xs text-slate-200">
+                  <span className="text-primary font-black text-sm leading-none">•</span>
+                  <span>{bp}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Highlighted Rules Box */}
+        <div className="mt-5 rounded-2xl border border-primary/40 bg-surface-200/80 p-4 space-y-2.5 shadow-[0_0_20px_rgba(0,0,0,0.4)]">
+          <div className="flex items-center justify-between border-b border-white/10 pb-2">
+            <h4 className="text-xs font-black uppercase text-primary tracking-wider flex items-center gap-1.5">
+              <Shield className="h-4 w-4" />
+              OFFICIAL MATCH RULES & REQUIREMENTS
+            </h4>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/20 text-primary uppercase border border-primary/30">
+              Strictly Enforced
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+            <div className="flex items-center gap-2 bg-surface-100/60 p-2 rounded-lg border border-white/5">
+              <span className="text-base">📱</span>
+              <span className="text-slate-200 font-medium">Mobile Only (No Emulators / PC)</span>
+            </div>
+            <div className="flex items-center gap-2 bg-surface-100/60 p-2 rounded-lg border border-white/5">
+              <span className="text-base">🆔</span>
+              <span className="text-slate-200 font-medium">Free Fire UID Verification Required</span>
+            </div>
+            <div className="flex items-center gap-2 bg-surface-100/60 p-2 rounded-lg border border-white/5">
+              <span className="text-base">🚫</span>
+              <span className="text-slate-200 font-medium">Zero Cheating / Hacks / Teaming</span>
+            </div>
+            <div className="flex items-center gap-2 bg-surface-100/60 p-2 rounded-lg border border-white/5">
+              <span className="text-base">⚡</span>
+              <span className="text-slate-200 font-medium">Instant JazzCash Prize Payouts</span>
+            </div>
+          </div>
+
+          <div className="pt-2 border-t border-white/10 space-y-1.5">
             {tournament.rules.map((rule, idx) => (
-              <li key={idx}>{rule}</li>
+              <div key={idx} className="flex items-start gap-2 text-xs text-slate-300">
+                <span className="text-primary font-black mt-0.5">•</span>
+                <span className="leading-relaxed">{rule}</span>
+              </div>
             ))}
-          </ul>
+          </div>
         </div>
 
         {/* Live Stream & Action Buttons */}

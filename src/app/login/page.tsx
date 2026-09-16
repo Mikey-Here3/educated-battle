@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 import { 
   Lock, 
@@ -84,39 +83,35 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col justify-center items-center px-4 py-10 relative overflow-hidden">
+    <div className="min-h-screen bg-background flex flex-col justify-center items-center px-4 py-8 sm:py-12 relative">
       
       {/* Background ambient lighting */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-crimson/10 rounded-full blur-[140px]" />
-        <div className="absolute bottom-10 left-10 w-72 h-72 bg-neon-gold/5 rounded-full blur-[100px]" />
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/15 rounded-full blur-[140px]" />
+        <div className="absolute bottom-10 left-10 w-72 h-72 bg-neon-gold/10 rounded-full blur-[100px]" />
       </div>
 
-      <div className="w-full max-w-lg relative z-10">
+      <div className="w-full max-w-lg relative z-10 my-auto">
         
         {/* Back navigation */}
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-5 flex items-center justify-between">
           <Link
             href="/"
             className="inline-flex items-center gap-2 text-sm font-semibold text-slate-400 hover:text-white transition group"
           >
-            <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1 text-crimson" />
+            <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1 text-primary" />
             Back to Arena
           </Link>
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-200 border border-white/10 text-xs font-bold text-slate-400">
-            <Shield className="w-3.5 h-3.5 text-crimson" /> Secure Gaming Console
+            <Shield className="w-3.5 h-3.5 text-primary" /> Secure Console
           </span>
         </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="rounded-3xl border border-crimson/30 bg-surface-100/95 p-6 sm:p-8 shadow-[0_20px_50px_rgba(0,0,0,0.8)] backdrop-blur-2xl"
-        >
+        {/* Stable Non-Remounting Card Container (Fixes Mobile Virtual Keyboard Focus Drop) */}
+        <div className="rounded-3xl border border-primary/30 bg-surface-100/98 p-6 sm:p-8 shadow-[0_20px_50px_rgba(0,0,0,0.8)] backdrop-blur-2xl">
           {/* Logo Header */}
           <div className="flex flex-col items-center text-center mb-6">
-            <div className="relative h-14 w-48 mb-3">
+            <div className="relative h-12 sm:h-14 w-44 sm:w-48 mb-3">
               <Image src="/logo.svg" alt="Educated Gamer" fill priority className="object-contain" />
             </div>
             <h1 className="text-xl sm:text-2xl font-black text-white uppercase tracking-wider font-display">
@@ -124,8 +119,8 @@ export default function LoginPage() {
             </h1>
             <p className="text-slate-400 text-xs mt-1">
               {tab === 'signin' 
-                ? 'Sign in to access your wallet, join rooms & view live tournaments.' 
-                : 'Register with your verified Free Fire UID to compete for real cash prizes.'}
+                ? 'Sign in to access your coin wallet, join rooms & view match credentials.' 
+                : 'Register with your verified Free Fire UID to compete for real PKR prizes.'}
             </p>
           </div>
 
@@ -136,7 +131,7 @@ export default function LoginPage() {
               onClick={() => { setTab('signin'); setError(''); }}
               className={`py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition ${
                 tab === 'signin'
-                  ? 'bg-crimson text-white shadow-[0_0_15px_rgba(255,0,60,0.4)]'
+                  ? 'bg-primary text-white shadow-[0_0_15px_rgba(var(--color-primary-rgb),0.5)]'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
@@ -147,35 +142,27 @@ export default function LoginPage() {
               onClick={() => { setTab('signup'); setError(''); }}
               className={`py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition ${
                 tab === 'signup'
-                  ? 'bg-crimson text-white shadow-[0_0_15px_rgba(255,0,60,0.4)]'
+                  ? 'bg-primary text-white shadow-[0_0_15px_rgba(var(--color-primary-rgb),0.5)]'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
-              Create Account (Sign Up)
+              Create Account
             </button>
           </div>
 
           {/* Error / Success Notifications */}
           {error && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="flex items-center gap-2 rounded-xl border border-crimson/50 bg-crimson/10 p-3 mb-4 text-xs font-semibold text-crimson"
-            >
+            <div className="flex items-center gap-2 rounded-xl border border-rose-500/50 bg-rose-500/10 p-3 mb-4 text-xs font-semibold text-rose-400">
               <AlertCircle className="h-4 w-4 flex-shrink-0" />
               <span>{error}</span>
-            </motion.div>
+            </div>
           )}
 
           {successMsg && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="flex items-center gap-2 rounded-xl border border-emerald-500/50 bg-emerald-500/10 p-3 mb-4 text-xs font-semibold text-emerald-400"
-            >
+            <div className="flex items-center gap-2 rounded-xl border border-emerald-500/50 bg-emerald-500/10 p-3 mb-4 text-xs font-semibold text-emerald-400">
               <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
               <span>{successMsg}</span>
-            </motion.div>
+            </div>
           )}
 
           {/* Sign In Form */}
@@ -193,7 +180,8 @@ export default function LoginPage() {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="e.g. player@educatedgamer.com"
                     required
-                    className="w-full rounded-xl border border-white/10 bg-surface-200/80 py-3 pl-11 pr-4 text-sm text-white placeholder-slate-500 focus:border-crimson focus:outline-none transition"
+                    autoComplete="email"
+                    className="w-full rounded-xl border border-white/10 bg-surface-200/80 py-3 pl-11 pr-4 text-sm text-white placeholder-slate-500 focus:border-primary focus:outline-none transition"
                   />
                 </div>
               </div>
@@ -210,7 +198,8 @@ export default function LoginPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter your password"
                     required
-                    className="w-full rounded-xl border border-white/10 bg-surface-200/80 py-3 pl-11 pr-11 text-sm text-white placeholder-slate-500 focus:border-crimson focus:outline-none transition"
+                    autoComplete="current-password"
+                    className="w-full rounded-xl border border-white/10 bg-surface-200/80 py-3 pl-11 pr-11 text-sm text-white placeholder-slate-500 focus:border-primary focus:outline-none transition"
                   />
                   <button
                     type="button"
@@ -225,7 +214,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full mt-3 rounded-xl bg-gradient-to-r from-crimson to-crimson-dark py-3.5 text-sm font-black uppercase tracking-wider text-white shadow-[0_0_25px_rgba(255,0,60,0.4)] transition hover:shadow-[0_0_35px_rgba(255,0,60,0.6)] disabled:opacity-60"
+                className="w-full mt-3 rounded-xl bg-primary hover:bg-primary/90 py-3.5 text-sm font-black uppercase tracking-wider text-white shadow-[0_0_25px_rgba(var(--color-primary-rgb),0.4)] transition disabled:opacity-60"
               >
                 {loading ? 'Authenticating...' : 'Sign In'}
               </button>
@@ -247,7 +236,8 @@ export default function LoginPage() {
                     onChange={(e) => setName(e.target.value)}
                     placeholder="e.g. Asad Ali"
                     required
-                    className="w-full rounded-xl border border-white/10 bg-surface-200/80 py-2.5 pl-11 pr-4 text-sm text-white placeholder-slate-500 focus:border-crimson focus:outline-none transition"
+                    autoComplete="name"
+                    className="w-full rounded-xl border border-white/10 bg-surface-200/80 py-2.5 pl-11 pr-4 text-sm text-white placeholder-slate-500 focus:border-primary focus:outline-none transition"
                   />
                 </div>
               </div>
@@ -302,7 +292,8 @@ export default function LoginPage() {
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="e.g. 03190799711"
                     required
-                    className="w-full rounded-xl border border-white/10 bg-surface-200/80 py-2.5 pl-11 pr-4 text-sm text-white placeholder-slate-500 focus:border-crimson focus:outline-none transition font-mono"
+                    autoComplete="tel"
+                    className="w-full rounded-xl border border-white/10 bg-surface-200/80 py-2.5 pl-11 pr-4 text-sm text-white placeholder-slate-500 focus:border-primary focus:outline-none transition font-mono"
                   />
                 </div>
               </div>
@@ -320,7 +311,8 @@ export default function LoginPage() {
                     onChange={(e) => setSignupEmail(e.target.value)}
                     placeholder="e.g. player@gmail.com"
                     required
-                    className="w-full rounded-xl border border-white/10 bg-surface-200/80 py-2.5 pl-11 pr-4 text-sm text-white placeholder-slate-500 focus:border-crimson focus:outline-none transition"
+                    autoComplete="email"
+                    className="w-full rounded-xl border border-white/10 bg-surface-200/80 py-2.5 pl-11 pr-4 text-sm text-white placeholder-slate-500 focus:border-primary focus:outline-none transition"
                   />
                 </div>
               </div>
@@ -338,7 +330,8 @@ export default function LoginPage() {
                     onChange={(e) => setSignupPass(e.target.value)}
                     placeholder="Create a secure password"
                     required
-                    className="w-full rounded-xl border border-white/10 bg-surface-200/80 py-2.5 pl-11 pr-4 text-sm text-white placeholder-slate-500 focus:border-crimson focus:outline-none transition"
+                    autoComplete="new-password"
+                    className="w-full rounded-xl border border-white/10 bg-surface-200/80 py-2.5 pl-11 pr-4 text-sm text-white placeholder-slate-500 focus:border-primary focus:outline-none transition"
                   />
                 </div>
               </div>
@@ -346,7 +339,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full mt-3 rounded-xl bg-gradient-to-r from-crimson to-crimson-dark py-3.5 text-sm font-black uppercase tracking-wider text-white shadow-[0_0_25px_rgba(255,0,60,0.4)] transition hover:shadow-[0_0_35px_rgba(255,0,60,0.6)] disabled:opacity-60"
+                className="w-full mt-3 rounded-xl bg-primary hover:bg-primary/90 py-3.5 text-sm font-black uppercase tracking-wider text-white shadow-[0_0_25px_rgba(var(--color-primary-rgb),0.4)] transition disabled:opacity-60"
               >
                 {loading ? 'Creating Account...' : 'Register & Join Arena'}
               </button>
@@ -358,7 +351,7 @@ export default function LoginPage() {
               Admin credentials directly grant management deck privileges upon login.
             </p>
           </div>
-        </motion.div>
+        </div>
       </div>
     </div>
   );

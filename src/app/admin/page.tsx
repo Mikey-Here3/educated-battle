@@ -128,16 +128,45 @@ export default function AdminPortalPage() {
   const [tMapCode, setTMapCode] = useState('');
   const [tStatus, setTStatus] = useState<'upcoming' | 'live' | 'completed' | 'special'>('upcoming');
   const [tPrize, setTPrize] = useState(15000);
-  const [tBooyah, setTBooyah] = useState(8000);
+  const [tBooyah, setTBooyah] = useState(7000);
+  // 1st to 6th Winner prizes
+  const [tPrize1, setTPrize1] = useState(7000);
+  const [tPrize2, setTPrize2] = useState(3500);
+  const [tPrize3, setTPrize3] = useState(2000);
+  const [tPrize4, setTPrize4] = useState(1000);
+  const [tPrize5, setTPrize5] = useState(800);
+  const [tPrize6, setTPrize6] = useState(700);
+
   const [tHasPerKill, setTHasPerKill] = useState(true);
   const [tPerKill, setTPerKill] = useState(50);
   const [tEntryFee, setTEntryFee] = useState(100);
   const [tSlots, setTSlots] = useState(48);
-  const [tStartTime, setTStartTime] = useState('Today, 9:00 PM PST');
+  const [tStartTime, setTStartTime] = useState('Saturday Night, 09:00 PM PKT');
+  const [tMatchDate, setTMatchDate] = useState('Saturday Night');
+  const [tMatchTime, setTMatchTime] = useState('09:00 PM PKT');
   const [tLiveUrl, setTLiveUrl] = useState('https://www.youtube.com/channel/UCNCXkynVdk3Xt2MHjMwHXaw');
   const [tBullets, setTBullets] = useState(
-    '?? Official YouTube Live Broadcast\nMobile devices only (No Emulators)\nBooyah & Kill rewards paid via JazzCash'
+    '• Official YouTube Live shoutcasting & spectator broadcast.\n• Mobile devices strictly verified (Zero emulators permitted).\n• Booyah & Kill rewards distributed instantly via JazzCash.'
   );
+  const [tRules, setTRules] = useState(
+    '📱 Mobile devices strictly required (Zero emulators / PC players permitted).\n🛡️ Anti-cheat and fair play strictly enforced. Teaming equals permanent ban.\n🆔 All players must enter custom room with registered Free Fire UIDs.\n⚡ Match results and frags recorded live by official tournament marshals.'
+  );
+
+  const autoDistributePrizes = (total: number) => {
+    const p1 = Math.round(total * 0.45);
+    const p2 = Math.round(total * 0.22);
+    const p3 = Math.round(total * 0.13);
+    const p4 = Math.round(total * 0.08);
+    const p5 = Math.round(total * 0.06);
+    const p6 = total - (p1 + p2 + p3 + p4 + p5);
+    setTBooyah(p1);
+    setTPrize1(p1);
+    setTPrize2(p2);
+    setTPrize3(p3);
+    setTPrize4(p4);
+    setTPrize5(p5);
+    setTPrize6(p6);
+  };
 
   // Room ID / Pass form
   const [editRoomId, setEditRoomId] = useState('');
@@ -170,11 +199,15 @@ export default function AdminPortalPage() {
   const resetTournamentForm = () => {
     setTTitle(''); setTGame('Free Fire MAX'); setTType('Squad'); setTMap('Bermuda');
     setTMapCode('');
-    setTStatus('upcoming'); setTPrize(15000); setTBooyah(8000); setTHasPerKill(true);
+    setTStatus('upcoming'); setTPrize(15000); setTBooyah(7000); setTHasPerKill(true);
+    setTPrize1(7000); setTPrize2(3500); setTPrize3(2000); setTPrize4(1000); setTPrize5(800); setTPrize6(700);
     setTPerKill(50); setTEntryFee(100); setTSlots(48);
-    setTStartTime('Today, 9:00 PM PST');
+    setTStartTime('Saturday Night, 09:00 PM PKT');
+    setTMatchDate('Saturday Night');
+    setTMatchTime('09:00 PM PKT');
     setTLiveUrl('https://www.youtube.com/channel/UCNCXkynVdk3Xt2MHjMwHXaw');
-    setTBullets('?? Official YouTube Live Broadcast\nMobile devices only (No Emulators)\nBooyah & Kill rewards paid via JazzCash');
+    setTBullets('• Official YouTube Live shoutcasting & spectator broadcast.\n• Mobile devices strictly verified (Zero emulators permitted).\n• Booyah & Kill rewards distributed instantly via JazzCash.');
+    setTRules('📱 Mobile devices strictly required (Zero emulators / PC players permitted).\n🛡️ Anti-cheat and fair play strictly enforced. Teaming equals permanent ban.\n🆔 All players must enter custom room with registered Free Fire UIDs.\n⚡ Match results and frags recorded live by official tournament marshals.');
   };
 
   const openEditTourney = (t: Tournament) => {
@@ -182,10 +215,20 @@ export default function AdminPortalPage() {
     setTTitle(t.title); setTGame(t.game); setTType(t.type); setTMap(t.map);
     setTMapCode(t.mapCode || '');
     setTStatus(t.status); setTPrize(t.prizePool); setTBooyah(t.booyahPrize);
+    setTPrize1(t.prizes?.first || t.booyahPrize || 7000);
+    setTPrize2(t.prizes?.second || Math.round((t.booyahPrize || 7000) * 0.5) || 3500);
+    setTPrize3(t.prizes?.third || Math.round((t.booyahPrize || 7000) * 0.25) || 2000);
+    setTPrize4(t.prizes?.fourth || 1000);
+    setTPrize5(t.prizes?.fifth || 800);
+    setTPrize6(t.prizes?.sixth || 700);
     setTHasPerKill(t.hasPerKill); setTPerKill(t.perKill); setTEntryFee(t.entryFee);
-    setTSlots(t.totalSlots); setTStartTime(t.startTime);
+    setTSlots(t.totalSlots);
+    setTStartTime(t.startTime);
+    setTMatchDate(t.matchDate || 'Saturday Night');
+    setTMatchTime(t.matchTime || '09:00 PM PKT');
     setTLiveUrl(t.liveStreamUrl || '');
     setTBullets((t.bulletPoints || []).join('\n'));
+    setTRules((t.rules || []).join('\n') || '📱 Mobile devices strictly required (Zero emulators / PC players permitted).\n🛡️ Anti-cheat and fair play strictly enforced. Teaming equals permanent ban.\n🆔 All players must enter custom room with registered Free Fire UIDs.\n⚡ Match results and frags recorded live by official tournament marshals.');
   };
 
   const handleSaveTournament = () => {
@@ -197,16 +240,26 @@ export default function AdminPortalPage() {
       mapCode: tMap === 'Custom/Craftland' ? tMapCode : undefined,
       status: tStatus,
       prizePool: tPrize,
-      booyahPrize: tBooyah,
+      booyahPrize: tPrize1 || tBooyah,
       hasPerKill: tHasPerKill,
       perKill: tPerKill,
       entryFee: tEntryFee,
       totalSlots: tSlots,
-      startTime: tStartTime,
+      startTime: `${tMatchDate}, ${tMatchTime}`,
+      matchDate: tMatchDate,
+      matchTime: tMatchTime,
       liveStreamUrl: tLiveUrl,
       bulletPoints: tBullets.split('\n').map(s => s.trim()).filter(Boolean),
-      prizes: { first: tBooyah, second: Math.round(tBooyah * 0.5), third: Math.round(tBooyah * 0.25), perKillBonus: tPerKill },
-      rules: ['Mobile only. No emulators.', 'Registered Free Fire UIDs only.', 'Admin decisions are final.'],
+      prizes: {
+        first: tPrize1,
+        second: tPrize2,
+        third: tPrize3,
+        fourth: tPrize4,
+        fifth: tPrize5,
+        sixth: tPrize6,
+        perKillBonus: tPerKill,
+      },
+      rules: tRules.split('\n').map(s => s.trim()).filter(Boolean),
       isFeatured: false,
     };
     if (editingTourney) {
@@ -302,11 +355,12 @@ export default function AdminPortalPage() {
 
   // ── Plain function (NOT a React component) to avoid remounting on every keystroke ──
   const renderTournamentForm = () => (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <div>
         <label className={labelClass}>Tournament Title *</label>
-        <input className={inputClass} value={tTitle} onChange={e => setTTitle(e.target.value)} placeholder="e.g. PAKISTAN CHAMPIONS CLASH #102" />
+        <input className={inputClass} value={tTitle} onChange={e => setTTitle(e.target.value)} placeholder="e.g. PAKISTAN NIGHT WARRIORS #104" />
       </div>
+
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className={labelClass}>Game</label>
@@ -322,6 +376,7 @@ export default function AdminPortalPage() {
           </select>
         </div>
       </div>
+
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className={labelClass}>Map</label>
@@ -344,58 +399,175 @@ export default function AdminPortalPage() {
           </select>
         </div>
       </div>
+
       {/* Custom/Craftland Map Code field */}
       {tMap === 'Custom/Craftland' && (
-        <div>
-          <label className={labelClass}>Craftland Map Code (players will see this)</label>
-          <input className={inputClass} value={tMapCode} onChange={e => setTMapCode(e.target.value)} placeholder="e.g. CRAFT-ABC123" />
+        <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl">
+          <label className="block text-amber-300 text-xs font-bold mb-1">Craftland Map Code (shared with registered players)</label>
+          <input className={inputClass} value={tMapCode} onChange={e => setTMapCode(e.target.value)} placeholder="e.g. #FREEFIRE98210-CRAFT" />
         </div>
       )}
-      <div className="grid grid-cols-3 gap-3">
-        <div>
-          <label className={labelClass}>Overall Prize Pool (PKR)</label>
-          <input type="number" className={inputClass} value={tPrize} onChange={e => setTPrize(Number(e.target.value))} />
+
+      {/* Match Night Scheduling */}
+      <div className="p-3.5 bg-surface-300/50 border border-white/10 rounded-xl space-y-2.5">
+        <div className="flex items-center justify-between">
+          <label className="text-white font-bold text-xs flex items-center gap-1.5">
+            <span>🌙 Match Schedule (Night Matches: Sat & Sun, 7:00 PM – 11:00 PM)</span>
+          </label>
         </div>
-        <div>
-          <label className={labelClass}>Booyah 1st Place (PKR)</label>
-          <input type="number" className={inputClass} value={tBooyah} onChange={e => setTBooyah(Number(e.target.value))} />
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className={labelClass}>Match Day / Date</label>
+            <input
+              className={inputClass}
+              value={tMatchDate}
+              onChange={e => { setTMatchDate(e.target.value); setTStartTime(`${e.target.value}, ${tMatchTime}`); }}
+              placeholder="e.g. Saturday Night"
+            />
+          </div>
+          <div>
+            <label className={labelClass}>Match Time (PKT)</label>
+            <input
+              className={inputClass}
+              value={tMatchTime}
+              onChange={e => { setTMatchTime(e.target.value); setTStartTime(`${tMatchDate}, ${e.target.value}`); }}
+              placeholder="e.g. 09:00 PM PKT"
+            />
+          </div>
         </div>
-        <div>
-          <label className={labelClass}>Entry Fee (0=Free)</label>
-          <input type="number" className={inputClass} value={tEntryFee} onChange={e => setTEntryFee(Number(e.target.value))} />
+        <div className="flex items-center gap-1.5 flex-wrap pt-1">
+          <span className="text-[10px] text-white/40 font-bold uppercase mr-1">Quick Presets:</span>
+          {[
+            { label: 'Sat 8:00 PM', d: 'Saturday Night', t: '08:00 PM PKT' },
+            { label: 'Sat 9:30 PM', d: 'Saturday Night', t: '09:30 PM PKT' },
+            { label: 'Sat 11:00 PM', d: 'Saturday Night', t: '11:00 PM PKT' },
+            { label: 'Sun 8:00 PM', d: 'Sunday Night', t: '08:00 PM PKT' },
+            { label: 'Sun 9:30 PM', d: 'Sunday Night', t: '09:30 PM PKT' },
+            { label: 'Sun 11:00 PM', d: 'Sunday Night', t: '11:00 PM PKT' },
+          ].map(p => (
+            <button
+              type="button"
+              key={p.label}
+              onClick={() => {
+                setTMatchDate(p.d);
+                setTMatchTime(p.t);
+                setTStartTime(`${p.d}, ${p.t}`);
+              }}
+              className="text-[11px] px-2 py-0.5 rounded-md bg-white/5 hover:bg-white/15 border border-white/10 text-white/80 transition-colors"
+            >
+              {p.label}
+            </button>
+          ))}
         </div>
       </div>
+
+      {/* Prize Pool & 1st to 6th Winner Distribution */}
+      <div className="p-3.5 bg-surface-300/50 border border-white/10 rounded-xl space-y-3">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div>
+            <label className="text-white font-bold text-xs">🏆 Prize Pool & Winner Payout Distribution (1st – 6th)</label>
+            <p className="text-[11px] text-white/50">Overall pool distributed among top 6 placements</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => autoDistributePrizes(tPrize)}
+            className="text-xs font-bold px-2.5 py-1 rounded-lg bg-neon-gold/20 text-neon-gold border border-neon-gold/40 hover:bg-neon-gold/30 transition-colors"
+          >
+            ⚡ Auto-Calculate Distribution
+          </button>
+        </div>
+
+        <div>
+          <label className={labelClass}>Overall Tournament Prize Pool (PKR)</label>
+          <input
+            type="number"
+            className={inputClass + " font-bold text-neon-gold"}
+            value={tPrize}
+            onChange={e => {
+              const val = Number(e.target.value);
+              setTPrize(val);
+            }}
+          />
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+          <div className="bg-surface-200 p-2.5 rounded-lg border border-neon-gold/40">
+            <label className="text-[11px] font-bold text-neon-gold block mb-1">🥇 1st Place (Booyah)</label>
+            <input
+              type="number"
+              className={inputClass}
+              value={tPrize1}
+              onChange={e => {
+                const val = Number(e.target.value);
+                setTPrize1(val);
+                setTBooyah(val);
+              }}
+            />
+          </div>
+          <div className="bg-surface-200 p-2.5 rounded-lg border border-white/10">
+            <label className="text-[11px] font-bold text-slate-300 block mb-1">🥈 2nd Place</label>
+            <input type="number" className={inputClass} value={tPrize2} onChange={e => setTPrize2(Number(e.target.value))} />
+          </div>
+          <div className="bg-surface-200 p-2.5 rounded-lg border border-white/10">
+            <label className="text-[11px] font-bold text-slate-300 block mb-1">🥉 3rd Place</label>
+            <input type="number" className={inputClass} value={tPrize3} onChange={e => setTPrize3(Number(e.target.value))} />
+          </div>
+          <div className="bg-surface-200 p-2.5 rounded-lg border border-white/10">
+            <label className="text-[11px] font-bold text-slate-400 block mb-1">4th Place</label>
+            <input type="number" className={inputClass} value={tPrize4} onChange={e => setTPrize4(Number(e.target.value))} />
+          </div>
+          <div className="bg-surface-200 p-2.5 rounded-lg border border-white/10">
+            <label className="text-[11px] font-bold text-slate-400 block mb-1">5th Place</label>
+            <input type="number" className={inputClass} value={tPrize5} onChange={e => setTPrize5(Number(e.target.value))} />
+          </div>
+          <div className="bg-surface-200 p-2.5 rounded-lg border border-white/10">
+            <label className="text-[11px] font-bold text-slate-400 block mb-1">6th Place</label>
+            <input type="number" className={inputClass} value={tPrize6} onChange={e => setTPrize6(Number(e.target.value))} />
+          </div>
+        </div>
+      </div>
+
+      {/* Entry Fee, Slots & Kill Bonus */}
       <div className="grid grid-cols-3 gap-3">
         <div>
-          <label className={labelClass}>Per Kill Bonus (PKR)</label>
-          <input type="number" className={inputClass} value={tPerKill} onChange={e => setTPerKill(Number(e.target.value))} />
-        </div>
-        <div>
-          <label className={labelClass}>Has Per Kill?</label>
-          <select className={selectClass} value={tHasPerKill ? 'yes' : 'no'} onChange={e => setTHasPerKill(e.target.value === 'yes')}>
-            <option value="yes">Yes</option><option value="no">No</option>
-          </select>
+          <label className={labelClass}>Entry Fee (PKR, 0=Free)</label>
+          <input type="number" className={inputClass} value={tEntryFee} onChange={e => setTEntryFee(Number(e.target.value))} />
         </div>
         <div>
           <label className={labelClass}>Total Slots</label>
           <input type="number" className={inputClass} value={tSlots} onChange={e => setTSlots(Number(e.target.value))} />
         </div>
+        <div>
+          <label className={labelClass}>Per Kill Bonus (PKR)</label>
+          <input type="number" className={inputClass} value={tPerKill} onChange={e => setTPerKill(Number(e.target.value))} />
+        </div>
       </div>
-      <div>
-        <label className={labelClass}>Start Time</label>
-        <input className={inputClass} value={tStartTime} onChange={e => setTStartTime(e.target.value)} placeholder="Today, 9:00 PM PST" />
-      </div>
+
       <div>
         <label className={labelClass}>YouTube Live URL</label>
         <input className={inputClass} value={tLiveUrl} onChange={e => setTLiveUrl(e.target.value)} placeholder="https://youtube.com/..." />
       </div>
-      <div>
-        <label className={labelClass}>Bullet Points (one per line)</label>
+
+      {/* Rules Box */}
+      <div className="p-3.5 bg-surface-300/40 border border-primary/30 rounded-xl space-y-1.5">
+        <label className="text-primary font-bold text-xs block">
+          📋 Highlighted Tournament Rules (one rule per line)
+        </label>
         <textarea
-          className={inputClass + " resize-none h-24"}
+          className={inputClass + " resize-none h-24 font-sans leading-relaxed"}
+          value={tRules}
+          onChange={e => setTRules(e.target.value)}
+          placeholder="Enter tournament rules..."
+        />
+      </div>
+
+      <div>
+        <label className={labelClass}>Match Highlights / Bullet Points (one per line)</label>
+        <textarea
+          className={inputClass + " resize-none h-20"}
           value={tBullets}
           onChange={e => setTBullets(e.target.value)}
-          placeholder="?? One bullet point per line"
+          placeholder="• One bullet point per line"
         />
       </div>
     </div>

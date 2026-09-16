@@ -2,13 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── Theme CSS Variables (defaults: Electric Blue) ── */
+/* ── Theme Dynamic CSS Variables (defaults: Electric Blue) ── */
 :root {
   --font-inter: 'Inter', system-ui, sans-serif;
   --font-outfit: 'Outfit', 'Montserrat', sans-serif;
   --color-primary: #0ea5e9;
   --color-primary-rgb: 14, 165, 233;
   --color-secondary: #0369a1;
+  --color-secondary-rgb: 3, 105, 161;
+  --color-accent: #38bdf8;
+  --color-accent-rgb: 56, 189, 248;
   --color-glow: rgba(14, 165, 233, 0.45);
 }
 
@@ -31,14 +34,15 @@ body {
   position: relative;
 }
 
-/* Fixed background via pseudo-element to prevent mobile scroll freezing */
+/* Dynamic background gradient adapting to current theme */
 body::before {
   content: '';
   position: fixed;
   inset: 0;
   background-image:
-    radial-gradient(ellipse 80% 70% at 50% -20%, rgba(var(--color-primary-rgb), 0.18), rgba(6, 8, 16, 0)),
-    radial-gradient(circle at 100% 60%, rgba(255, 215, 0, 0.04), transparent 40%);
+    radial-gradient(ellipse 80% 70% at 50% -20%, rgba(var(--color-primary-rgb), 0.22), rgba(6, 8, 16, 0)),
+    radial-gradient(ellipse 60% 50% at 100% 60%, rgba(var(--color-secondary-rgb), 0.12), transparent 50%),
+    radial-gradient(circle at 10% 80%, rgba(var(--color-accent-rgb), 0.08), transparent 40%);
   pointer-events: none;
   z-index: -1;
 }
@@ -56,40 +60,39 @@ body::before {
 
 /* ── Theme-aware Glow / Glass Utilities ── */
 .neon-glow-primary {
-  text-shadow: 0 0 14px rgba(var(--color-primary-rgb), 0.8),
-               0 0 28px rgba(var(--color-primary-rgb), 0.4);
+  text-shadow: 0 0 14px rgba(var(--color-primary-rgb), 0.85),
+               0 0 28px rgba(var(--color-primary-rgb), 0.45);
 }
-/* legacy aliases */
 .neon-glow-purple,
 .neon-glow-crimson { @apply neon-glow-primary; }
 
 .box-glow-primary {
-  box-shadow: 0 0 30px rgba(var(--color-primary-rgb), 0.3),
+  box-shadow: 0 0 30px rgba(var(--color-primary-rgb), 0.35),
               inset 0 0 15px rgba(var(--color-primary-rgb), 0.1);
 }
 .box-glow-purple,
 .box-glow-crimson { @apply box-glow-primary; }
 
 .card-glass {
-  background: rgba(8, 12, 22, 0.85);
+  background: rgba(8, 12, 22, 0.88);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(var(--color-primary-rgb), 0.18);
+  border: 1px solid rgba(var(--color-primary-rgb), 0.22);
 }
 
 .card-glass-hover {
   transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .card-glass-hover:hover {
-  background: rgba(12, 18, 34, 0.92);
-  border-color: rgba(var(--color-primary-rgb), 0.55);
+  background: rgba(12, 18, 34, 0.95);
+  border-color: rgba(var(--color-primary-rgb), 0.65);
   transform: translateY(-3px);
-  box-shadow: 0 14px 38px rgba(var(--color-primary-rgb), 0.22);
+  box-shadow: 0 14px 38px rgba(var(--color-primary-rgb), 0.25);
 }
 
 .cyber-badge {
-  background: linear-gradient(135deg, rgba(var(--color-primary-rgb), 0.22) 0%, rgba(255, 215, 0, 0.08) 100%);
-  border: 1px solid rgba(var(--color-primary-rgb), 0.4);
+  background: linear-gradient(135deg, rgba(var(--color-primary-rgb), 0.25) 0%, rgba(var(--color-secondary-rgb), 0.15) 100%);
+  border: 1px solid rgba(var(--color-primary-rgb), 0.45);
   backdrop-filter: blur(4px);
 }
 
@@ -114,11 +117,7 @@ body::before {
 }
 @keyframes pulseGlow {
   0%, 100% { box-shadow: 0 0 12px rgba(var(--color-primary-rgb), 0.4); }
-  50%       { box-shadow: 0 0 28px rgba(var(--color-primary-rgb), 0.75); }
-}
-@keyframes shimmer {
-  0%   { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  50%       { box-shadow: 0 0 28px rgba(var(--color-primary-rgb), 0.8); }
 }
 
 .animate-fade-in-up { animation: fadeInUp 0.45s ease both; }
@@ -131,12 +130,10 @@ body::before {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Minimum touch target 44px on mobile */
 @media (max-width: 768px) {
-  button, [role="button"] { min-height: 40px; }
+  button, [role="button"] { min-height: 38px; }
 }
 
-/* Safe area bottom padding for notch phones */
 .pb-safe {
   padding-bottom: max(1rem, env(safe-area-inset-bottom));
 }

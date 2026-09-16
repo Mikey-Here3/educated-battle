@@ -22,6 +22,8 @@ export interface Tournament {
   slotsFilled: number;
   totalSlots: number;
   startTime: string;
+  matchDate?: string; // e.g. "Saturday (Weekend Night)"
+  matchTime?: string; // e.g. "09:00 PM PKT"
   isFeatured?: boolean;
   roomId?: string;
   roomPassword?: string;
@@ -36,6 +38,9 @@ export interface Tournament {
     first: number;
     second: number;
     third: number;
+    fourth?: number;
+    fifth?: number;
+    sixth?: number;
     perKillBonus: number;
   };
   rules: string[];
@@ -84,11 +89,13 @@ export const INITIAL_TOURNAMENTS: Tournament[] = [
     prizePool: 15000,
     hasPerKill: true,
     perKill: 50,
-    booyahPrize: 8000,
+    booyahPrize: 7000,
     entryFee: 100,
     slotsFilled: 48,
     totalSlots: 48,
-    startTime: 'LIVE STREAMING NOW',
+    startTime: 'Saturday Night, 09:00 PM PKT',
+    matchDate: 'Saturday Night',
+    matchTime: '09:00 PM PKT',
     isFeatured: true,
     roomId: 'EG-984210',
     roomPassword: '777',
@@ -98,20 +105,23 @@ export const INITIAL_TOURNAMENTS: Tournament[] = [
     bulletPoints: [
       '• Official YouTube Live shoutcasting & spectator broadcast.',
       '• Mobile devices strictly verified (Zero emulators permitted).',
-      '• Booyah payout: PKR 8,000 + PKR 50 per kill distributed instantly.',
+      '• Booyah payout: PKR 7,000 + PKR 50 per kill distributed instantly.',
       '• Room ID & Password available only to verified registered squads.'
     ],
     prizes: {
-      first: 8000,
-      second: 4000,
+      first: 7000,
+      second: 3500,
       third: 2000,
+      fourth: 1000,
+      fifth: 800,
+      sixth: 700,
       perKillBonus: 50,
     },
     rules: [
-      'Emulators strictly prohibited (Mobile devices only).',
-      'Teammates must join using registered Free Fire UIDs.',
-      'No teaming or cheating. Violators face permanent ban and forfeiture.',
-      'Match results and kills recorded live by admin spectators.',
+      '📱 Mobile devices only (Zero emulators / PC players permitted).',
+      '🛡️ Anti-cheat and fair play strictly enforced. Teaming equals permanent ban.',
+      '🆔 All players must enter custom room with registered Free Fire UIDs.',
+      '⚡ Match results and frags recorded live by official tournament marshals.',
     ]
   },
   {
@@ -124,11 +134,13 @@ export const INITIAL_TOURNAMENTS: Tournament[] = [
     prizePool: 5000,
     hasPerKill: true,
     perKill: 30,
-    booyahPrize: 2500,
+    booyahPrize: 2200,
     entryFee: 0, // FREE ENTRY
     slotsFilled: 48, // FULL Promotional
     totalSlots: 48,
-    startTime: 'Today, 8:00 PM PST',
+    startTime: 'Saturday Night, 10:30 PM PKT',
+    matchDate: 'Saturday Night',
+    matchTime: '10:30 PM PKT',
     isFeatured: true,
     roomId: 'EG-SOLO-304',
     roomPassword: '555',
@@ -137,20 +149,23 @@ export const INITIAL_TOURNAMENTS: Tournament[] = [
     description: 'High-speed Free Fire Solo battleground with zero entry fee and cash prizes.',
     bulletPoints: [
       '• 100% FREE ENTRY tournament — 48/48 Slots Full (Promotional Match).',
-      '• PKR 2,500 Booyah cash prize + PKR 30 per verified kill.',
-      '• Room credentials unlock 15 minutes before 8:00 PM PST.',
+      '• PKR 2,200 Booyah cash prize + PKR 30 per verified kill.',
+      '• Room credentials unlock 15 minutes before match start.',
       '• Join with your registered Free Fire in-game UID.'
     ],
     prizes: {
-      first: 2500,
-      second: 1500,
-      third: 500,
+      first: 2200,
+      second: 1200,
+      third: 700,
+      fourth: 400,
+      fifth: 300,
+      sixth: 200,
       perKillBonus: 30,
     },
     rules: [
-      'Free Fire mobile only.',
-      'Do not share Room ID or Password with outsiders.',
-      'Top 3 survivors + top fraggers receive instant JazzCash payout.',
+      '📱 Free Fire mobile only.',
+      '🔒 Do not share Room ID or Password with non-registered players.',
+      '💵 Top 6 survivors + fraggers receive instant JazzCash payment confirmation.',
     ]
   },
   {
@@ -163,11 +178,13 @@ export const INITIAL_TOURNAMENTS: Tournament[] = [
     prizePool: 8000,
     hasPerKill: true,
     perKill: 40,
-    booyahPrize: 4500,
+    booyahPrize: 3800,
     entryFee: 50,
     slotsFilled: 22,
     totalSlots: 24,
-    startTime: 'Tonight, 10:30 PM PST',
+    startTime: 'Sunday Night, 08:30 PM PKT',
+    matchDate: 'Sunday Night',
+    matchTime: '08:30 PM PKT',
     isFeatured: false,
     roomId: 'EG-DUO-882',
     roomPassword: '999',
@@ -176,19 +193,22 @@ export const INITIAL_TOURNAMENTS: Tournament[] = [
     description: 'Intense 2v2 tactical battle across Kalahari with high per-kill multipliers.',
     bulletPoints: [
       '• Fast filling match: 22/24 Duos confirmed.',
-      '• PKR 4,500 1st place prize + PKR 40 bounty per kill.',
+      '• PKR 3,800 1st place prize + PKR 40 bounty per kill.',
       '• Custom room ID & Pass given strictly to joined players.',
       '• Screenshot winning leaderboard & submit via contact support if needed.'
     ],
     prizes: {
-      first: 4500,
-      second: 2000,
+      first: 3800,
+      second: 1800,
       third: 1000,
+      fourth: 600,
+      fifth: 450,
+      sixth: 350,
       perKillBonus: 40,
     },
     rules: [
-      'Duo partners must both be registered on Educated Gamer.',
-      'Gun attributes default / competitive settings.',
+      '📱 Duo partners must both be registered on Educated Gamer.',
+      '⚡ Gun attributes default / competitive esports settings.',
     ]
   },
   {
@@ -201,17 +221,19 @@ export const INITIAL_TOURNAMENTS: Tournament[] = [
     prizePool: 25000,
     hasPerKill: true,
     perKill: 75,
-    booyahPrize: 14000,
+    booyahPrize: 12000,
     entryFee: 150,
     slotsFilled: 48,
     totalSlots: 48,
-    startTime: 'Yesterday, 9:00 PM PST',
+    startTime: 'Sunday Night, 09:45 PM PKT',
+    matchDate: 'Sunday Night',
+    matchTime: '09:45 PM PKT',
     isFeatured: false,
     liveStreamUrl: 'https://www.youtube.com/channel/UCNCXkynVdk3Xt2MHjMwHXaw',
     description: 'Mega Squad Championship successfully concluded with verified JazzCash payouts.',
     bulletPoints: [
       '• WINNER: Team CYBORG — UID: 489201482 (PK_CYBORG_FF)',
-      '• Total Kills: 17 Squad Kills | Booyah Prize: PKR 14,000',
+      '• Total Kills: 17 Squad Kills | Booyah Prize: PKR 12,000',
       '• All payments confirmed & distributed via JazzCash by Admin.',
       '• Full match replay available on EDUCATED GAMER YouTube channel.'
     ],
@@ -220,13 +242,16 @@ export const INITIAL_TOURNAMENTS: Tournament[] = [
       ign: 'CYBORG_ESPORTS',
       uid: '489201482',
       kills: 17,
-      prizePKR: 15275,
+      prizePKR: 13275,
       rank: '1st Place Booyah',
     },
     prizes: {
-      first: 14000,
-      second: 7000,
+      first: 12000,
+      second: 5500,
       third: 3000,
+      fourth: 2000,
+      fifth: 1500,
+      sixth: 1000,
       perKillBonus: 75,
     },
     rules: [
