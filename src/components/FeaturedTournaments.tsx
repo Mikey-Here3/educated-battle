@@ -139,7 +139,7 @@ export const FeaturedTournaments: React.FC<FeaturedTournamentsProps> = ({
                 <div className="flex items-center justify-between text-xs text-slate-400 mb-3">
                   <span className="flex items-center gap-1">
                     <Zap className="h-3 w-3 text-crimson" />
-                    Per Kill: {t.hasPerKill && t.perKill > 0 ? `PKR ${t.perKill}` : 'Survival'}
+                    Per Kill: {(t.hasPerKill || t.perKill > 0) ? `PKR ${t.perKill}` : '---'}
                   </span>
                   <span className="flex items-center gap-1">
                     <Users className="h-3 w-3 text-primary" />

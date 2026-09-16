@@ -25,7 +25,8 @@ export const TournamentCard: React.FC<TournamentCardProps> = ({
   const isLive = tournament.status === 'live';
   const isSpecial = tournament.status === 'special';
   const isCompleted = tournament.status === 'completed';
-  const isUserRegistered = registeredTournaments.includes(tournament.id);
+  const isUserRegistered = Boolean(currentUser) && registeredTournaments.includes(tournament.id);
+  const isAdmin = currentUser?.role === 'admin';
 
   return (
     <div className={`group relative flex flex-col justify-between overflow-hidden rounded-3xl border transition-all duration-300 card-glass ${
@@ -195,7 +196,7 @@ export const TournamentCard: React.FC<TournamentCardProps> = ({
         <div className="flex flex-col justify-center border-x border-white/10 px-1">
           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Per Kill</span>
           <span className="text-base sm:text-lg font-black text-crimson font-display">
-            {tournament.hasPerKill && tournament.perKill > 0 ? `PKR ${tournament.perKill}` : 'Surviving'}
+            {(tournament.hasPerKill || tournament.perKill > 0) ? `PKR ${tournament.perKill}` : '---'}
           </span>
         </div>
 
@@ -253,7 +254,7 @@ export const TournamentCard: React.FC<TournamentCardProps> = ({
 
         <div className="flex items-center gap-2">
           {/* Room ID & Pass Button */}
-          {(isLive || isUserRegistered) && (
+          {(isUserRegistered || isAdmin) && (
             <button
               onClick={() => onViewRoomDetails(tournament)}
               className={`flex flex-1 items-center justify-center space-x-1.5 rounded-xl border py-2.5 text-xs font-black uppercase tracking-wider transition ${

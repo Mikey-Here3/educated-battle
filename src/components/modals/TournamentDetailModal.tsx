@@ -23,7 +23,7 @@ export const TournamentDetailModal: React.FC<TournamentDetailModalProps> = ({
 
   const isFull = tournament.slotsFilled >= tournament.totalSlots;
   const isCompleted = tournament.status === 'completed';
-  const isUserRegistered = registeredTournaments.includes(tournament.id);
+  const isUserRegistered = Boolean(currentUser) && registeredTournaments.includes(tournament.id);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 backdrop-blur-md overflow-y-auto">
