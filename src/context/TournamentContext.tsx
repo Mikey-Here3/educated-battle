@@ -40,7 +40,7 @@ interface TournamentContextType {
   leaderboard: PlayerRank[];
   loadingTournaments: boolean;
   createTournament: (tournament: Omit<Tournament, 'id' | 'slotsFilled'>) => Promise<boolean>;
-  updateTournament: (id: string, updatedFields: Partial<Tournament>) => void;
+  updateTournament: (id: string, updatedFields: Partial<Tournament>) => Promise<void>;
   deleteTournament: (id: string) => void;
   setTournamentWinner: (id: string, winner: TournamentWinner) => void;
   submitDeposit: (data: Omit<DepositRequest, 'id' | 'date' | 'status'>) => Promise<{ success: boolean; error?: string }>;
@@ -211,12 +211,60 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
   };
 
-  const updateTournament = (id: string, updatedFields: Partial<Tournament>) => {
+
+  const updateTournament = async (id: string, updatedFields: Partial<Tournament>) => {
+    // Optimistic local update for instant UI feedback
     setTournaments((prev) => {
       const updated = prev.map((t) => (t.id === id ? { ...t, ...updatedFields } : t));
       localStorage.setItem('eg_tournaments_list', JSON.stringify(updated));
       return updated;
     });
+
+    // Persist to database via API
+    try {
+      // Map front-end Tournament fields to database column names
+      const apiPayload: Record<string, any> = { id };
+      if (updatedFields.title !== undefined) apiPayload.title = updatedFields.title;
+      if (updatedFields.category !== undefined) apiPayload.category = updatedFields.category;
+      if (updatedFields.type !== undefined) apiPayload.type = updatedFields.type;
+      if (updatedFields.format !== undefined) apiPayload.format = updatedFields.format;
+      if (updatedFields.mode !== undefined) apiPayload.mode = updatedFields.mode;
+      if (updatedFields.map !== undefined) apiPayload.map = updatedFields.map;
+      if (updatedFields.allowedWeapons !== undefined) apiPayload.allowedWeapons = updatedFields.allowedWeapons;
+      if (updatedFields.rules !== undefined) apiPayload.rules = updatedFields.rules;
+      if (updatedFields.status !== undefined) apiPayload.status = updatedFields.status;
+      if (updatedFields.prizePool !== undefined) apiPayload.prizePool = updatedFields.prizePool;
+      if (updatedFields.booyahPrize !== undefined) apiPayload.winnerPrize = updatedFields.booyahPrize;
+      if (updatedFields.perKill !== undefined) apiPayload.perKill = updatedFields.perKill;
+      if (updatedFields.entryFee !== undefined) apiPayload.entryFee = updatedFields.entryFee;
+      if (updatedFields.totalSlots !== undefined) apiPayload.totalSlots = updatedFields.totalSlots;
+      if (updatedFields.matchDate !== undefined) apiPayload.matchDate = updatedFields.matchDate;
+      if (updatedFields.matchTime !== undefined) apiPayload.matchTime = updatedFields.matchTime;
+      if (updatedFields.startTime !== undefined) apiPayload.startTime = updatedFields.startTime;
+      // bannerImage on the front-end maps to bannerUrl in the database
+      if (updatedFields.bannerImage !== undefined) apiPayload.bannerUrl = updatedFields.bannerImage;
+      if (updatedFields.roomId !== undefined) apiPayload.roomId = updatedFields.roomId;
+      if (updatedFields.roomPassword !== undefined) apiPayload.roomPassword = updatedFields.roomPassword;
+      if (updatedFields.liveStreamUrl !== undefined) apiPayload.liveStreamUrl = updatedFields.liveStreamUrl;
+      if (updatedFields.prizes !== undefined) apiPayload.prizesJson = updatedFields.prizes;
+      if (updatedFields.isFeatured !== undefined) apiPayload.isFeatured = updatedFields.isFeatured;
+
+      const res = await fetch('/api/admin/tournaments', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(apiPayload),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        console.error('Tournament update API error:', err);
+      } else {
+        // Refresh from DB to confirm persisted state
+        await refreshTournaments();
+      }
+    } catch (error) {
+      console.error('Tournament update network error:', error);
+    }
   };
 
   const deleteTournament = (id: string) => {
