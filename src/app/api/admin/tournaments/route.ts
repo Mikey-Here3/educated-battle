@@ -87,7 +87,11 @@ export async function PATCH(req: NextRequest) {
         ? fields.allowedWeapons.join(", ")
         : fields.allowedWeapons || null;
     }
-    if (fields.rules !== undefined) updateData.rules = fields.rules;
+    if (fields.rules !== undefined) {
+      updateData.rules = Array.isArray(fields.rules)
+        ? fields.rules.join("\n")
+        : fields.rules || null;
+    }
     if (fields.status !== undefined) updateData.status = fields.status;
     if (fields.prizePool !== undefined) updateData.prizePool = Number(fields.prizePool);
     if (fields.winnerPrize !== undefined) updateData.winnerPrize = Number(fields.winnerPrize);

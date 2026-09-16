@@ -233,8 +233,13 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       if (updatedFields.format !== undefined) apiPayload.format = updatedFields.format;
       if (updatedFields.mode !== undefined) apiPayload.mode = updatedFields.mode;
       if (updatedFields.map !== undefined) apiPayload.map = updatedFields.map;
-      if (updatedFields.allowedWeapons !== undefined) apiPayload.allowedWeapons = updatedFields.allowedWeapons;
-      if (updatedFields.rules !== undefined) apiPayload.rules = updatedFields.rules;
+      if (updatedFields.allowedWeapons !== undefined) {
+        apiPayload.allowedWeapons = Array.isArray(updatedFields.allowedWeapons) ? updatedFields.allowedWeapons.join(', ') : updatedFields.allowedWeapons;
+      }
+      if (updatedFields.rules !== undefined) {
+        apiPayload.rules = Array.isArray(updatedFields.rules) ? updatedFields.rules.join('\n') : updatedFields.rules;
+      }
+
       if (updatedFields.status !== undefined) apiPayload.status = updatedFields.status;
       if (updatedFields.prizePool !== undefined) apiPayload.prizePool = updatedFields.prizePool;
       if (updatedFields.booyahPrize !== undefined) apiPayload.winnerPrize = updatedFields.booyahPrize;
