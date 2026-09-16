@@ -39,18 +39,33 @@ export const JoinTournamentModal: React.FC<JoinTournamentModalProps> = ({
   const [error, setError] = useState('');
   const [confirmed, setConfirmed] = useState(false);
 
+  // Set first open slot when modal opens
+  React.useEffect(() => {
+    if (tournament) {
+      const booked = new Set((tournament as any).bookedSlots || []);
+      const total = tournament.totalSlots || 48;
+      for (let i = 1; i <= total; i++) {
+        if (!booked.has(i)) {
+          setSelectedSlot(i);
+          break;
+        }
+      }
+    }
+  }, [tournament]);
+
   if (!isOpen || !tournament) return null;
 
   const totalSlotsCount = tournament.totalSlots || 48;
   const occupiedCount = tournament.slotsFilled || 0;
+  const bookedSet = new Set<number>((tournament as any).bookedSlots || []);
   const isInsufficientBalance = currentUser ? (tournament.entryFee > 0 && currentUser.balancePKR < tournament.entryFee) : false;
 
-  const handleConfirmJoin = () => {
+  const handleConfirmJoin = async () => {
     if (!currentUser) return;
     setLoading(true);
     setError('');
 
-    const res = joinTournament(tournament.id, tournament.entryFee, selectedSlot);
+    const res = await joinTournament(tournament.id, tournament.entryFee, selectedSlot);
     setLoading(false);
 
     if (res.success) {
@@ -118,7 +133,7 @@ export const JoinTournamentModal: React.FC<JoinTournamentModalProps> = ({
             </div>
 
             <div className="rounded-xl bg-crimson/10 border border-crimson/30 p-3 text-left text-xs text-slate-300">
-              <p className="font-bold text-crimson mb-0.5">?? Match Room Rule:</p>
+              <p className="font-bold text-crimson mb-0.5">⚠️ Match Room Rule:</p>
               <p>When you join the Free Fire Custom Room, occupy <strong>Slot #{selectedSlot}</strong> strictly. Any player sitting in the wrong slot will be kicked before match start.</p>
             </div>
 
@@ -126,7 +141,7 @@ export const JoinTournamentModal: React.FC<JoinTournamentModalProps> = ({
               onClick={onClose}
               className="w-full rounded-xl bg-gradient-to-r from-crimson to-crimson-dark py-3.5 text-xs font-black uppercase tracking-wider text-white shadow-lg"
             >
-              Done ? View Match Console
+              Done — View Match Console
             </button>
           </div>
         ) : currentUser ? (
@@ -157,7 +172,7 @@ export const JoinTournamentModal: React.FC<JoinTournamentModalProps> = ({
 
               <div className="grid grid-cols-6 sm:grid-cols-8 gap-1.5 max-h-40 overflow-y-auto p-2 rounded-2xl border border-white/10 bg-surface-200/50">
                 {Array.from({ length: totalSlotsCount }, (_, i) => i + 1).map((slotNum) => {
-                  const isOccupied = slotNum <= occupiedCount && slotNum !== selectedSlot;
+                  const isOccupied = (bookedSet.size > 0 ? bookedSet.has(slotNum) : slotNum <= occupiedCount) && slotNum !== selectedSlot;
                   const isSelected = slotNum === selectedSlot;
 
                   return (

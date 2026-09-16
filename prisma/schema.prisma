@@ -14,8 +14,11 @@ model User {
   phone        String?       @unique
   ign          String
   uid          String
+  passwordHash String?
   avatarUrl    String?
+  role         String        @default("player")
   balancePKR   Float         @default(0.0)
+  reservedPKR  Float         @default(0.0)
   winningsPKR  Float         @default(0.0)
   bonusPKR     Float         @default(0.0)
   createdAt    DateTime      @default(now())
@@ -74,24 +77,29 @@ model Slot {
   ign          String
   uid          String
   createdAt    DateTime   @default(now())
-  tournament   Tournament @relation(fields: [tournamentId], references: [id])
-  user         User       @relation(fields: [userId], references: [id])
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([tournamentId, slotNumber])
+  @@unique([tournamentId, userId])
   @@map("slots")
 }
 
 model Transaction {
-  id        String   @id @default(cuid())
-  userId    String
-  type      String
-  amountPKR Float
-  status    String   @default("PENDING")
-  method    String?
-  trxId     String?
-  proofUrl  String?
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id])
+  id            String   @id @default(cuid())
+  userId        String
+  type          String   // DEPOSIT, WITHDRAWAL, MATCH_FEE, PRIZE_WINNING, REFUND
+  amountPKR     Float
+  status        String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  method        String?  // JazzCash, EasyPaisa, Wallet
+  trxId         String?
+  proofUrl      String?
+  accountTitle  String?
+  accountNumber String?
+  note          String?
+  tournamentId  String?
+  createdAt     DateTime @default(now())
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("transactions")
 }

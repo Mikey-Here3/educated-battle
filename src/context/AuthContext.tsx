@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 export interface UserAccount {
   id: string;
@@ -10,6 +10,7 @@ export interface UserAccount {
   ign: string; // Free Fire In-Game Name
   uid: string; // Free Fire Player UID
   balancePKR: number;
+  reservedPKR?: number;
   winningPKR: number;
   role: 'player' | 'admin';
 }
@@ -40,22 +41,68 @@ interface AuthContextType {
   login: (email: string, pass: string) => Promise<{ success: boolean; role?: 'player' | 'admin'; error?: string }>;
   signup: (userData: { name: string; email: string; pass: string; phone: string; ign: string; uid: string }) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
-  joinTournament: (tournamentId: string, entryFee: number, slotNumber: number) => { success: boolean; error?: string; remainingBalance?: number };
+  joinTournament: (tournamentId: string, entryFee: number, slotNumber: number) => Promise<{ success: boolean; error?: string; remainingBalance?: number }>;
   submitContactQuery: (query: Omit<ContactQuery, 'id' | 'createdAt' | 'status'>) => void;
   updateUserBalance: (newBalance: number) => void;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const INITIAL_QUERIES: ContactQuery[] = [];
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<UserAccount | null>(null);
-  const [registeredTournaments, setRegisteredTournaments] = useState<string[]>([]); // Starts EMPTY for fresh users
+  const [registeredTournaments, setRegisteredTournaments] = useState<string[]>([]);
   const [bookedSlots, setBookedSlots] = useState<Record<string, BookedSlotDetail>>({});
-  const [contactQueries, setContactQueries] = useState<ContactQuery[]>(INITIAL_QUERIES);
+  const [contactQueries, setContactQueries] = useState<ContactQuery[]>([]);
 
-  // Load from localStorage on mount
+  // Refresh user data directly from database
+  const refreshUser = useCallback(async () => {
+    try {
+      const res = await fetch('/api/auth/me');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.user) {
+          const userAccount: UserAccount = {
+            id: data.user.id,
+            name: data.user.name,
+            email: data.user.email,
+            phone: data.user.phone || '',
+            ign: data.user.ign,
+            uid: data.user.uid,
+            balancePKR: data.user.balancePKR || 0,
+            reservedPKR: data.user.reservedPKR || 0,
+            winningPKR: data.user.winningsPKR || 0,
+            role: (data.user.role as 'player' | 'admin') || 'player',
+          };
+          setCurrentUser(userAccount);
+          localStorage.setItem('eg_user_session', JSON.stringify(userAccount));
+
+          // Sync registered tournaments and booked slots from real database slots
+          if (Array.isArray(data.user.slots)) {
+            const matchIds = data.user.slots.map((s: any) => s.tournamentId);
+            setRegisteredTournaments(matchIds);
+            localStorage.setItem('eg_joined_matches', JSON.stringify(matchIds));
+
+            const slotMap: Record<string, BookedSlotDetail> = {};
+            data.user.slots.forEach((s: any) => {
+              slotMap[s.tournamentId] = {
+                slotNumber: s.slotNumber,
+                uid: s.uid,
+                ign: s.ign,
+                bookedAt: s.createdAt ? new Date(s.createdAt).toLocaleTimeString() : 'Verified',
+              };
+            });
+            setBookedSlots(slotMap);
+            localStorage.setItem('eg_booked_slots', JSON.stringify(slotMap));
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Failed to sync user from database:', err);
+    }
+  }, []);
+
+  // On mount: read cached state, then immediately verify with real database
   useEffect(() => {
     try {
       const savedUser = localStorage.getItem('eg_user_session');
@@ -75,122 +122,93 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setContactQueries(JSON.parse(savedQueries));
       }
     } catch {}
-  }, []);
+
+    // Verify against DB
+    refreshUser();
+  }, [refreshUser]);
 
   const login = async (email: string, pass: string): Promise<{ success: boolean; role?: 'player' | 'admin'; error?: string }> => {
-    // Admin login
-    if (email === 'admin@educatedgamer.com' && pass === 'Password123!') {
-      const adminUser: UserAccount = {
-        id: 'admin-1',
-        name: 'Educated Gamer Admin',
-        email: 'admin@educatedgamer.com',
-        phone: '03190799711',
-        ign: 'EG_ADMIN_PK',
-        uid: '100000001',
-        balancePKR: 99999,
-        winningPKR: 50000,
-        role: 'admin',
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password: pass }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        return { success: false, error: data.error || 'Authentication failed.' };
+      }
+
+      const userAccount: UserAccount = {
+        id: data.user.id,
+        name: data.user.name,
+        email: data.user.email,
+        phone: data.user.phone,
+        ign: data.user.ign,
+        uid: data.user.uid,
+        balancePKR: data.user.balancePKR,
+        reservedPKR: data.user.reservedPKR,
+        winningPKR: data.user.winningsPKR,
+        role: data.role as 'player' | 'admin',
       };
-      setCurrentUser(adminUser);
-      localStorage.setItem('eg_user_session', JSON.stringify(adminUser));
-      document.cookie = 'eg_admin=1; path=/; max-age=86400; SameSite=Lax';
-      return { success: true, role: 'admin' };
+
+      setCurrentUser(userAccount);
+      localStorage.setItem('eg_user_session', JSON.stringify(userAccount));
+      
+      // Refresh DB data to fetch existing slots
+      await refreshUser();
+
+      return { success: true, role: userAccount.role };
+    } catch (error: any) {
+      return { success: false, error: error?.message || 'Network error during login' };
     }
-
-    // Registered player lookup
-    const storedUsersStr = localStorage.getItem('eg_registered_accounts');
-    const storedUsers: (UserAccount & { pass: string })[] = storedUsersStr ? JSON.parse(storedUsersStr) : [];
-    const matched = storedUsers.find(u => u.email.toLowerCase() === email.toLowerCase() && u.pass === pass);
-
-    if (matched) {
-      const playerUser: UserAccount = {
-        id: matched.id,
-        name: matched.name,
-        email: matched.email,
-        phone: matched.phone,
-        ign: matched.ign,
-        uid: matched.uid,
-        balancePKR: matched.balancePKR,
-        winningPKR: matched.winningPKR,
-        role: 'player',
-      };
-      setCurrentUser(playerUser);
-      localStorage.setItem('eg_user_session', JSON.stringify(playerUser));
-      return { success: true, role: 'player' };
-    }
-
-    // Demo test player
-    if (email.toLowerCase() === 'player@educatedgamer.com' && pass === 'Player123!') {
-      const demoPlayer: UserAccount = {
-        id: 'usr-demo-1',
-        name: 'Asad Ali',
-        email: 'player@educatedgamer.com',
-        phone: '03190799711',
-        ign: 'PK_LEGEND_FF',
-        uid: '592810482',
-        balancePKR: 500, // PKR 500 balance for demo registration testing
-        winningPKR: 850,
-        role: 'player',
-      };
-      setCurrentUser(demoPlayer);
-      localStorage.setItem('eg_user_session', JSON.stringify(demoPlayer));
-      return { success: true, role: 'player' };
-    }
-
-    return { success: false, error: 'Invalid email or password. Please create an account if you are new.' };
   };
 
   const signup = async (data: { name: string; email: string; pass: string; phone: string; ign: string; uid: string }) => {
-    if (!data.name || !data.email || !data.pass || !data.phone || !data.ign || !data.uid) {
-      return { success: false, error: 'All fields including Free Fire UID and IGN are mandatory.' };
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      const resData = await res.json();
+      if (!res.ok || !resData.success) {
+        return { success: false, error: resData.error || 'Registration failed.' };
+      }
+
+      const sessionUser: UserAccount = {
+        id: resData.user.id,
+        name: resData.user.name,
+        email: resData.user.email,
+        phone: resData.user.phone,
+        ign: resData.user.ign,
+        uid: resData.user.uid,
+        balancePKR: resData.user.balancePKR,
+        reservedPKR: resData.user.reservedPKR,
+        winningPKR: resData.user.winningsPKR,
+        role: 'player',
+      };
+
+      setCurrentUser(sessionUser);
+      localStorage.setItem('eg_user_session', JSON.stringify(sessionUser));
+      setRegisteredTournaments([]);
+      setBookedSlots({});
+
+      return { success: true };
+    } catch (error: any) {
+      return { success: false, error: error?.message || 'Network error during registration' };
     }
-
-    const newUser: UserAccount & { pass: string } = {
-      id: `usr-${Date.now()}`,
-      name: data.name,
-      email: data.email,
-      phone: data.phone,
-      ign: data.ign,
-      uid: data.uid,
-      balancePKR: 0, // Starts at 0 PKR (Needs JazzCash deposit)
-      winningPKR: 0,
-      role: 'player',
-      pass: data.pass,
-    };
-
-    const storedUsersStr = localStorage.getItem('eg_registered_accounts');
-    const storedUsers: (UserAccount & { pass: string })[] = storedUsersStr ? JSON.parse(storedUsersStr) : [];
-    
-    if (storedUsers.some(u => u.email.toLowerCase() === data.email.toLowerCase())) {
-      return { success: false, error: 'An account with this email already exists.' };
-    }
-    if (storedUsers.some(u => u.uid === data.uid)) {
-      return { success: false, error: 'This Free Fire UID is already registered.' };
-    }
-
-    storedUsers.push(newUser);
-    localStorage.setItem('eg_registered_accounts', JSON.stringify(storedUsers));
-
-    const sessionUser: UserAccount = {
-      id: newUser.id,
-      name: newUser.name,
-      email: newUser.email,
-      phone: newUser.phone,
-      ign: newUser.ign,
-      uid: newUser.uid,
-      balancePKR: 0,
-      winningPKR: 0,
-      role: 'player',
-    };
-    setCurrentUser(sessionUser);
-    localStorage.setItem('eg_user_session', JSON.stringify(sessionUser));
-    return { success: true };
   };
 
   const logout = () => {
     setCurrentUser(null);
+    setRegisteredTournaments([]);
+    setBookedSlots({});
     localStorage.removeItem('eg_user_session');
-    document.cookie = 'eg_admin=; path=/; max-age=0; SameSite=Lax';
+    localStorage.removeItem('eg_joined_matches');
+    localStorage.removeItem('eg_booked_slots');
     fetch('/api/auth/login', { method: 'DELETE' }).catch(() => {});
   };
 
@@ -201,52 +219,64 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem('eg_user_session', JSON.stringify(updated));
   };
 
-  const joinTournament = (tournamentId: string, entryFee: number, slotNumber: number) => {
+  const joinTournament = async (
+    tournamentId: string,
+    entryFee: number,
+    slotNumber: number
+  ): Promise<{ success: boolean; error?: string; remainingBalance?: number }> => {
     if (!currentUser) {
       return { success: false, error: 'Please sign in or create an account to join this match.' };
     }
 
-    // Check if already registered
     if (registeredTournaments.includes(tournamentId)) {
       return { success: false, error: 'You are already registered in this tournament!' };
     }
 
-    // Check balance if paid entry
-    if (entryFee > 0 && currentUser.balancePKR < entryFee) {
-      return { 
-        success: false, 
-        error: `Insufficient balance! Your coin balance is PKR ${currentUser.balancePKR}, but this tournament entry fee is PKR ${entryFee}. Please add coins via JazzCash to join.` 
-      };
-    }
+    try {
+      const res = await fetch('/api/slots/join', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tournamentId,
+          slotNumber,
+          userId: currentUser.id,
+        }),
+      });
 
-    // Deduct entry fee
-    const newBalance = Math.max(0, currentUser.balancePKR - entryFee);
-    const updatedUser: UserAccount = {
-      ...currentUser,
-      balancePKR: newBalance,
-    };
-    setCurrentUser(updatedUser);
-    localStorage.setItem('eg_user_session', JSON.stringify(updatedUser));
-
-    // Update registered tournaments
-    const updatedMatches = [...registeredTournaments, tournamentId];
-    setRegisteredTournaments(updatedMatches);
-    localStorage.setItem('eg_joined_matches', JSON.stringify(updatedMatches));
-
-    // Update booked slots
-    const updatedSlots = {
-      ...bookedSlots,
-      [tournamentId]: {
-        slotNumber,
-        uid: currentUser.uid,
-        ign: currentUser.ign,
-        bookedAt: new Date().toLocaleTimeString(),
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        return { success: false, error: data.error || 'Slot reservation failed.' };
       }
-    };
-    setBookedSlots(updatedSlots);
-    localStorage.setItem('eg_booked_slots', JSON.stringify(updatedSlots));
 
-    return { success: true, remainingBalance: newBalance };
+      // Update local state with real DB results
+      const newBal = data.data?.remainingBalance !== undefined ? data.data.remainingBalance : currentUser.balancePKR - entryFee;
+      const updatedUser: UserAccount = {
+        ...currentUser,
+        balancePKR: newBal,
+      };
+      setCurrentUser(updatedUser);
+      localStorage.setItem('eg_user_session', JSON.stringify(updatedUser));
+
+      const updatedMatches = [...registeredTournaments, tournamentId];
+      setRegisteredTournaments(updatedMatches);
+      localStorage.setItem('eg_joined_matches', JSON.stringify(updatedMatches));
+
+      const updatedSlots = {
+        ...bookedSlots,
+        [tournamentId]: {
+          slotNumber,
+          uid: currentUser.uid,
+          ign: currentUser.ign,
+          bookedAt: new Date().toLocaleTimeString(),
+        },
+      };
+      setBookedSlots(updatedSlots);
+      localStorage.setItem('eg_booked_slots', JSON.stringify(updatedSlots));
+
+      return { success: true, remainingBalance: newBal };
+    } catch (err: any) {
+      return { success: false, error: err?.message || 'Network error during slot reservation.' };
+    }
   };
 
   const submitContactQuery = (query: Omit<ContactQuery, 'id' | 'createdAt' | 'status'>) => {
@@ -274,6 +304,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         joinTournament,
         submitContactQuery,
         updateUserBalance,
+        refreshUser,
       }}
     >
       {children}

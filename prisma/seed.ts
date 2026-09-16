@@ -229,7 +229,57 @@ async function main() {
     },
   });
 
-  console.log('✅ Seed successful: All 4 initial tournaments seeded into Neon PostgreSQL!');
+  // Seed Admin User
+  await prisma.user.upsert({
+    where: { email: 'admin@educatedgamer.com' },
+    update: {
+      name: 'Educated Gamer Admin',
+      phone: '03190799711',
+      ign: 'EG_ADMIN_PK',
+      uid: '100000001',
+      role: 'admin',
+    },
+    create: {
+      name: 'Educated Gamer Admin',
+      email: 'admin@educatedgamer.com',
+      phone: '03190799711',
+      ign: 'EG_ADMIN_PK',
+      uid: '100000001',
+      role: 'admin',
+      balancePKR: 0,
+      reservedPKR: 0,
+      winningsPKR: 0,
+    },
+  });
+
+  // Seed Demo Player User
+  await prisma.user.upsert({
+    where: { email: 'player@educatedgamer.com' },
+    update: {
+      name: 'Asad Ali',
+      phone: '03123456789',
+      ign: 'PK_LEGEND_FF',
+      uid: '592810482',
+      passwordHash: 'Player123!',
+      role: 'player',
+      balancePKR: 250,
+      winningsPKR: 450,
+    },
+    create: {
+      name: 'Asad Ali',
+      email: 'player@educatedgamer.com',
+      phone: '03123456789',
+      ign: 'PK_LEGEND_FF',
+      uid: '592810482',
+      passwordHash: 'Player123!',
+      role: 'player',
+      balancePKR: 250,
+      reservedPKR: 0,
+      winningsPKR: 450,
+    },
+  });
+
+  console.log('✅ Seed successful: All 4 initial tournaments and official accounts seeded into Neon PostgreSQL!');
 }
 
 main()

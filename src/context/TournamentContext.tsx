@@ -1,9 +1,7 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { 
-  INITIAL_TOURNAMENTS, 
-  MOCK_LEADERBOARD, 
   Tournament, 
   PlayerRank, 
   TournamentWinner 
@@ -17,7 +15,7 @@ export interface DepositRequest {
   method: 'JazzCash' | 'EasyPaisa';
   amt: number;
   trxId: string;
-  proofUrl: string; // Base64 or image URL
+  proofUrl: string;
   date: string;
   status: 'pending' | 'approved' | 'rejected';
 }
@@ -40,264 +38,334 @@ interface TournamentContextType {
   deposits: DepositRequest[];
   withdrawals: WithdrawalRequest[];
   leaderboard: PlayerRank[];
-  createTournament: (tournament: Omit<Tournament, 'id' | 'slotsFilled'>) => void;
+  loadingTournaments: boolean;
+  createTournament: (tournament: Omit<Tournament, 'id' | 'slotsFilled'>) => Promise<boolean>;
   updateTournament: (id: string, updatedFields: Partial<Tournament>) => void;
   deleteTournament: (id: string) => void;
   setTournamentWinner: (id: string, winner: TournamentWinner) => void;
-  submitDeposit: (deposit: Omit<DepositRequest, 'id' | 'date' | 'status'>) => void;
-  approveDeposit: (id: string) => void;
-  rejectDeposit: (id: string) => void;
-  submitWithdrawal: (withdrawal: Omit<WithdrawalRequest, 'id' | 'date' | 'status'>) => void;
-  approveWithdrawal: (id: string) => void;
-  rejectWithdrawal: (id: string) => void;
+  submitDeposit: (data: Omit<DepositRequest, 'id' | 'date' | 'status'>) => Promise<{ success: boolean; error?: string }>;
+  approveDeposit: (id: string) => Promise<void>;
+  rejectDeposit: (id: string) => Promise<void>;
+  submitWithdrawal: (data: Omit<WithdrawalRequest, 'id' | 'date' | 'status'>) => Promise<{ success: boolean; error?: string }>;
+  approveWithdrawal: (id: string) => Promise<void>;
+  rejectWithdrawal: (id: string) => Promise<void>;
   updateLeaderboardPlayer: (uid: string, updatedFields: Partial<PlayerRank>) => void;
   addLeaderboardPlayer: (player: PlayerRank) => void;
+  refreshTournaments: () => Promise<void>;
+  refreshLeaderboard: () => Promise<void>;
+  refreshTransactions: () => Promise<void>;
 }
 
 const TournamentContext = createContext<TournamentContextType | undefined>(undefined);
 
-const INITIAL_DEPOSITS: DepositRequest[] = [];
-
 export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [tournaments, setTournaments] = useState<Tournament[]>(INITIAL_TOURNAMENTS);
-  const [deposits, setDeposits] = useState<DepositRequest[]>(INITIAL_DEPOSITS);
+  const [tournaments, setTournaments] = useState<Tournament[]>([]);
+  const [deposits, setDeposits] = useState<DepositRequest[]>([]);
   const [withdrawals, setWithdrawals] = useState<WithdrawalRequest[]>([]);
-  const [leaderboard, setLeaderboard] = useState<PlayerRank[]>(MOCK_LEADERBOARD);
+  const [leaderboard, setLeaderboard] = useState<PlayerRank[]>([]);
+  const [loadingTournaments, setLoadingTournaments] = useState<boolean>(true);
 
-  // Load from localStorage on client mount
-  useEffect(() => {
+  // 1. Fetch Tournaments from Database
+  const refreshTournaments = useCallback(async () => {
     try {
-      const savedTournaments = localStorage.getItem('eg_tournaments_list');
-      if (savedTournaments) {
-        setTournaments(JSON.parse(savedTournaments));
-      }
-
-      // Fetch from PostgreSQL database via /api/tournaments
-      fetch('/api/tournaments')
-        .then(res => res.json())
-        .then(data => {
-          if (data && data.success && Array.isArray(data.data) && data.data.length > 0) {
-            setTournaments(prev => {
-              // Merge db tournaments, keeping local storage customizations if any
-              const dbTourneys: Tournament[] = data.data;
-              const localIds = new Set(prev.map(t => t.id));
-              const combined = [
-                ...prev,
-                ...dbTourneys.filter(t => !localIds.has(t.id)),
-              ];
-              // Update existing ones with DB values if applicable
-              const merged = combined.map(item => {
-                const dbMatch = dbTourneys.find(d => d.id === item.id || (d.slug && d.slug === item.slug));
-                return dbMatch ? { ...item, ...dbMatch } : item;
-              });
-              try {
-                localStorage.setItem('eg_tournaments_list', JSON.stringify(merged));
-              } catch {}
-              return merged;
-            });
-          }
-        })
-        .catch(() => {});
-      const savedDeposits = localStorage.getItem('eg_deposits_list');
-      if (savedDeposits) {
-        setDeposits(JSON.parse(savedDeposits));
-      }
-      const savedWithdrawals = localStorage.getItem('eg_withdrawals_list');
-      if (savedWithdrawals) {
-        setWithdrawals(JSON.parse(savedWithdrawals));
-      }
-
-      // Leaderboard: load saved OR seed bots fresh
-      const savedLeaderboard = localStorage.getItem('eg_leaderboard_list');
-      const botSeedDate = localStorage.getItem('eg_bot_seed_date');
-      const now = Date.now();
-      const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
-
-      if (savedLeaderboard) {
-        let board = JSON.parse(savedLeaderboard) as typeof MOCK_LEADERBOARD;
-        // If 1 week has passed, randomise bot earnings (1–1000 PKR each)
-        if (botSeedDate && now - parseInt(botSeedDate, 10) > ONE_WEEK_MS) {
-          board = board.map(p =>
-            p.isBot
-              ? { ...p, earningsPKR: Math.floor(Math.random() * 1000) + 1 }
-              : p
-          );
-          board.sort((a, b) => b.earningsPKR - a.earningsPKR);
-          board = board.map((p, i) => ({ ...p, rank: i + 1 }));
-          localStorage.setItem('eg_leaderboard_list', JSON.stringify(board));
-          localStorage.setItem('eg_bot_seed_date', String(now));
+      const res = await fetch('/api/tournaments');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && Array.isArray(data.data)) {
+          setTournaments(data.data);
+          localStorage.setItem('eg_tournaments_list', JSON.stringify(data.data));
         }
-        setLeaderboard(board);
-      } else {
-        // First time: persist initial bots and record seed date
-        localStorage.setItem('eg_leaderboard_list', JSON.stringify(MOCK_LEADERBOARD));
-        localStorage.setItem('eg_bot_seed_date', String(now));
       }
-    } catch {}
+    } catch (err) {
+      console.error('Failed to load tournaments from DB:', err);
+    } finally {
+      setLoadingTournaments(false);
+    }
   }, []);
 
-  const createTournament = (data: Omit<Tournament, 'id' | 'slotsFilled'>) => {
-    const newTournament: Tournament = {
-      ...data,
-      id: `eg-ff-${Date.now().toString().slice(-4)}`,
-      slotsFilled: 0,
-    };
-    const updated = [newTournament, ...tournaments];
-    setTournaments(updated);
-    localStorage.setItem('eg_tournaments_list', JSON.stringify(updated));
+  // 2. Fetch Leaderboard from Database
+  const refreshLeaderboard = useCallback(async () => {
+    try {
+      const res = await fetch('/api/leaderboard');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && Array.isArray(data.data)) {
+          setLeaderboard(data.data);
+          localStorage.setItem('eg_leaderboard_list', JSON.stringify(data.data));
+        }
+      }
+    } catch (err) {
+      console.error('Failed to load leaderboard from DB:', err);
+    }
+  }, []);
+
+  // 3. Fetch Transactions from Database
+  const refreshTransactions = useCallback(async () => {
+    try {
+      const res = await fetch('/api/transactions');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && Array.isArray(data.transactions)) {
+          const deps: DepositRequest[] = [];
+          const withs: WithdrawalRequest[] = [];
+
+          data.transactions.forEach((tx: any) => {
+            if (tx.type === 'DEPOSIT') {
+              deps.push({
+                id: tx.id,
+                userId: tx.userId,
+                user: `${tx.userName || 'Player'} (${tx.ign || 'FF'})`,
+                uid: tx.uid || '',
+                method: (tx.method as any) || 'JazzCash',
+                amt: tx.amountPKR,
+                trxId: tx.trxId || '',
+                proofUrl: tx.proofUrl || '',
+                date: new Date(tx.createdAt).toLocaleDateString() + ' ' + new Date(tx.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                status: tx.status.toLowerCase() as any,
+              });
+            } else if (tx.type === 'WITHDRAWAL') {
+              withs.push({
+                id: tx.id,
+                userId: tx.userId,
+                user: `${tx.userName || 'Player'} (${tx.ign || 'FF'})`,
+                uid: tx.uid || '',
+                method: (tx.method as any) || 'JazzCash',
+                accountNumber: tx.accountNumber || '',
+                accountTitle: tx.accountTitle || '',
+                amt: tx.amountPKR,
+                date: new Date(tx.createdAt).toLocaleDateString() + ' ' + new Date(tx.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                status: tx.status.toLowerCase() as any,
+              });
+            }
+          });
+
+          setDeposits(deps);
+          setWithdrawals(withs);
+          localStorage.setItem('eg_deposits_list', JSON.stringify(deps));
+          localStorage.setItem('eg_withdrawals_list', JSON.stringify(withs));
+        }
+      }
+    } catch (err) {
+      console.error('Failed to load transactions:', err);
+    }
+  }, []);
+
+  // Mount effect
+  useEffect(() => {
+    // Initial quick hydrate from localStorage if available
+    try {
+      const savedTournaments = localStorage.getItem('eg_tournaments_list');
+      if (savedTournaments) setTournaments(JSON.parse(savedTournaments));
+      const savedLeaderboard = localStorage.getItem('eg_leaderboard_list');
+      if (savedLeaderboard) setLeaderboard(JSON.parse(savedLeaderboard));
+      const savedDeposits = localStorage.getItem('eg_deposits_list');
+      if (savedDeposits) setDeposits(JSON.parse(savedDeposits));
+      const savedWithdrawals = localStorage.getItem('eg_withdrawals_list');
+      if (savedWithdrawals) setWithdrawals(JSON.parse(savedWithdrawals));
+    } catch {}
+
+    // Fetch live truth from database
+    refreshTournaments();
+    refreshLeaderboard();
+    refreshTransactions();
+  }, [refreshTournaments, refreshLeaderboard, refreshTransactions]);
+
+  const createTournament = async (data: Omit<Tournament, 'id' | 'slotsFilled'>): Promise<boolean> => {
+    try {
+      const res = await fetch('/api/admin/tournaments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: data.title,
+          category: data.category,
+          type: data.type,
+          format: data.format,
+          mode: data.mode,
+          map: data.map,
+          allowedWeapons: data.allowedWeapons,
+          rules: Array.isArray(data.rules) ? data.rules.join('\n') : data.rules,
+          entryFee: data.entryFee,
+          prizePool: data.prizePool,
+          winnerPrize: data.booyahPrize || data.prizePool,
+          perKill: data.perKill,
+          totalSlots: data.totalSlots,
+          matchDate: data.matchDate,
+          matchTime: data.matchTime,
+          startTime: data.startTime,
+          bannerUrl: data.bannerImage,
+          prizesJson: data.prizes,
+          isFeatured: data.isFeatured,
+          roomId: data.roomId,
+          roomPassword: data.roomPassword,
+        }),
+      });
+
+      if (res.ok) {
+        await refreshTournaments();
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Create tournament error:', error);
+      return false;
+    }
   };
 
   const updateTournament = (id: string, updatedFields: Partial<Tournament>) => {
-    const updated = tournaments.map((t) => (t.id === id ? { ...t, ...updatedFields } : t));
-    setTournaments(updated);
-    localStorage.setItem('eg_tournaments_list', JSON.stringify(updated));
+    setTournaments((prev) => {
+      const updated = prev.map((t) => (t.id === id ? { ...t, ...updatedFields } : t));
+      localStorage.setItem('eg_tournaments_list', JSON.stringify(updated));
+      return updated;
+    });
   };
 
   const deleteTournament = (id: string) => {
-    const updated = tournaments.filter((t) => t.id !== id);
-    setTournaments(updated);
-    localStorage.setItem('eg_tournaments_list', JSON.stringify(updated));
+    setTournaments((prev) => {
+      const updated = prev.filter((t) => t.id !== id);
+      localStorage.setItem('eg_tournaments_list', JSON.stringify(updated));
+      return updated;
+    });
   };
 
   const setTournamentWinner = (id: string, winner: TournamentWinner) => {
-    const updated = tournaments.map((t) => {
-      if (t.id === id) {
-        return {
-          ...t,
-          status: 'completed' as const,
-          winner,
-        };
-      }
-      return t;
-    });
-    setTournaments(updated);
-    localStorage.setItem('eg_tournaments_list', JSON.stringify(updated));
-
-    // Automatically update or add player to Leaderboard
-    setLeaderboard((prev) => {
-      const existing = prev.find((p) => p.uid === winner.uid);
-      let newBoard: PlayerRank[];
-      if (existing) {
-        newBoard = prev.map((p) =>
-          p.uid === winner.uid
-            ? {
-                ...p,
-                earningsPKR: p.earningsPKR + winner.prizePKR,
-                totalKills: p.totalKills + winner.kills,
-                matchesPlayed: p.matchesPlayed + 1,
-              }
-            : p
-        );
-      } else {
-        const newPlayer: PlayerRank = {
-          rank: prev.length + 1,
-          name: winner.name,
-          ign: winner.ign,
-          uid: winner.uid,
-          avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${winner.ign}`,
-          earningsPKR: winner.prizePKR,
-          matchesPlayed: 1,
-          totalKills: winner.kills,
-          winRate: 100,
-          badge: 'CHAMPION',
-        };
-        newBoard = [...prev, newPlayer];
-      }
-      // Re-sort by earnings descending
-      newBoard.sort((a, b) => b.earningsPKR - a.earningsPKR);
-      newBoard = newBoard.map((p, idx) => ({ ...p, rank: idx + 1 }));
-      localStorage.setItem('eg_leaderboard_list', JSON.stringify(newBoard));
-      return newBoard;
+    setTournaments((prev) => {
+      const updated = prev.map((t) => {
+        if (t.id === id) {
+          return {
+            ...t,
+            status: 'completed' as const,
+            winner,
+          };
+        }
+        return t;
+      });
+      localStorage.setItem('eg_tournaments_list', JSON.stringify(updated));
+      return updated;
     });
   };
 
-  const submitDeposit = (data: Omit<DepositRequest, 'id' | 'date' | 'status'>) => {
-    const newDep: DepositRequest = {
-      ...data,
-      id: `dep-${Date.now()}`,
-      date: 'Just now',
-      status: 'pending',
-    };
-    const updated = [newDep, ...deposits];
-    setDeposits(updated);
-    localStorage.setItem('eg_deposits_list', JSON.stringify(updated));
-  };
-
-  const approveDeposit = (id: string) => {
-    const dep = deposits.find((d) => d.id === id);
-    if (!dep) return;
-
-    const updated = deposits.filter((d) => d.id !== id);
-    setDeposits(updated);
-    localStorage.setItem('eg_deposits_list', JSON.stringify(updated));
-
-    // Credit coins to user if session matches
+  const submitDeposit = async (data: Omit<DepositRequest, 'id' | 'date' | 'status'>) => {
     try {
-      const currentSessionStr = localStorage.getItem('eg_user_session');
-      if (currentSessionStr) {
-        const user = JSON.parse(currentSessionStr);
-        if (user.uid === dep.uid || user.name === dep.user) {
-          user.balancePKR = (user.balancePKR || 0) + dep.amt;
-          localStorage.setItem('eg_user_session', JSON.stringify(user));
-        }
+      const res = await fetch('/api/deposit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: data.amt,
+          method: data.method,
+          trxId: data.trxId,
+          screenshotUrl: data.proofUrl,
+          userId: data.userId,
+        }),
+      });
+
+      const resData = await res.json();
+      if (!res.ok || !resData.success) {
+        return { success: false, error: resData.error || 'Failed to submit deposit.' };
       }
-      // Also update stored accounts list
-      const storedUsersStr = localStorage.getItem('eg_registered_accounts');
-      if (storedUsersStr) {
-        const users = JSON.parse(storedUsersStr);
-        const u = users.find((x: any) => x.uid === dep.uid);
-        if (u) {
-          u.balancePKR = (u.balancePKR || 0) + dep.amt;
-          localStorage.setItem('eg_registered_accounts', JSON.stringify(users));
-        }
+
+      await refreshTransactions();
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err?.message || 'Network error submitting deposit' };
+    }
+  };
+
+  const approveDeposit = async (id: string) => {
+    try {
+      await fetch('/api/admin/transactions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ transactionId: id, action: 'APPROVE' }),
+      });
+      await refreshTransactions();
+    } catch (e) {
+      console.error('Approve deposit error:', e);
+    }
+  };
+
+  const rejectDeposit = async (id: string) => {
+    try {
+      await fetch('/api/admin/transactions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ transactionId: id, action: 'REJECT' }),
+      });
+      await refreshTransactions();
+    } catch (e) {
+      console.error('Reject deposit error:', e);
+    }
+  };
+
+  const submitWithdrawal = async (data: Omit<WithdrawalRequest, 'id' | 'date' | 'status'>) => {
+    try {
+      const res = await fetch('/api/withdraw', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: data.amt,
+          method: data.method,
+          accountTitle: data.accountTitle,
+          accountNumber: data.accountNumber,
+          userId: data.userId,
+        }),
+      });
+
+      const resData = await res.json();
+      if (!res.ok || !resData.success) {
+        return { success: false, error: resData.error || 'Withdrawal request failed.' };
       }
-    } catch {}
+
+      await refreshTransactions();
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err?.message || 'Network error submitting withdrawal' };
+    }
   };
 
-  const rejectDeposit = (id: string) => {
-    const updated = deposits.filter((d) => d.id !== id);
-    setDeposits(updated);
-    localStorage.setItem('eg_deposits_list', JSON.stringify(updated));
+  const approveWithdrawal = async (id: string) => {
+    try {
+      await fetch('/api/admin/transactions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ transactionId: id, action: 'APPROVE' }),
+      });
+      await refreshTransactions();
+    } catch (e) {
+      console.error('Approve withdrawal error:', e);
+    }
   };
 
-  const submitWithdrawal = (data: Omit<WithdrawalRequest, 'id' | 'date' | 'status'>) => {
-    const newW: WithdrawalRequest = {
-      ...data,
-      id: `wth-${Date.now()}`,
-      date: 'Just now',
-      status: 'pending',
-    };
-    const updated = [newW, ...withdrawals];
-    setWithdrawals(updated);
-    localStorage.setItem('eg_withdrawals_list', JSON.stringify(updated));
-  };
-
-  const approveWithdrawal = (id: string) => {
-    const updated = withdrawals.filter((w) => w.id !== id);
-    setWithdrawals(updated);
-    localStorage.setItem('eg_withdrawals_list', JSON.stringify(updated));
-  };
-
-  const rejectWithdrawal = (id: string) => {
-    const updated = withdrawals.filter((w) => w.id !== id);
-    setWithdrawals(updated);
-    localStorage.setItem('eg_withdrawals_list', JSON.stringify(updated));
+  const rejectWithdrawal = async (id: string) => {
+    try {
+      await fetch('/api/admin/transactions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ transactionId: id, action: 'REJECT' }),
+      });
+      await refreshTransactions();
+    } catch (e) {
+      console.error('Reject withdrawal error:', e);
+    }
   };
 
   const updateLeaderboardPlayer = (uid: string, updatedFields: Partial<PlayerRank>) => {
-    const updated = leaderboard.map((p) => (p.uid === uid ? { ...p, ...updatedFields } : p));
-    updated.sort((a, b) => b.earningsPKR - a.earningsPKR);
-    const reRanked = updated.map((p, idx) => ({ ...p, rank: idx + 1 }));
-    setLeaderboard(reRanked);
-    localStorage.setItem('eg_leaderboard_list', JSON.stringify(reRanked));
+    setLeaderboard((prev) => {
+      const updated = prev.map((p) => (p.uid === uid ? { ...p, ...updatedFields } : p));
+      updated.sort((a, b) => b.earningsPKR - a.earningsPKR);
+      const reRanked = updated.map((p, idx) => ({ ...p, rank: idx + 1 }));
+      localStorage.setItem('eg_leaderboard_list', JSON.stringify(reRanked));
+      return reRanked;
+    });
   };
 
   const addLeaderboardPlayer = (player: PlayerRank) => {
-    const updated = [...leaderboard, player];
-    updated.sort((a, b) => b.earningsPKR - a.earningsPKR);
-    const reRanked = updated.map((p, idx) => ({ ...p, rank: idx + 1 }));
-    setLeaderboard(reRanked);
-    localStorage.setItem('eg_leaderboard_list', JSON.stringify(reRanked));
+    setLeaderboard((prev) => {
+      const updated = [...prev, player];
+      updated.sort((a, b) => b.earningsPKR - a.earningsPKR);
+      const reRanked = updated.map((p, idx) => ({ ...p, rank: idx + 1 }));
+      localStorage.setItem('eg_leaderboard_list', JSON.stringify(reRanked));
+      return reRanked;
+    });
   };
 
   return (
@@ -307,6 +375,7 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         deposits,
         withdrawals,
         leaderboard,
+        loadingTournaments,
         createTournament,
         updateTournament,
         deleteTournament,
@@ -319,6 +388,9 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         rejectWithdrawal,
         updateLeaderboardPlayer,
         addLeaderboardPlayer,
+        refreshTournaments,
+        refreshLeaderboard,
+        refreshTransactions,
       }}
     >
       {children}

@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { INITIAL_TOURNAMENTS, Tournament } from '@/data/mockData';
+import { Tournament } from '@/data/mockData';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -21,83 +23,92 @@ export async function GET(request: Request) {
 
     const dbTournaments = await prisma.tournament.findMany({
       where,
+      include: {
+        slots: {
+          select: {
+            slotNumber: true,
+            ign: true,
+            uid: true,
+            userId: true,
+            createdAt: true,
+          },
+        },
+      },
       orderBy: { startTime: 'asc' },
     });
 
-    if (dbTournaments && dbTournaments.length > 0) {
-      let mapped: Tournament[] = dbTournaments.map(t => {
-        let prizes: any = { first: t.winnerPrize || t.prizePool, second: 0, third: 0, perKillBonus: t.perKill };
-        if (t.prizesJson) {
-          try {
-            prizes = JSON.parse(t.prizesJson);
-          } catch {}
-        }
-        return {
-          id: t.id,
-          slug: t.slug || undefined,
-          title: t.title,
-          game: (t.game as any) || 'Free Fire MAX',
-          type: (t.type as any) || 'Solo',
-          category: t.category || undefined,
-          format: t.format || undefined,
-          mode: t.mode || undefined,
-          map: (t.map as any) || 'Bermuda',
-          allowedWeapons: t.allowedWeapons ? t.allowedWeapons.split(',').map(s => s.trim()) : undefined,
-          status: (t.status as any) || 'upcoming',
-          prizePool: t.prizePool,
-          perKill: t.perKill,
-          hasPerKill: t.perKill > 0,
-          booyahPrize: t.winnerPrize || t.prizePool,
-          entryFee: t.entryFee,
-          slotsFilled: t.slotsFilled || 0,
-          totalSlots: t.totalSlots,
-          startTime: t.matchDate ? `${t.matchDate}, ${t.matchTime || ''}` : t.startTime.toISOString(),
-          matchDate: t.matchDate || undefined,
-          matchTime: t.matchTime || undefined,
-          isFeatured: t.isFeatured,
-          roomId: t.roomId || undefined,
-          roomPassword: t.roomPassword || undefined,
-          bannerImage: t.bannerUrl || undefined,
-          description: t.description || undefined,
-          rules: t.rules ? t.rules.split('\n').filter(Boolean) : [],
-          prizes,
-        };
-      });
+    let mapped: (Tournament & { bookedSlots: number[]; registeredUsers: string[] })[] = dbTournaments.map((t) => {
+      let prizes: any = { first: t.winnerPrize || t.prizePool, second: 0, third: 0, perKillBonus: t.perKill };
+      if (t.prizesJson) {
+        try {
+          prizes = JSON.parse(t.prizesJson);
+        } catch {}
+      }
 
-      if (search) {
-        mapped = mapped.filter(t =>
+      const bookedSlots = t.slots.map((s) => s.slotNumber);
+      const registeredUsers = t.slots.map((s) => s.userId);
+      const realSlotsFilled = Math.max(t.slots.length, t.slotsFilled || 0);
+
+      return {
+        id: t.id,
+        slug: t.slug || undefined,
+        title: t.title,
+        game: (t.game as any) || 'Free Fire MAX',
+        type: (t.type as any) || 'Solo',
+        category: t.category || undefined,
+        format: t.format || undefined,
+        mode: t.mode || undefined,
+        map: (t.map as any) || 'Bermuda',
+        allowedWeapons: t.allowedWeapons ? t.allowedWeapons.split(',').map((s) => s.trim()) : undefined,
+        status: (t.status as any) || 'upcoming',
+        prizePool: t.prizePool,
+        perKill: t.perKill,
+        hasPerKill: t.perKill > 0,
+        booyahPrize: t.winnerPrize || t.prizePool,
+        entryFee: t.entryFee,
+        slotsFilled: realSlotsFilled,
+        totalSlots: t.totalSlots,
+        startTime: t.matchDate ? `${t.matchDate}, ${t.matchTime || ''}` : t.startTime.toISOString(),
+        matchDate: t.matchDate || undefined,
+        matchTime: t.matchTime || undefined,
+        isFeatured: t.isFeatured,
+        roomId: t.roomId || undefined,
+        roomPassword: t.roomPassword || undefined,
+        bannerImage: t.bannerUrl || undefined,
+        description: t.description || undefined,
+        rules: t.rules ? t.rules.split('\n').filter(Boolean) : [],
+        prizes,
+        bookedSlots,
+        registeredUsers,
+      };
+    });
+
+    if (search) {
+      mapped = mapped.filter(
+        (t) =>
           t.title.toLowerCase().includes(search) ||
           t.map.toLowerCase().includes(search) ||
           (t.category && t.category.toLowerCase().includes(search)) ||
           (t.mode && t.mode.toLowerCase().includes(search))
-        );
-      }
-
-      return NextResponse.json({
-        success: true,
-        source: 'database',
-        data: mapped,
-        total: mapped.length,
-      });
+      );
     }
-  } catch (error) {
+
+    return NextResponse.json({
+      success: true,
+      source: 'database',
+      data: mapped,
+      total: mapped.length,
+    });
+  } catch (error: any) {
     console.error('Database fetch error in /api/tournaments:', error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Unable to load tournaments from database: ' + (error?.message || 'DB Error'),
+        data: [],
+        total: 0,
+      },
+      { status: 500 }
+    );
   }
-
-  // Fallback to in-memory initial tournaments
-  let result = INITIAL_TOURNAMENTS;
-  if (status && status !== 'all') {
-    result = result.filter(t => t.status === status);
-  }
-  if (type && type !== 'all') {
-    result = result.filter(t => t.type === type);
-  }
-
-  return NextResponse.json({
-    success: true,
-    source: 'fallback',
-    data: result,
-    total: result.length,
-  });
 }
-
