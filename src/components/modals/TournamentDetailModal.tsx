@@ -177,46 +177,29 @@ export const TournamentDetailModal: React.FC<TournamentDetailModalProps> = ({
           </div>
         )}
 
-        {/* Highlighted Rules Box */}
-        <div className="mt-5 rounded-2xl border border-primary/40 bg-surface-200/80 p-4 space-y-2.5 shadow-[0_0_20px_rgba(0,0,0,0.4)]">
-          <div className="flex items-center justify-between border-b border-white/10 pb-2">
-            <h4 className="text-xs font-black uppercase text-primary tracking-wider flex items-center gap-1.5">
-              <Shield className="h-4 w-4" />
-              OFFICIAL MATCH RULES & REQUIREMENTS
-            </h4>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/20 text-primary uppercase border border-primary/30">
-              Strictly Enforced
-            </span>
-          </div>
+        {/* Rules Box — only show DB rules, no hardcoded duplicates */}
+        {tournament.rules && tournament.rules.length > 0 && (
+          <div className="mt-5 rounded-2xl border border-primary/40 bg-surface-200/80 p-4 space-y-2.5 shadow-[0_0_20px_rgba(0,0,0,0.4)]">
+            <div className="flex items-center justify-between border-b border-white/10 pb-2">
+              <h4 className="text-xs font-black uppercase text-primary tracking-wider flex items-center gap-1.5">
+                <Shield className="h-4 w-4" />
+                OFFICIAL MATCH RULES & REQUIREMENTS
+              </h4>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/20 text-primary uppercase border border-primary/30">
+                Strictly Enforced
+              </span>
+            </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-            <div className="flex items-center gap-2 bg-surface-100/60 p-2 rounded-lg border border-white/5">
-              <span className="text-base">📱</span>
-              <span className="text-slate-200 font-medium">Mobile Only (No Emulators / PC)</span>
-            </div>
-            <div className="flex items-center gap-2 bg-surface-100/60 p-2 rounded-lg border border-white/5">
-              <span className="text-base">🆔</span>
-              <span className="text-slate-200 font-medium">Free Fire UID Verification Required</span>
-            </div>
-            <div className="flex items-center gap-2 bg-surface-100/60 p-2 rounded-lg border border-white/5">
-              <span className="text-base">🚫</span>
-              <span className="text-slate-200 font-medium">Zero Cheating / Hacks / Teaming</span>
-            </div>
-            <div className="flex items-center gap-2 bg-surface-100/60 p-2 rounded-lg border border-white/5">
-              <span className="text-base">⚡</span>
-              <span className="text-slate-200 font-medium">Instant JazzCash Prize Payouts</span>
+            <div className="space-y-1.5">
+              {tournament.rules.map((rule, idx) => (
+                <div key={idx} className="flex items-start gap-2 text-xs text-slate-300">
+                  <span className="text-primary font-black mt-0.5 shrink-0">•</span>
+                  <span className="leading-relaxed">{rule}</span>
+                </div>
+              ))}
             </div>
           </div>
-
-          <div className="pt-2 border-t border-white/10 space-y-1.5">
-            {tournament.rules.map((rule, idx) => (
-              <div key={idx} className="flex items-start gap-2 text-xs text-slate-300">
-                <span className="text-primary font-black mt-0.5">•</span>
-                <span className="leading-relaxed">{rule}</span>
-              </div>
-            ))}
-          </div>
-        </div>
+        )}
 
         {/* Live Stream, WhatsApp & Action Buttons */}
         <div className="mt-6 pt-4 border-t border-white/10 flex flex-col sm:flex-row gap-2.5">

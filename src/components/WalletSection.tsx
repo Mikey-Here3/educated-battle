@@ -35,7 +35,7 @@ export const WalletSection: React.FC<WalletSectionProps> = () => {
   
   const [activeTab, setActiveTab] = useState<'deposit' | 'withdraw' | 'history'>('deposit');
   const [paymentMethod, setPaymentMethod] = useState<'JazzCash' | 'EasyPaisa'>('JazzCash');
-  const [withdrawMethod, setWithdrawMethod] = useState<'JazzCash' | 'EasyPaisa'>('JazzCash');
+  const [withdrawMethod, setWithdrawMethod] = useState<'JazzCash' | 'EasyPaisa'>('EasyPaisa');
   
   // Deposit form state
   const [amount, setAmount] = useState<number>(100);
@@ -521,23 +521,23 @@ export const WalletSection: React.FC<WalletSectionProps> = () => {
                     SELECT CASHOUT METHOD *
                   </label>
                   <div className="grid grid-cols-2 gap-3">
+                    <div className="p-3.5 rounded-xl border border-white/10 bg-surface-200/50 text-left opacity-60 cursor-not-allowed">
+                      <span className="text-sm font-display font-black block text-white/60">JazzCash</span>
+                      <span className="text-[10px] text-yellow-500">Coming Soon</span>
+                    </div>
+
                     <button
                       type="button"
-                      onClick={() => setWithdrawMethod('JazzCash')}
+                      onClick={() => setWithdrawMethod('EasyPaisa')}
                       className={`p-3.5 rounded-xl border text-left transition ${
-                        withdrawMethod === 'JazzCash'
+                        withdrawMethod === 'EasyPaisa'
                           ? 'border-emerald-500 bg-surface-100 ring-2 ring-emerald-500/30 font-bold text-white'
                           : 'border-white/10 bg-surface-200 text-slate-400 hover:text-white'
                       }`}
                     >
-                      <span className="text-sm font-display font-black block">JazzCash</span>
+                      <span className="text-sm font-display font-black block">EasyPaisa</span>
                       <span className="text-[10px] text-slate-400">Mobile Account</span>
                     </button>
-
-                    <div className="p-3.5 rounded-xl border border-white/10 bg-surface-200/50 text-left opacity-60 cursor-not-allowed">
-                      <span className="text-sm font-display font-black block text-white/60">EasyPaisa</span>
-                      <span className="text-[10px] text-yellow-500">Coming Soon</span>
-                    </div>
                   </div>
                 </div>
 
