@@ -25,6 +25,8 @@ export const TournamentCard: React.FC<TournamentCardProps> = ({
   const isSpecial = tournament.status === 'special';
   const isCompleted = tournament.status === 'completed';
   const isUserRegistered = Boolean(currentUser) && registeredTournaments.includes(tournament.id);
+  const [imgError, setImgError] = React.useState(false);
+  const hasValidImage = Boolean(tournament.bannerImage) && !imgError;
 
   return (
     <div 
@@ -40,7 +42,7 @@ export const TournamentCard: React.FC<TournamentCardProps> = ({
       }`}
     >
       {/* 1. Large Poster */}
-      {tournament.bannerImage ? (
+      {hasValidImage ? (
         <div className="relative w-full bg-black/60 overflow-hidden flex items-center justify-center min-h-[180px]">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -48,10 +50,11 @@ export const TournamentCard: React.FC<TournamentCardProps> = ({
             alt={tournament.title}
             loading="lazy"
             className="w-full h-auto max-h-[320px] object-contain transition-transform duration-500 group-hover:scale-[1.02]"
-            onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+            onError={() => setImgError(true)}
           />
           {/* Subtle cinematic overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-surface-200 via-surface-200/5 to-transparent pointer-events-none" />
+
           
           {/* Status Badge */}
           <div className="absolute top-3 left-3 z-10">

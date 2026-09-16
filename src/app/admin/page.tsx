@@ -163,13 +163,47 @@ export default function AdminPortalPage() {
   const [tAllowedWeapons, setTAllowedWeapons] = useState('Desert Eagle, M1887');
   const [tDescription, setTDescription] = useState('');
 
+  // Upload state
+  const [uploadingBanner, setUploadingBanner] = useState(false);
+  const [bannerUploadError, setBannerUploadError] = useState('');
+  const [tournamentSaveError, setTournamentSaveError] = useState('');
+
   const autoDistributePrizes = (total: number) => {
+    const isSmall = tSlots <= 4 || tFormat === '1v1' || tFormat === '2v2' || tCategory === 'Clash Squad';
+    
+    if (tFormat === '1v1' || tSlots === 2) {
+      // 1v1: Winner takes all (or winner gets pool)
+      setTBooyah(total);
+      setTPrize1(total);
+      setTPrize2(0);
+      setTPrize3(0);
+      setTPrize4(0);
+      setTPrize5(0);
+      setTPrize6(0);
+      return;
+    }
+
+    if (tFormat === '2v2' || tSlots <= 4) {
+      // 2v2 / 4 slots: 1st gets 70%, 2nd gets 30%
+      const p1 = Math.round(total * 0.70);
+      const p2 = total - p1;
+      setTBooyah(p1);
+      setTPrize1(p1);
+      setTPrize2(p2);
+      setTPrize3(0);
+      setTPrize4(0);
+      setTPrize5(0);
+      setTPrize6(0);
+      return;
+    }
+
+    // Larger Battle Royale tournaments (e.g. 48 slots)
     const p1 = Math.round(total * 0.45);
     const p2 = Math.round(total * 0.22);
     const p3 = Math.round(total * 0.13);
     const p4 = Math.round(total * 0.08);
     const p5 = Math.round(total * 0.06);
-    const p6 = total - (p1 + p2 + p3 + p4 + p5);
+    const p6 = Math.max(0, total - (p1 + p2 + p3 + p4 + p5));
     setTBooyah(p1);
     setTPrize1(p1);
     setTPrize2(p2);
@@ -178,6 +212,7 @@ export default function AdminPortalPage() {
     setTPrize5(p5);
     setTPrize6(p6);
   };
+
 
   // Room ID / Pass form
   const [editRoomId, setEditRoomId] = useState('');
@@ -213,9 +248,10 @@ export default function AdminPortalPage() {
     setTCategory('Clash Squad'); setTFormat('1v1'); setTMode('Headshot');
     setTAllowedWeapons('Desert Eagle, M1887'); setTDescription('');
     setTMapCode('');
-    setTStatus('upcoming'); setTPrize(15000); setTBooyah(7000); setTHasPerKill(true);
-    setTPrize1(7000); setTPrize2(3500); setTPrize3(2000); setTPrize4(1000); setTPrize5(800); setTPrize6(700);
-    setTPerKill(50); setTEntryFee(100); setTSlots(48);
+    setTStatus('upcoming'); setTPrize(100); setTBooyah(90); setTHasPerKill(false);
+    setTPrize1(90); setTPrize2(0); setTPrize3(0); setTPrize4(0); setTPrize5(0); setTPrize6(0);
+    setTPerKill(0); setTEntryFee(50); setTSlots(2);
+
     setTStartTime('Saturday Night, 09:00 PM PKT');
     setTMatchDate('Saturday Night');
     setTMatchTime('09:00 PM PKT');
@@ -236,12 +272,15 @@ export default function AdminPortalPage() {
     setTDescription(t.description || '');
     setTMapCode(t.mapCode || '');
     setTStatus(t.status); setTPrize(t.prizePool); setTBooyah(t.booyahPrize);
-    setTPrize1(t.prizes?.first || t.booyahPrize || 7000);
-    setTPrize2(t.prizes?.second || Math.round((t.booyahPrize || 7000) * 0.5) || 3500);
-    setTPrize3(t.prizes?.third || Math.round((t.booyahPrize || 7000) * 0.25) || 2000);
-    setTPrize4(t.prizes?.fourth || 1000);
-    setTPrize5(t.prizes?.fifth || 800);
-    setTPrize6(t.prizes?.sixth || 700);
+    setTPrize1(t.prizes?.first || t.booyahPrize || 0);
+    // Only populate 2nd-6th prize if there is a real stored value (not auto-calculated from pool)
+    const isSmallTournament = t.totalSlots <= 4 || t.format === '1v1' || t.format === '2v2';
+    setTPrize2(t.prizes?.second || 0);
+    setTPrize3(isSmallTournament ? 0 : (t.prizes?.third || 0));
+    setTPrize4(isSmallTournament ? 0 : (t.prizes?.fourth || 0));
+    setTPrize5(isSmallTournament ? 0 : (t.prizes?.fifth || 0));
+    setTPrize6(isSmallTournament ? 0 : (t.prizes?.sixth || 0));
+
     setTHasPerKill(t.hasPerKill); setTPerKill(t.perKill); setTEntryFee(t.entryFee);
     setTSlots(t.totalSlots);
     setTStartTime(t.startTime);
@@ -253,46 +292,51 @@ export default function AdminPortalPage() {
     setTRules((t.rules || []).join('\n') || '📱 Mobile devices strictly required (Zero emulators / PC players permitted).\n🛡️ Anti-cheat and fair play strictly enforced. Teaming equals permanent ban.\n🆔 All players must enter custom room with registered Free Fire UIDs.\n⚡ Match results and frags recorded live by official tournament marshals.');
   };
 
-  const handleBannerFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Upload banner immediately to Cloudinary when file is selected — stores permanent URL, never base64
+  const handleBannerFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        alert('Image file size must be less than 5MB');
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setBannerUploadError('Please select an image file (JPG, PNG, WebP).');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setBannerUploadError('Image must be under 5MB.');
+      return;
+    }
+
+    setBannerUploadError('');
+    setUploadingBanner(true);
+    setTBannerImage(''); // Clear old image while uploading
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const res = await fetch('/api/admin/upload-image', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const result = await res.json();
+
+      if (!res.ok || !result.success) {
+        setBannerUploadError(result.error || 'Image upload failed. Please try again.');
         return;
       }
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const img = new Image();
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          let width = img.width;
-          let height = img.height;
-          const MAX_SIZE = 800;
-          
-          if (width > height && width > MAX_SIZE) {
-            height *= MAX_SIZE / width;
-            width = MAX_SIZE;
-          } else if (height > MAX_SIZE) {
-            width *= MAX_SIZE / height;
-            height = MAX_SIZE;
-          }
-          
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          if (ctx) {
-            ctx.drawImage(img, 0, 0, width, height);
-            const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-            setTBannerImage(dataUrl);
-          }
-        };
-        img.src = event.target?.result as string;
-      };
-      reader.readAsDataURL(file);
+
+      // Store the permanent Cloudinary URL
+      setTBannerImage(result.url);
+    } catch {
+      setBannerUploadError('Network error during upload. Please try again.');
+    } finally {
+      setUploadingBanner(false);
     }
   };
 
-  const handleSaveTournament = () => {
+  const handleSaveTournament = async () => {
+    setTournamentSaveError('');
     const data = {
       title: tTitle,
       game: tGame,
@@ -315,6 +359,7 @@ export default function AdminPortalPage() {
       matchDate: tMatchDate,
       matchTime: tMatchTime,
       liveStreamUrl: tLiveUrl,
+      // tBannerImage is now always a Cloudinary https:// URL or empty string — never base64
       bannerImage: tBannerImage || undefined,
       bulletPoints: tBullets.split('\n').map(s => s.trim()).filter(Boolean),
       prizes: {
@@ -329,15 +374,27 @@ export default function AdminPortalPage() {
       rules: tRules.split('\n').map(s => s.trim()).filter(Boolean),
       isFeatured: false,
     };
+
     if (editingTourney) {
-      updateTournament(editingTourney.id, data);
-      setEditingTourney(null);
+      try {
+        await updateTournament(editingTourney.id, data);
+        setEditingTourney(null);
+        resetTournamentForm();
+      } catch (err: any) {
+        setTournamentSaveError(err?.message || 'Failed to save tournament. Please try again.');
+      }
     } else {
-      createTournament(data);
-      setShowCreateModal(false);
+      const success = await createTournament(data);
+      if (success) {
+        setShowCreateModal(false);
+        resetTournamentForm();
+      } else {
+        setTournamentSaveError('Tournament creation failed. Check your inputs and try again.');
+      }
     }
-    resetTournamentForm();
   };
+
+
 
   const handleSaveRoomId = () => {
     if (!editingRoomIdTourney) return;
@@ -540,25 +597,43 @@ export default function AdminPortalPage() {
         {wizardStep === 2 && (
           <div className="space-y-4 animate-in fade-in duration-200">
             <div>
-              <label className={labelClass}>Tournament Banner Image (Upload File or Paste Link)</label>
+              <label className={labelClass}>Tournament Banner Image</label>
               
               <div className="mt-2 space-y-3">
                 {/* File Upload Dropzone */}
-                <label className="relative flex flex-col items-center justify-center p-6 border-2 border-dashed border-white/20 hover:border-crimson rounded-2xl bg-surface-300/40 cursor-pointer transition-all text-center group">
+                <label className={`relative flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-2xl bg-surface-300/40 cursor-pointer transition-all text-center group ${uploadingBanner ? 'border-primary/60 animate-pulse' : 'border-white/20 hover:border-crimson'}`}>
                   <input
                     type="file"
                     accept="image/*"
                     onChange={handleBannerFileUpload}
+                    disabled={uploadingBanner}
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                   />
-                  <UploadCloud className="h-8 w-8 text-crimson mb-2 group-hover:scale-110 transition-transform" />
-                  <span className="text-xs font-black text-white uppercase tracking-wider">
-                    Upload Banner Image File
-                  </span>
-                  <span className="text-[10px] text-white/50 mt-1">
-                    Tap to select PNG, JPG or WEBP from Gallery (Max 5MB)
-                  </span>
+                  {uploadingBanner ? (
+                    <>
+                      <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin mb-2" />
+                      <span className="text-xs font-black text-primary uppercase tracking-wider">Uploading to Cloudinary...</span>
+                      <span className="text-[10px] text-white/50 mt-1">This takes just a moment</span>
+                    </>
+                  ) : (
+                    <>
+                      <UploadCloud className="h-8 w-8 text-crimson mb-2 group-hover:scale-110 transition-transform" />
+                      <span className="text-xs font-black text-white uppercase tracking-wider">
+                        Upload Banner Image
+                      </span>
+                      <span className="text-[10px] text-white/50 mt-1">
+                        PNG, JPG or WebP · Max 5MB · Saved permanently to Cloudinary
+                      </span>
+                    </>
+                  )}
                 </label>
+
+                {/* Upload error */}
+                {bannerUploadError && (
+                  <div className="flex items-center gap-2 p-3 bg-red-500/15 border border-red-500/40 rounded-xl">
+                    <span className="text-xs font-bold text-red-400">⚠️ {bannerUploadError}</span>
+                  </div>
+                )}
 
                 <div className="flex items-center gap-2 my-2">
                   <div className="h-px flex-1 bg-white/10" />
@@ -571,15 +646,15 @@ export default function AdminPortalPage() {
                   <input
                     className={`${inputClass} pl-10`}
                     value={tBannerImage}
-                    onChange={e => setTBannerImage(e.target.value)}
-                    placeholder="https://images.unsplash.com/... or direct image link"
+                    onChange={e => { setTBannerImage(e.target.value); setBannerUploadError(''); }}
+                    placeholder="https://res.cloudinary.com/... or any image URL"
                   />
                 </div>
               </div>
             </div>
 
             {/* Banner Live Preview */}
-            {tBannerImage ? (
+            {tBannerImage && !uploadingBanner ? (
               <div className="relative rounded-2xl overflow-hidden h-48 bg-black/40 border border-neon-gold/50 shadow-lg group flex items-center justify-center">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
@@ -591,22 +666,22 @@ export default function AdminPortalPage() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent flex items-end justify-between p-3.5">
                   <span className="text-xs text-white font-bold flex items-center gap-1.5">
                     <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-                    <span>Live Banner Image Attached</span>
+                    <span>{tBannerImage.startsWith('https://res.cloudinary.com') ? '✅ Saved to Cloudinary (permanent)' : 'Banner Preview'}</span>
                   </span>
                   <button
                     type="button"
-                    onClick={() => setTBannerImage('')}
+                    onClick={() => { setTBannerImage(''); setBannerUploadError(''); }}
                     className="px-2.5 py-1 bg-red-500/80 hover:bg-red-600 text-white rounded-lg text-xs font-bold transition-colors"
                   >
                     Remove Banner
                   </button>
                 </div>
               </div>
-            ) : (
+            ) : !uploadingBanner ? (
               <div className="rounded-2xl border border-dashed border-white/20 p-6 text-center bg-surface-200/40">
-                <p className="text-xs text-white/50">No banner image attached yet. Standard high-res esports graphic will be displayed.</p>
+                <p className="text-xs text-white/50">No banner image attached yet. Upload one above for it to appear on tournament cards.</p>
               </div>
-            )}
+            ) : null}
 
             <div>
               <label className={labelClass}>YouTube Live URL / Stream Link</label>
@@ -619,6 +694,8 @@ export default function AdminPortalPage() {
             </div>
           </div>
         )}
+
+
 
         {/* STEP 3: SCHEDULE */}
         {wizardStep === 3 && (
@@ -905,16 +982,25 @@ export default function AdminPortalPage() {
             <button
               type="button"
               onClick={handleSaveTournament}
-              disabled={!tTitle}
+              disabled={!tTitle || uploadingBanner}
               className="px-6 py-2 rounded-xl text-xs font-black uppercase text-white bg-crimson hover:bg-crimson/80 disabled:opacity-40 transition-colors shadow-[0_0_20px_rgba(255,0,60,0.5)]"
             >
-              {editingTourney ? 'Save Changes' : 'Publish Tournament'}
+              {uploadingBanner ? 'Uploading Image...' : editingTourney ? 'Save Changes' : 'Publish Tournament'}
             </button>
           )}
         </div>
+
+        {/* Save error display */}
+        {tournamentSaveError && (
+          <div className="mx-5 mb-4 p-3 bg-red-500/15 border border-red-500/40 rounded-xl">
+            <p className="text-xs font-bold text-red-400">⚠️ {tournamentSaveError}</p>
+          </div>
+        )}
       </div>
     );
   };
+
+
 
   return (
     <div className="min-h-screen bg-surface-100">
@@ -1011,21 +1097,29 @@ export default function AdminPortalPage() {
                 </div>
               )}
               {filteredTourneys.map(t => (
-                <div key={t.id} className="bg-surface-200 border border-white/10 rounded-xl p-4">
-                  <div className="flex items-start justify-between gap-3 flex-wrap">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                          t.status === 'live' ? 'bg-green-500/20 text-green-400 animate-pulse' :
-                          t.status === 'upcoming' ? 'bg-blue-500/20 text-blue-400' :
-                          t.status === 'completed' ? 'bg-white/10 text-white/50' :
-                          'bg-neon-gold/20 text-neon-gold'
-                        }`}>
-                          {t.status.toUpperCase()}
-                        </span>
-                        <span className="text-xs text-white/40">{t.type} · {t.map} · {t.game}</span>
-                      </div>
-                      <h3 className="text-white font-bold text-sm truncate">{t.title}</h3>
+                <div key={t.id} className="bg-surface-200 border border-white/10 rounded-xl p-4 flex gap-4 items-start">
+                  {t.bannerImage && (
+                    <div className="w-16 h-16 rounded-lg bg-black/50 overflow-hidden shrink-0 border border-white/10 hidden sm:flex items-center justify-center">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={t.bannerImage} alt={t.title} className="w-full h-full object-cover" />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-3 flex-wrap">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                          <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                            t.status === 'live' ? 'bg-green-500/20 text-green-400 animate-pulse' :
+                            t.status === 'upcoming' ? 'bg-blue-500/20 text-blue-400' :
+                            t.status === 'completed' ? 'bg-white/10 text-white/50' :
+                            'bg-neon-gold/20 text-neon-gold'
+                          }`}>
+                            {t.status.toUpperCase()}
+                          </span>
+                          <span className="text-xs text-white/40">{t.type} · {t.map} · {t.game}</span>
+                        </div>
+                        <h3 className="text-white font-bold text-sm truncate">{t.title}</h3>
+
                       <div className="flex items-center gap-4 mt-1 text-xs text-white/50 flex-wrap">
                         <span>PKR {t.prizePool.toLocaleString()} pool</span>
                         <span>Entry: {t.entryFee === 0 ? 'FREE' : `PKR ${t.entryFee}`}</span>
@@ -1077,7 +1171,9 @@ export default function AdminPortalPage() {
                     </div>
                   </div>
                 </div>
-              ))}
+              </div>
+            ))}
+
             </div>
           </div>
         )}
