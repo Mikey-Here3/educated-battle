@@ -3,7 +3,7 @@
 import React from 'react';
 import { Tournament } from '../data/mockData';
 import { useAuth } from '@/context/AuthContext';
-import { Trophy, Swords, Shield, Clock, Key, ArrowRight, Lock, MapPin, Users, Youtube, CheckCircle2, Flame, Award } from 'lucide-react';
+import { Trophy, Clock, ArrowRight, MapPin, Users, Youtube, CheckCircle2 } from 'lucide-react';
 
 interface TournamentCardProps {
   tournament: Tournament;
@@ -15,298 +15,214 @@ interface TournamentCardProps {
 export const TournamentCard: React.FC<TournamentCardProps> = ({
   tournament,
   onJoin,
-  onViewRoomDetails,
   onViewDetails,
 }) => {
   const { currentUser, registeredTournaments } = useAuth();
   
-  const percentageSlots = Math.round((tournament.slotsFilled / tournament.totalSlots) * 100);
+  const percentageSlots = Math.min(Math.round((tournament.slotsFilled / Math.max(tournament.totalSlots, 1)) * 100), 100);
   const isFull = tournament.slotsFilled >= tournament.totalSlots;
   const isLive = tournament.status === 'live';
   const isSpecial = tournament.status === 'special';
   const isCompleted = tournament.status === 'completed';
   const isUserRegistered = Boolean(currentUser) && registeredTournaments.includes(tournament.id);
-  const isAdmin = currentUser?.role === 'admin';
 
   return (
-    <div className={`group relative flex flex-col justify-between overflow-hidden rounded-3xl border transition-all duration-300 card-glass ${
-      isCompleted
-        ? 'border-emerald-500/40 bg-surface-100/90'
-        : isLive
-        ? 'border-crimson shadow-[0_0_35px_rgba(255,0,60,0.3)]'
-        : isSpecial 
-        ? 'border-neon-gold/50 shadow-[0_0_30px_rgba(255,215,0,0.2)]' 
-        : 'border-crimson/30 hover:border-crimson hover:shadow-[0_0_35px_rgba(255,0,60,0.25)]'
-    }`}>
-      
-      {/* Banner Image (if set) */}
+    <div 
+      onClick={() => onViewDetails(tournament)}
+      className={`group relative flex flex-col overflow-hidden rounded-[20px] bg-surface-200 border transition-all duration-300 cursor-pointer ${
+        isCompleted
+          ? 'border-emerald-500/30 hover:border-emerald-500/50'
+          : isLive
+          ? 'border-crimson shadow-[0_0_35px_rgba(255,0,60,0.25)]'
+          : isSpecial 
+          ? 'border-neon-gold/40 shadow-[0_0_30px_rgba(255,215,0,0.15)]' 
+          : 'border-white/10 hover:border-white/20 hover:shadow-lg'
+      }`}
+    >
+      {/* 1. Large Poster */}
       {tournament.bannerImage ? (
-        <div
-          className="relative w-full overflow-hidden cursor-pointer bg-surface-300"
-          style={{ aspectRatio: '16/7' }}
-          onClick={() => onViewDetails(tournament)}
-        >
+        <div className="relative w-full bg-black/60 overflow-hidden flex items-center justify-center min-h-[180px]">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={tournament.bannerImage}
             alt={tournament.title}
-            className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
-            onError={e => { (e.target as HTMLImageElement).parentElement!.style.display = 'none'; }}
+            loading="lazy"
+            className="w-full h-auto max-h-[320px] object-contain transition-transform duration-500 group-hover:scale-[1.02]"
+            onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
           />
-          {/* Gradient overlay with prize info */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
-          {/* Status badge on image */}
-          <div className="absolute top-3 left-3 flex items-center gap-2">
+          {/* Subtle cinematic overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-surface-200 via-surface-200/5 to-transparent pointer-events-none" />
+          
+          {/* Status Badge */}
+          <div className="absolute top-3 left-3 z-10">
             {isLive ? (
-              <span className="flex items-center space-x-1.5 rounded-lg bg-primary/90 border border-primary px-2.5 py-1 text-[11px] font-black text-white uppercase animate-pulse backdrop-blur-sm">
+              <span className="flex items-center space-x-1.5 rounded-lg bg-crimson/90 border border-crimson px-3 py-1 text-xs font-black text-white uppercase animate-pulse shadow-lg backdrop-blur-sm">
                 <span className="h-2 w-2 rounded-full bg-white animate-ping" />
                 <span>LIVE</span>
               </span>
             ) : isCompleted ? (
-              <span className="flex items-center space-x-1 rounded-lg bg-emerald-500/90 px-2.5 py-1 text-[11px] font-black text-white uppercase backdrop-blur-sm">
-                <CheckCircle2 className="h-3.5 w-3.5 mr-0.5" />COMPLETED
+              <span className="flex items-center space-x-1 rounded-lg bg-emerald-500/90 px-3 py-1 text-xs font-black text-white uppercase shadow-lg backdrop-blur-sm">
+                <CheckCircle2 className="h-4 w-4 mr-0.5" />COMPLETED
               </span>
             ) : isSpecial ? (
-              <span className="rounded-lg bg-neon-gold/90 px-2.5 py-1 text-[11px] font-black text-black uppercase backdrop-blur-sm">⚡ MAJOR EVENT</span>
+              <span className="rounded-lg bg-neon-gold/90 border border-neon-gold px-3 py-1 text-xs font-black text-black uppercase shadow-lg backdrop-blur-sm">
+                ⚡ MAJOR EVENT
+              </span>
+            ) : isFull ? (
+              <span className="rounded-lg bg-surface-300/90 border border-white/20 px-3 py-1 text-xs font-black text-white uppercase shadow-lg backdrop-blur-sm">
+                FULL
+              </span>
             ) : (
-              <span className="flex items-center space-x-1 rounded-lg bg-black/60 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur-sm border border-white/20">
-                <Clock className="h-3 w-3 text-primary mr-0.5" />
+              <span className="flex items-center space-x-1 rounded-lg bg-black/70 border border-white/20 px-3 py-1 text-xs font-semibold text-white shadow-lg backdrop-blur-sm">
+                <Clock className="h-3.5 w-3.5 text-primary mr-1" />
                 {tournament.matchDate ? `${tournament.matchDate}` : 'UPCOMING'}
               </span>
             )}
           </div>
-          {/* Prize overlay bottom */}
-          <div className="absolute bottom-0 left-0 right-0 p-3 flex items-end justify-between">
-            <div>
-              <p className="text-[10px] font-bold text-white/60 uppercase tracking-wider">Prize Pool</p>
-              <p className="text-xl font-black text-neon-gold font-display">PKR {tournament.prizePool.toLocaleString()}</p>
-            </div>
-            <div className="text-right">
-              <p className="text-[10px] font-bold text-white/60 uppercase tracking-wider">Entry</p>
-              <p className={`text-base font-black ${tournament.entryFee === 0 ? 'text-emerald-400' : 'text-white'}`}>
-                {tournament.entryFee === 0 ? 'FREE' : `PKR ${tournament.entryFee}`}
-              </p>
-            </div>
-          </div>
         </div>
-      ) : null}
-
-      {/* Top Banner & Header Tags */}
-      <div className="relative p-5 pb-4">
-        
-        {/* Category Badges & Status — only show status badge if no banner image */}
-        <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-          
-          <div className="flex items-center space-x-2">
-            <span className="rounded-lg bg-crimson/20 px-2.5 py-1 text-[11px] font-black uppercase text-crimson border border-crimson/40">
-              {tournament.type}
-            </span>
-            <span className="rounded-lg bg-neon-gold/20 px-2.5 py-1 text-[11px] font-black uppercase text-neon-gold border border-neon-gold/40">
-              {tournament.game}
-            </span>
-            <span className="flex items-center space-x-1 rounded-lg bg-surface-300 px-2.5 py-1 text-[11px] font-bold text-slate-300">
-              <MapPin className="h-3 w-3 text-slate-400" />
-              <span>{tournament.map}</span>
-            </span>
-            {tournament.mapCode && (
-              <span className="rounded-lg bg-amber-500/20 px-2.5 py-1 text-[11px] font-mono text-amber-400 border border-amber-500/40">
-                Code: {tournament.mapCode}
+      ) : (
+        // Fallback gradient if no image
+        <div className={`relative w-full aspect-[4/3] sm:aspect-video min-h-[180px] flex flex-col items-center justify-center p-6 ${
+          isLive ? 'bg-gradient-to-br from-crimson/30 to-surface-300' : 'bg-gradient-to-br from-primary/20 to-surface-300'
+        }`}>
+          <Trophy className={`h-16 w-16 opacity-30 ${isLive ? 'text-crimson' : 'text-primary'}`} />
+          <p className="mt-3 text-xs font-bold text-white/40 uppercase tracking-widest text-center">Educated Gamer<br/>Tournament Arena</p>
+          <div className="absolute top-3 left-3 z-10">
+            {isLive ? (
+              <span className="flex items-center space-x-1.5 rounded-lg bg-crimson/90 border border-crimson px-3 py-1 text-xs font-black text-white uppercase shadow-lg backdrop-blur-sm">
+                <span className="h-2 w-2 rounded-full bg-white animate-ping" />
+                <span>LIVE</span>
+              </span>
+            ) : (
+              <span className="flex items-center space-x-1 rounded-lg bg-black/70 border border-white/20 px-3 py-1 text-xs font-semibold text-white shadow-lg backdrop-blur-sm">
+                <Clock className="h-3.5 w-3.5 text-primary mr-1" />
+                {tournament.matchDate ? `${tournament.matchDate}` : 'UPCOMING'}
               </span>
             )}
-          </div>
-
-          {/* Live / Status Indicator */}
-          {isLive ? (
-            <span className="flex items-center space-x-1.5 rounded-lg bg-primary/20 border border-primary px-2.5 py-1 text-[11px] font-black text-primary uppercase animate-pulse shadow-[0_0_15px_rgba(14,165,233,0.4)]">
-              <span className="h-2 w-2 rounded-full bg-primary animate-ping" />
-              <span>LIVE MATCH</span>
-            </span>
-          ) : isCompleted ? (
-            <span className="flex items-center space-x-1 rounded-lg bg-emerald-500/20 px-2.5 py-1 text-[11px] font-black text-emerald-400 border border-emerald-500/40">
-              <CheckCircle2 className="h-3.5 w-3.5" />
-              <span>COMPLETED</span>
-            </span>
-          ) : isSpecial ? (
-            <span className="flex items-center space-x-1 rounded-lg bg-neon-gold/20 px-2.5 py-1 text-[11px] font-black text-neon-gold border border-neon-gold/50">
-              <span>MAJOR EVENT</span>
-            </span>
-          ) : (
-            <span className="flex items-center space-x-1 rounded-lg bg-surface-300 px-2.5 py-1 text-[11px] font-semibold text-slate-300">
-              <Clock className="h-3 w-3 text-primary" />
-              <span>{tournament.matchDate ? `${tournament.matchDate} · ${tournament.matchTime || tournament.startTime}` : tournament.startTime}</span>
-            </span>
-          )}
-
-        </div>
-
-        {/* Tournament Title */}
-        <h3 
-          onClick={() => onViewDetails(tournament)}
-          className="text-lg sm:text-xl font-black text-white font-display uppercase tracking-wide group-hover:text-primary transition-colors cursor-pointer line-clamp-1"
-        >
-          {tournament.title}
-        </h3>
-
-        {/* Bullet Points Preview if available */}
-        {tournament.bulletPoints && tournament.bulletPoints.length > 0 && (
-          <div className="mt-2.5 space-y-1">
-            {tournament.bulletPoints.slice(0, 2).map((bp, idx) => (
-              <p key={idx} className="text-xs text-slate-300 flex items-start space-x-1.5">
-                <span className="text-primary font-black">•</span>
-                <span className="line-clamp-1">{bp}</span>
-              </p>
-            ))}
-          </div>
-        )}
-
-      </div>
-
-      {/* Completed Match: Winner Spotlight Banner */}
-      {isCompleted && tournament.winner && (
-        <div className="mx-5 mb-2 rounded-2xl border border-neon-gold/50 bg-gradient-to-r from-neon-gold/20 via-surface-200 to-black p-3.5 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-neon-gold/20 text-neon-gold border border-neon-gold/40">
-              <Trophy className="h-5 w-5 animate-bounce" />
-            </div>
-            <div>
-              <span className="text-[10px] font-black uppercase text-neon-gold tracking-wider">★ BOOYAH CHAMPION</span>
-              <p className="text-sm font-black text-white">{tournament.winner.name}</p>
-              <p className="text-[10px] font-mono text-slate-300">FF UID: {tournament.winner.uid} • {tournament.winner.kills} Kills</p>
-            </div>
-          </div>
-          <div className="text-right">
-            <span className="text-[9px] font-bold text-slate-400 uppercase">Paid Out</span>
-            <p className="text-sm font-black text-emerald-400">PKR {tournament.winner.prizePKR.toLocaleString()}</p>
           </div>
         </div>
       )}
 
-      {/* Prize Money & Key Metrics Grid */}
-      <div className="px-5 py-3 my-1 border-y border-white/10 bg-surface-200/60 grid grid-cols-3 gap-2 text-center">
+      {/* Content Area */}
+      <div className="flex flex-col p-4 sm:p-5 gap-3.5">
         
-        {/* Prize Pool */}
-        <div className="flex flex-col justify-center">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Prize Pool</span>
-          <span className="text-base sm:text-lg font-black text-neon-gold font-display">
-            PKR {tournament.prizePool.toLocaleString()}
-          </span>
+        {/* Title */}
+        <h3 className="text-[20px] sm:text-[22px] font-black text-white uppercase font-display leading-tight line-clamp-2">
+          {tournament.title}
+        </h3>
+
+        {/* Metadata Pills */}
+        <div className="flex flex-wrap gap-2 text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-300">
+          {tournament.category && <span className="px-2.5 py-1 bg-surface-300 rounded-md border border-white/5">{tournament.category}</span>}
+          {tournament.format && <span className="px-2.5 py-1 bg-surface-300 rounded-md border border-white/5">{tournament.format}</span>}
+          {tournament.mode && <span className="px-2.5 py-1 bg-surface-300 rounded-md border border-white/5 text-primary/90">{tournament.mode}</span>}
+          <span className="px-2.5 py-1 bg-surface-300 rounded-md border border-white/5 flex items-center gap-1"><MapPin size={12}/> {tournament.map}</span>
         </div>
 
-        {/* Per Kill Cash */}
-        <div className="flex flex-col justify-center border-x border-white/10 px-1">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Per Kill</span>
-          <span className="text-base sm:text-lg font-black text-crimson font-display">
-            {(tournament.hasPerKill || tournament.perKill > 0) ? `PKR ${tournament.perKill}` : '---'}
-          </span>
-        </div>
-
-        {/* Entry Fee */}
-        <div className="flex flex-col justify-center">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Entry Fee</span>
-          <span className={`text-base sm:text-lg font-black font-display ${
-            tournament.entryFee === 0 ? 'text-emerald-400' : 'text-white'
-          }`}>
-            {tournament.entryFee === 0 ? 'FREE' : `PKR ${tournament.entryFee}`}
-          </span>
-        </div>
-
-      </div>
-
-      {/* Slots Progress Bar */}
-      <div className="px-5 py-3">
-        <div className="flex justify-between text-xs font-bold mb-1.5">
-          <span className="flex items-center space-x-1.5 text-slate-300">
-            <Users className="h-3.5 w-3.5 text-slate-400" />
-            <span>Slots Confirmed</span>
-          </span>
-          <span className={isFull ? 'text-crimson font-black' : 'text-slate-200'}>
-            {tournament.slotsFilled} / {tournament.totalSlots} {isFull && '(FULL)'}
-          </span>
-        </div>
-
-        <div className="h-2 w-full overflow-hidden rounded-full bg-surface-300">
-          <div 
-            className={`h-full transition-all duration-500 ${
-              isFull 
-                ? 'bg-gradient-to-r from-crimson to-crimson-light' 
-                : 'bg-gradient-to-r from-neon-gold to-amber-500'
-            }`}
-            style={{ width: `${Math.min(percentageSlots, 100)}%` }}
-          />
-        </div>
-      </div>
-
-      {/* Bottom Actions CTA */}
-      <div className="p-5 pt-2 flex flex-col gap-2">
-        
-        {/* Live Match YouTube Watch Button */}
-        {isLive && tournament.liveStreamUrl && (
-          <a
-            href={tournament.liveStreamUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-center space-x-2 rounded-xl bg-gradient-to-r from-red-600 to-crimson py-3 text-xs font-black uppercase tracking-wider text-white shadow-[0_0_20px_rgba(255,0,0,0.5)] hover:shadow-[0_0_30px_rgba(255,0,0,0.7)] transition"
-          >
-            <Youtube className="h-4 w-4" />
-            <span>Watch Live Match on YouTube</span>
-          </a>
+        {/* Weapons */}
+        {tournament.allowedWeapons && tournament.allowedWeapons.length > 0 && (
+          <div className="text-xs font-bold text-slate-400">
+            🔫 {tournament.allowedWeapons.join(' + ')}
+          </div>
         )}
 
-        <div className="flex items-center gap-2">
-          {/* Room ID & Pass Button */}
-          {(isUserRegistered || isAdmin) && (
-            <button
-              onClick={() => onViewRoomDetails(tournament)}
-              className={`flex flex-1 items-center justify-center space-x-1.5 rounded-xl border py-2.5 text-xs font-black uppercase tracking-wider transition ${
-                isUserRegistered
-                  ? 'border-neon-gold/50 bg-neon-gold/15 text-neon-gold hover:bg-neon-gold/25'
-                  : 'border-white/10 bg-surface-200 text-slate-300 hover:text-white'
-              }`}
-            >
-              <Key className="h-3.5 w-3.5" />
-              <span>{isUserRegistered ? 'Room ID & Pass' : 'Room Status'}</span>
-            </button>
-          )}
+        <hr className="border-white/5 my-0.5" />
 
-          {/* Join / Details Button */}
-          {!isCompleted && !isFull && !isUserRegistered && (
-            <button
-              onClick={() => onJoin(tournament)}
-              className="flex flex-1 items-center justify-center space-x-1.5 rounded-xl bg-gradient-to-r from-crimson to-crimson-dark py-2.5 text-xs font-black uppercase tracking-wider text-white shadow-[0_0_20px_rgba(255,0,60,0.4)] transition hover:shadow-[0_0_30px_rgba(255,0,60,0.6)]"
-            >
-              <span>Join Match</span>
-              <ArrowRight className="h-3.5 w-3.5" />
-            </button>
-          )}
-
-          {isUserRegistered && !isCompleted && (
-            <span className="flex flex-1 items-center justify-center space-x-1.5 rounded-xl bg-emerald-500/20 border border-emerald-500/40 py-2.5 text-xs font-black text-emerald-400 uppercase">
-              <CheckCircle2 className="h-3.5 w-3.5" />
-              <span>Registered</span>
+        {/* Prize / Entry (2 columns) */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="flex flex-col">
+            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Winner</span>
+            <span className="text-xl sm:text-2xl font-black text-neon-gold font-display">
+              PKR {tournament.booyahPrize || tournament.prizePool}
             </span>
+          </div>
+          <div className="flex flex-col text-right">
+            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Entry Fee</span>
+            <span className={`text-xl sm:text-2xl font-black font-display ${tournament.entryFee === 0 ? 'text-emerald-400' : 'text-white'}`}>
+              {tournament.entryFee === 0 ? 'FREE' : `PKR ${tournament.entryFee}`}
+            </span>
+          </div>
+        </div>
+
+        {/* Per Kill */}
+        {(tournament.hasPerKill || tournament.perKill > 0) ? (
+          <div className="flex justify-between items-center px-3.5 py-2 bg-crimson/10 border border-crimson/20 rounded-xl mt-1">
+            <span className="text-xs font-bold text-crimson uppercase tracking-wider">Per Kill Reward</span>
+            <span className="text-sm font-black text-crimson font-display">PKR {tournament.perKill}</span>
+          </div>
+        ) : null}
+
+        {/* Completed Winner Spotlight */}
+        {isCompleted && tournament.winner && (
+          <div className="rounded-xl border border-neon-gold/40 bg-gradient-to-r from-neon-gold/10 to-surface-300 p-3 flex items-center gap-3 mt-1">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-neon-gold/20 text-neon-gold border border-neon-gold/30">
+              <Trophy className="h-5 w-5" />
+            </div>
+            <div>
+              <span className="text-[10px] font-black uppercase text-neon-gold tracking-widest">★ Champion</span>
+              <p className="text-sm font-black text-white">{tournament.winner.name}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Slots */}
+        <div className="flex flex-col gap-2 mt-1">
+          <div className="flex justify-between items-end">
+            <span className="text-xs font-bold text-slate-300 flex items-center gap-1.5 uppercase tracking-wider">
+              <Users size={14} className="text-slate-400"/> Players
+            </span>
+            <span className={`text-sm font-black ${isFull ? 'text-crimson' : 'text-white'}`}>
+              {tournament.slotsFilled} / {tournament.totalSlots}
+            </span>
+          </div>
+          <div className="h-2.5 w-full bg-surface-300 rounded-full overflow-hidden">
+            <div 
+              className={`h-full rounded-full transition-all duration-500 ${isFull ? 'bg-crimson' : 'bg-neon-gold'}`}
+              style={{ width: `${percentageSlots}%` }}
+            />
+          </div>
+        </div>
+
+        {/* CTA */}
+        <div className="mt-2 flex flex-col gap-2">
+          {/* Live Match YouTube Watch Button */}
+          {isLive && tournament.liveStreamUrl && (
+            <a
+              href={tournament.liveStreamUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={e => e.stopPropagation()}
+              className="flex items-center justify-center space-x-2 rounded-xl bg-gradient-to-r from-red-600 to-crimson py-3 text-xs font-black uppercase tracking-wider text-white shadow-[0_0_20px_rgba(255,0,0,0.5)] hover:shadow-[0_0_30px_rgba(255,0,0,0.7)] transition"
+            >
+              <Youtube className="h-4 w-4" />
+              <span>Watch Live Stream</span>
+            </a>
           )}
 
-          {isFull && !isUserRegistered && !isCompleted && (
-            <button
-              onClick={() => onViewDetails(tournament)}
-              className="flex flex-1 items-center justify-center space-x-1.5 rounded-xl bg-surface-200 border border-white/10 py-2.5 text-xs font-bold text-slate-400"
-            >
-              <span>Match Full ? View Details</span>
+          {isCompleted ? (
+            <button onClick={(e) => { e.stopPropagation(); onViewDetails(tournament); }} className="w-full py-3.5 rounded-xl bg-surface-300 border border-emerald-500/30 text-emerald-400 text-sm font-black uppercase hover:bg-surface-300/80 transition-colors">
+              View Results →
             </button>
-          )}
-
-          {isCompleted && (
-            <button
-              onClick={() => onViewDetails(tournament)}
-              className="flex flex-1 items-center justify-center space-x-1.5 rounded-xl bg-surface-200 border border-emerald-500/30 py-2.5 text-xs font-bold text-emerald-400 hover:bg-surface-300 transition"
+          ) : isUserRegistered ? (
+            <span className="w-full py-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/40 text-emerald-400 text-sm font-black uppercase flex items-center justify-center gap-2">
+              <CheckCircle2 size={18}/> Registered
+            </span>
+          ) : isFull ? (
+            <button disabled className="w-full py-3.5 rounded-xl bg-surface-300 text-slate-500 text-sm font-black uppercase cursor-not-allowed">
+              Registration Closed
+            </button>
+          ) : (
+            <button 
+              onClick={(e) => { e.stopPropagation(); onJoin(tournament); }} 
+              className="w-full py-3.5 rounded-xl bg-crimson hover:bg-crimson-light text-white text-[13px] font-black uppercase tracking-wider transition-colors shadow-[0_0_20px_rgba(255,0,60,0.3)] hover:shadow-[0_0_30px_rgba(255,0,60,0.5)] flex items-center justify-center gap-1.5"
             >
-              <span>View Leaderboard Results</span>
+              <span>{currentUser ? 'Join Tournament' : 'Sign in to Join'}</span>
+              <ArrowRight size={16} />
             </button>
           )}
         </div>
 
       </div>
-
     </div>
   );
 };
