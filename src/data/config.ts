@@ -26,9 +26,10 @@ export const PLATFORM_CONFIG = {
     accountTitle: 'Ashan Akhtar',
   },
   easyPaisa: {
-    accountNumber: '03190799711',
+    accountNumber: '03122444428',
     accountTitle: 'Ashan Akhtar',
   },
+
 };
 
 /**

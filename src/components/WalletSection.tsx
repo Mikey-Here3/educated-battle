@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { useTournaments } from '@/context/TournamentContext';
+import { PLATFORM_CONFIG } from '@/data/config';
+
 import { 
   Wallet, 
   ArrowUpRight, 
@@ -52,9 +54,14 @@ export const WalletSection: React.FC<WalletSectionProps> = () => {
   const [submittingWithdraw, setSubmittingWithdraw] = useState<boolean>(false);
   const [withdrawMsg, setWithdrawMsg] = useState<{ text: string; error?: boolean } | null>(null);
 
-  // Official Receiver Account Details
-  const officialNumber = '03190799711';
-  const officialName = 'Ashan Akhtar';
+  // Official Receiver Account Details (from PLATFORM_CONFIG)
+  const officialNumber = paymentMethod === 'EasyPaisa' 
+    ? PLATFORM_CONFIG.easyPaisa.accountNumber 
+    : PLATFORM_CONFIG.jazzCash.accountNumber;
+  const officialName = paymentMethod === 'EasyPaisa' 
+    ? PLATFORM_CONFIG.easyPaisa.accountTitle 
+    : PLATFORM_CONFIG.jazzCash.accountTitle;
+
 
   useEffect(() => {
     if (currentUser) {

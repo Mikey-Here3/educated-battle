@@ -577,8 +577,9 @@ export const FAQ_ITEMS = [
     a: 'Room ID and Password are published on the website 15 minutes before match start time. Only logged in players who joined the match can see the credentials.'
   },
   {
-    q: 'What are the JazzCash payment details?',
-    a: 'Send deposits to JazzCash: 03190799711 (Account Name: Ashan Akhtar). EasyPaisa is currently in maintenance. Upload your transaction screenshot on the wallet page.'
+    q: 'What are the payment deposit details?',
+    a: 'Send deposits to JazzCash: 03190799711 or EasyPaisa: 03122444428 (Account Name: Ashan Akhtar). Upload your transaction screenshot with Transaction ID on the wallet page for fast verification.'
+
   },
   {
     q: 'Can emulator or PC players join?',

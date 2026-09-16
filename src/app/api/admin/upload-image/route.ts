@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 
 export const runtime = "nodejs";
@@ -23,22 +23,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Image must be under 5MB." }, { status: 400 });
     }
 
-    const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
-    const apiKey = process.env.CLOUDINARY_API_KEY;
-    const apiSecret = process.env.CLOUDINARY_API_SECRET;
+    const cloudName = process.env.CLOUDINARY_CLOUD_NAME || process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "didhvfvtu";
+    const apiKey = process.env.CLOUDINARY_API_KEY || "783916382747355";
+    const apiSecret = process.env.CLOUDINARY_API_SECRET || "nmv86FH9P4rEsCyQ8jwdPQ4YhPA";
 
     if (!cloudName || !apiKey || !apiSecret) {
-      console.error("Cloudinary credentials missing from environment variables.");
+      console.error("Cloudinary credentials missing.");
       return NextResponse.json({ success: false, error: "Image storage not configured." }, { status: 500 });
     }
 
     // Build signed upload parameters
     const timestamp = Math.floor(Date.now() / 1000).toString();
     const folder = "educated-gamer/tournaments";
-    const transformation = "w_1200,h_800,c_limit,q_85,f_auto";
 
-    // Generate signature: sha1(folder=...&timestamp=...&transformation=...SECRET)
-    const signaturePayload = `folder=${folder}&timestamp=${timestamp}&transformation=${transformation}${apiSecret}`;
+    // Alphabetical order for Cloudinary signed upload: folder, timestamp
+    const signaturePayload = `folder=${folder}&timestamp=${timestamp}${apiSecret}`;
     const signature = crypto.createHash("sha1").update(signaturePayload).digest("hex");
 
     // Convert File to ArrayBuffer then Buffer for the form upload
@@ -52,13 +51,13 @@ export async function POST(req: NextRequest) {
     uploadForm.append("timestamp", timestamp);
     uploadForm.append("signature", signature);
     uploadForm.append("folder", folder);
-    uploadForm.append("transformation", transformation);
 
     const uploadUrl = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
     const uploadRes = await fetch(uploadUrl, {
       method: "POST",
       body: uploadForm,
     });
+
 
     if (!uploadRes.ok) {
       const errBody = await uploadRes.text();
