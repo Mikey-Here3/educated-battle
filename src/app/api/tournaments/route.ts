@@ -76,6 +76,8 @@ export async function GET(request: Request) {
         roomPassword: t.roomPassword || undefined,
         bannerImage: t.bannerUrl || undefined,
         description: t.description || undefined,
+        liveStreamUrl: t.youtubeUrl || undefined,
+        bulletPoints: t.rules ? [] : [], // bulletPoints not stored separately; kept for compat
         rules: t.rules ? t.rules.split('\n').filter(Boolean) : [],
         prizes,
         bookedSlots,

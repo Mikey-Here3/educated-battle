@@ -186,6 +186,16 @@ export const TournamentCard: React.FC<TournamentCardProps> = ({
           </div>
         </div>
 
+        {/* Schedule Row */}
+        {(tournament.matchDate || tournament.matchTime) && (
+          <div className="flex items-center gap-2 px-1 text-xs text-slate-400">
+            <Clock size={12} className="text-primary shrink-0" />
+            <span className="font-semibold">
+              {tournament.matchDate || ''}{tournament.matchDate && tournament.matchTime ? ' · ' : ''}{tournament.matchTime || ''}
+            </span>
+          </div>
+        )}
+
         {/* CTA */}
         <div className="mt-2 flex flex-col gap-2">
           {/* Live Match YouTube Watch Button */}

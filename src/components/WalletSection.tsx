@@ -320,21 +320,13 @@ export const WalletSection: React.FC<WalletSectionProps> = () => {
                   <p className="text-[11px] text-slate-400 mt-1">Instant mobile wallet transfer</p>
                 </button>
 
-                <button
-                  type="button"
-                  onClick={() => setPaymentMethod('EasyPaisa')}
-                  className={`p-4 rounded-2xl border text-left transition ${
-                    paymentMethod === 'EasyPaisa'
-                      ? 'border-emerald-500 bg-surface-100 ring-2 ring-emerald-500/40 shadow-[0_0_20px_rgba(16,185,129,0.2)]'
-                      : 'border-white/10 bg-surface-200 hover:bg-surface-100'
-                  }`}
-                >
+                <div className="p-4 rounded-2xl border border-white/10 bg-surface-200/50 text-left opacity-60 cursor-not-allowed relative overflow-hidden">
                   <div className="flex items-center justify-between">
-                    <span className="font-display font-black text-base text-white">EasyPaisa</span>
-                    <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="font-display font-black text-base text-white/60">EasyPaisa</span>
+                    <span className="text-[9px] font-black bg-yellow-500/20 text-yellow-400 border border-yellow-500/40 px-2 py-0.5 rounded-full uppercase tracking-wider">Coming Soon</span>
                   </div>
-                  <p className="text-[11px] text-slate-400 mt-1">Instant mobile wallet transfer</p>
-                </button>
+                  <p className="text-[11px] text-slate-500 mt-1">Integration in progress</p>
+                </div>
               </div>
 
               {/* Account Details Box */}
@@ -542,18 +534,10 @@ export const WalletSection: React.FC<WalletSectionProps> = () => {
                       <span className="text-[10px] text-slate-400">Mobile Account</span>
                     </button>
 
-                    <button
-                      type="button"
-                      onClick={() => setWithdrawMethod('EasyPaisa')}
-                      className={`p-3.5 rounded-xl border text-left transition ${
-                        withdrawMethod === 'EasyPaisa'
-                          ? 'border-emerald-500 bg-surface-100 ring-2 ring-emerald-500/30 font-bold text-white'
-                          : 'border-white/10 bg-surface-200 text-slate-400 hover:text-white'
-                      }`}
-                    >
-                      <span className="text-sm font-display font-black block">EasyPaisa</span>
-                      <span className="text-[10px] text-slate-400">Mobile Account</span>
-                    </button>
+                    <div className="p-3.5 rounded-xl border border-white/10 bg-surface-200/50 text-left opacity-60 cursor-not-allowed">
+                      <span className="text-sm font-display font-black block text-white/60">EasyPaisa</span>
+                      <span className="text-[10px] text-yellow-500">Coming Soon</span>
+                    </div>
                   </div>
                 </div>
 

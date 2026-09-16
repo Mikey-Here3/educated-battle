@@ -286,10 +286,14 @@ export default function AdminPortalPage() {
     setTStartTime(t.startTime);
     setTMatchDate(t.matchDate || 'Saturday Night');
     setTMatchTime(t.matchTime || '09:00 PM PKT');
-    setTLiveUrl(t.liveStreamUrl || '');
+    // Use existing liveStreamUrl from DB, fall back to official channel only if completely absent
+    setTLiveUrl(t.liveStreamUrl || 'https://www.youtube.com/@EducatedGamer3');
     setTBannerImage(t.bannerImage || '');
-    setTBullets((t.bulletPoints || []).join('\n'));
-    setTRules((t.rules || []).join('\n') || '📱 Mobile devices strictly required (Zero emulators / PC players permitted).\n🛡️ Anti-cheat and fair play strictly enforced. Teaming equals permanent ban.\n🆔 All players must enter custom room with registered Free Fire UIDs.\n⚡ Match results and frags recorded live by official tournament marshals.');
+    // Bullet points: use existing or leave empty (not auto-filled with rules)
+    setTBullets((t.bulletPoints && t.bulletPoints.length > 0) ? t.bulletPoints.join('\n') : '');
+    // Rules: use existing rules from DB; don't overwrite with placeholder defaults
+    const rulesText = Array.isArray(t.rules) ? t.rules.join('\n') : (t.rules || '');
+    setTRules(rulesText || '📱 Mobile devices strictly required (Zero emulators / PC players permitted).\n🛡️ Anti-cheat and fair play strictly enforced. Teaming equals permanent ban.\n🆔 All players must enter custom room with registered Free Fire UIDs.\n⚡ Match results and frags recorded live by official tournament marshals.');
   };
 
   // Upload banner immediately to Cloudinary when file is selected — stores permanent URL, never base64
