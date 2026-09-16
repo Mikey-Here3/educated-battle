@@ -377,9 +377,13 @@ export default function AdminPortalPage() {
 
     if (editingTourney) {
       try {
-        await updateTournament(editingTourney.id, data);
-        setEditingTourney(null);
-        resetTournamentForm();
+        const result = await updateTournament(editingTourney.id, data);
+        if (result.success) {
+          setEditingTourney(null);
+          resetTournamentForm();
+        } else {
+          setTournamentSaveError(result.error || 'Failed to update tournament. Please try again.');
+        }
       } catch (err: any) {
         setTournamentSaveError(err?.message || 'Failed to save tournament. Please try again.');
       }

@@ -40,7 +40,7 @@ interface TournamentContextType {
   leaderboard: PlayerRank[];
   loadingTournaments: boolean;
   createTournament: (tournament: Omit<Tournament, 'id' | 'slotsFilled'>) => Promise<{ success: boolean; error?: string }>;
-  updateTournament: (id: string, updatedFields: Partial<Tournament>) => Promise<void>;
+  updateTournament: (id: string, updatedFields: Partial<Tournament>) => Promise<{ success: boolean; error?: string }>;
 
   deleteTournament: (id: string) => void;
   setTournamentWinner: (id: string, winner: TournamentWinner) => void;
@@ -69,7 +69,7 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   // 1. Fetch Tournaments from Database
   const refreshTournaments = useCallback(async () => {
     try {
-      const res = await fetch('/api/tournaments');
+      const res = await fetch('/api/tournaments', { cache: 'no-store' });
       if (res.ok) {
         const data = await res.json();
         if (data.success && Array.isArray(data.data)) {
@@ -214,9 +214,9 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   };
 
 
-
-  const updateTournament = async (id: string, updatedFields: Partial<Tournament>) => {
+  const updateTournament = async (id: string, updatedFields: Partial<Tournament>): Promise<{ success: boolean; error?: string }> => {
     // Optimistic local update for instant UI feedback
+    const previousState = [...tournaments];
     setTournaments((prev) => {
       const updated = prev.map((t) => (t.id === id ? { ...t, ...updatedFields } : t));
       localStorage.setItem('eg_tournaments_list', JSON.stringify(updated));
@@ -258,15 +258,23 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         body: JSON.stringify(apiPayload),
       });
 
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        console.error('Tournament update API error:', err);
-      } else {
-        // Refresh from DB to confirm persisted state
-        await refreshTournaments();
+      const resData = await res.json().catch(() => ({}));
+      
+      if (!res.ok || !resData.success) {
+        // Revert optimistic update
+        setTournaments(previousState);
+        localStorage.setItem('eg_tournaments_list', JSON.stringify(previousState));
+        return { success: false, error: resData.error || 'Failed to update tournament.' };
       }
-    } catch (error) {
+
+      // Refresh from DB to confirm persisted state
+      await refreshTournaments();
+      return { success: true };
+    } catch (error: any) {
       console.error('Tournament update network error:', error);
+      setTournaments(previousState);
+      localStorage.setItem('eg_tournaments_list', JSON.stringify(previousState));
+      return { success: false, error: error?.message || 'Network error updating tournament.' };
     }
   };
 
