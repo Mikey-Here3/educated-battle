@@ -261,10 +261,32 @@ export default function AdminPortalPage() {
         return;
       }
       const reader = new FileReader();
-      reader.onloadend = () => {
-        if (reader.result) {
-          setTBannerImage(reader.result as string);
-        }
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          const MAX_SIZE = 800;
+          
+          if (width > height && width > MAX_SIZE) {
+            height *= MAX_SIZE / width;
+            width = MAX_SIZE;
+          } else if (height > MAX_SIZE) {
+            width *= MAX_SIZE / height;
+            height = MAX_SIZE;
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+            setTBannerImage(dataUrl);
+          }
+        };
+        img.src = event.target?.result as string;
       };
       reader.readAsDataURL(file);
     }
@@ -558,12 +580,12 @@ export default function AdminPortalPage() {
 
             {/* Banner Live Preview */}
             {tBannerImage ? (
-              <div className="relative rounded-2xl overflow-hidden h-40 border border-neon-gold/50 shadow-lg group">
+              <div className="relative rounded-2xl overflow-hidden h-48 bg-black/40 border border-neon-gold/50 shadow-lg group flex items-center justify-center">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={tBannerImage}
                   alt="Banner preview"
-                  className="w-full h-full object-cover"
+                  className="max-w-full max-h-full object-contain"
                   onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent flex items-end justify-between p-3.5">

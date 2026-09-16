@@ -67,16 +67,16 @@ export const FeaturedTournaments: React.FC<FeaturedTournamentsProps> = ({
               onClick={() => onViewDetails(t)}
             >
               {/* Banner image or gradient fallback */}
-              <div className="relative" style={{ aspectRatio: '16/8' }}>
+              <div className="relative bg-surface-300" style={{ aspectRatio: '16/8' }}>
                 {t.bannerImage ? (
                   <>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={t.bannerImage}
                       alt={t.title}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent pointer-events-none" />
                   </>
                 ) : (
                   <div

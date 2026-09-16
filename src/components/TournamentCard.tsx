@@ -42,7 +42,7 @@ export const TournamentCard: React.FC<TournamentCardProps> = ({
       {/* Banner Image (if set) */}
       {tournament.bannerImage ? (
         <div
-          className="relative w-full overflow-hidden cursor-pointer"
+          className="relative w-full overflow-hidden cursor-pointer bg-surface-300"
           style={{ aspectRatio: '16/7' }}
           onClick={() => onViewDetails(tournament)}
         >
@@ -50,7 +50,7 @@ export const TournamentCard: React.FC<TournamentCardProps> = ({
           <img
             src={tournament.bannerImage}
             alt={tournament.title}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
             onError={e => { (e.target as HTMLImageElement).parentElement!.style.display = 'none'; }}
           />
           {/* Gradient overlay with prize info */}

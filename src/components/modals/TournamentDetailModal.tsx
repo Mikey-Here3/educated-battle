@@ -39,10 +39,10 @@ export const TournamentDetailModal: React.FC<TournamentDetailModalProps> = ({
 
         {/* Banner image if present */}
         {tournament.bannerImage && (
-          <div className="relative w-full h-40 sm:h-52 rounded-2xl overflow-hidden mb-4 border border-white/10">
+          <div className="relative w-full h-40 sm:h-52 rounded-2xl overflow-hidden mb-4 border border-white/10 bg-surface-300">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={tournament.bannerImage} alt={tournament.title} className="w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
+            <img src={tournament.bannerImage} alt={tournament.title} className="w-full h-full object-contain" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent pointer-events-none" />
           </div>
         )}
 
