@@ -70,7 +70,7 @@ const Modal: React.FC<ModalProps> = ({ title, onClose, children }) => (
 
 export default function AdminPortalPage() {
   const router = useRouter();
-  const { currentUser, contactQueries } = useAuth();
+  const { currentUser, contactQueries, authLoading } = useAuth();
   const {
     tournaments,
     createTournament,
@@ -91,13 +91,14 @@ export default function AdminPortalPage() {
   const [authorized, setAuthorized] = useState<boolean | null>(null);
 
   useEffect(() => {
+    if (authLoading) return;
     const hasAdminCookie = typeof document !== 'undefined' && document.cookie.includes('eg_admin=1');
     if (!hasAdminCookie && currentUser?.role !== 'admin') {
       router.push('/login');
     } else {
       setAuthorized(true);
     }
-  }, [router, currentUser]);
+  }, [router, currentUser, authLoading]);
 
   const handleSignOut = async () => {
     try {
@@ -1016,8 +1017,8 @@ export default function AdminPortalPage() {
               )}
               <div className="space-y-3">
                 {pendingDeposits.map(dep => (
-                  <div key={dep.id} className="bg-surface-200 border border-white/10 rounded-xl p-4">
-                    <div className="flex items-start gap-4">
+                  <div key={dep.id} className="bg-surface-200 border border-white/10 rounded-xl p-4 space-y-3">
+                    <div className="flex items-start gap-3">
                       {/* Receipt thumbnail */}
                       {dep.proofUrl ? (
                         <button
@@ -1034,32 +1035,35 @@ export default function AdminPortalPage() {
                           <ImageIcon className="h-6 w-6 text-white/20" />
                         </div>
                       )}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <p className="text-white font-medium text-sm">{dep.user}</p>
-                          <span className="text-xs text-white/40">UID: {dep.uid}</span>
+                      <div className="flex-1 min-w-0 space-y-1">
+                        <div className="flex items-center justify-between flex-wrap gap-1">
+                          <p className="text-white font-bold text-sm truncate">{dep.user}</p>
+                          <span className="text-[11px] font-mono text-neon-gold bg-neon-gold/10 px-2 py-0.5 rounded border border-neon-gold/20">
+                            PKR {dep.amt.toLocaleString()}
+                          </span>
                         </div>
-                        <div className="flex items-center gap-4 text-xs text-white/50 flex-wrap">
-                          <span className="text-green-400 font-bold">PKR {dep.amt.toLocaleString()}</span>
+                        <p className="text-xs text-white/50 font-mono">FF UID: {dep.uid}</p>
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-white/40 font-mono">
                           <span>{dep.method}</span>
                           <span>Trx: {dep.trxId}</span>
                           <span>{dep.date}</span>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => approveDeposit(dep.id)}
-                          className="flex items-center gap-1 bg-green-500/20 hover:bg-green-500/30 text-green-400 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
-                        >
-                          <CheckCircle2 className="h-3 w-3" /> Approve
-                        </button>
-                        <button
-                          onClick={() => rejectDeposit(dep.id)}
-                          className="flex items-center gap-1 bg-red-500/20 hover:bg-red-500/30 text-red-400 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
-                        >
-                          <XCircle className="h-3 w-3" /> Reject
-                        </button>
-                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-end gap-2 pt-2 border-t border-white/5">
+                      <button
+                        onClick={() => approveDeposit(dep.id)}
+                        className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/40 px-4 py-2 rounded-lg text-xs font-bold transition-colors"
+                      >
+                        <CheckCircle2 className="h-3.5 w-3.5" /> Approve Deposit
+                      </button>
+                      <button
+                        onClick={() => rejectDeposit(dep.id)}
+                        className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/40 px-4 py-2 rounded-lg text-xs font-bold transition-colors"
+                      >
+                        <XCircle className="h-3.5 w-3.5" /> Reject
+                      </button>
                     </div>
                   </div>
                 ))}

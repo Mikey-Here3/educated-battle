@@ -47,7 +47,7 @@ export async function GET(request: Request) {
 
       const bookedSlots = t.slots.map((s) => s.slotNumber);
       const registeredUsers = t.slots.map((s) => s.userId);
-      const realSlotsFilled = Math.max(t.slots.length, t.slotsFilled || 0);
+      const realSlotsFilled = t.slots.length;
 
       return {
         id: t.id,

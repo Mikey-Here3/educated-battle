@@ -35,6 +35,7 @@ export interface ContactQuery {
 
 interface AuthContextType {
   currentUser: UserAccount | null;
+  authLoading: boolean;
   registeredTournaments: string[]; // IDs of matches the user joined
   bookedSlots: Record<string, BookedSlotDetail>; // tournamentId -> slot details
   contactQueries: ContactQuery[];
@@ -51,6 +52,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<UserAccount | null>(null);
+  const [authLoading, setAuthLoading] = useState<boolean>(true);
   const [registeredTournaments, setRegisteredTournaments] = useState<string[]>([]);
   const [bookedSlots, setBookedSlots] = useState<Record<string, BookedSlotDetail>>({});
   const [contactQueries, setContactQueries] = useState<ContactQuery[]>([]);
@@ -99,6 +101,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (err) {
       console.error('Failed to sync user from database:', err);
+    } finally {
+      setAuthLoading(false);
     }
   }, []);
 
@@ -295,6 +299,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     <AuthContext.Provider
       value={{
         currentUser,
+        authLoading,
         registeredTournaments,
         bookedSlots,
         contactQueries,
