@@ -42,6 +42,9 @@ import {
   Award,
   DollarSign,
   Users,
+  UploadCloud,
+  Upload,
+  Link as LinkIcon,
 } from 'lucide-react';
 
 interface ModalProps {
@@ -248,6 +251,23 @@ export default function AdminPortalPage() {
     setTBannerImage(t.bannerImage || '');
     setTBullets((t.bulletPoints || []).join('\n'));
     setTRules((t.rules || []).join('\n') || '📱 Mobile devices strictly required (Zero emulators / PC players permitted).\n🛡️ Anti-cheat and fair play strictly enforced. Teaming equals permanent ban.\n🆔 All players must enter custom room with registered Free Fire UIDs.\n⚡ Match results and frags recorded live by official tournament marshals.');
+  };
+
+  const handleBannerFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Image file size must be less than 5MB');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (reader.result) {
+          setTBannerImage(reader.result as string);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleSaveTournament = () => {
@@ -498,17 +518,47 @@ export default function AdminPortalPage() {
         {wizardStep === 2 && (
           <div className="space-y-4 animate-in fade-in duration-200">
             <div>
-              <label className={labelClass}>Tournament Banner Image URL (Optional)</label>
-              <input
-                className={inputClass}
-                value={tBannerImage}
-                onChange={e => setTBannerImage(e.target.value)}
-                placeholder="https://images.unsplash.com/... or direct image link"
-              />
+              <label className={labelClass}>Tournament Banner Image (Upload File or Paste Link)</label>
+              
+              <div className="mt-2 space-y-3">
+                {/* File Upload Dropzone */}
+                <label className="relative flex flex-col items-center justify-center p-6 border-2 border-dashed border-white/20 hover:border-crimson rounded-2xl bg-surface-300/40 cursor-pointer transition-all text-center group">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleBannerFileUpload}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  />
+                  <UploadCloud className="h-8 w-8 text-crimson mb-2 group-hover:scale-110 transition-transform" />
+                  <span className="text-xs font-black text-white uppercase tracking-wider">
+                    Upload Banner Image File
+                  </span>
+                  <span className="text-[10px] text-white/50 mt-1">
+                    Tap to select PNG, JPG or WEBP from Gallery (Max 5MB)
+                  </span>
+                </label>
+
+                <div className="flex items-center gap-2 my-2">
+                  <div className="h-px flex-1 bg-white/10" />
+                  <span className="text-[10px] font-bold text-white/40 uppercase">OR PASTE DIRECT URL</span>
+                  <div className="h-px flex-1 bg-white/10" />
+                </div>
+
+                <div className="relative">
+                  <LinkIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+                  <input
+                    className={`${inputClass} pl-10`}
+                    value={tBannerImage}
+                    onChange={e => setTBannerImage(e.target.value)}
+                    placeholder="https://images.unsplash.com/... or direct image link"
+                  />
+                </div>
+              </div>
             </div>
 
+            {/* Banner Live Preview */}
             {tBannerImage ? (
-              <div className="relative rounded-2xl overflow-hidden h-36 border border-neon-gold/40 shadow-lg">
+              <div className="relative rounded-2xl overflow-hidden h-40 border border-neon-gold/50 shadow-lg group">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={tBannerImage}
@@ -516,13 +566,23 @@ export default function AdminPortalPage() {
                   className="w-full h-full object-cover"
                   onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-3">
-                  <span className="text-xs text-white font-bold">Live Banner Preview</span>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent flex items-end justify-between p-3.5">
+                  <span className="text-xs text-white font-bold flex items-center gap-1.5">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+                    <span>Live Banner Image Attached</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setTBannerImage('')}
+                    className="px-2.5 py-1 bg-red-500/80 hover:bg-red-600 text-white rounded-lg text-xs font-bold transition-colors"
+                  >
+                    Remove Banner
+                  </button>
                 </div>
               </div>
             ) : (
-              <div className="rounded-2xl border border-dashed border-white/20 p-8 text-center bg-surface-200/40">
-                <p className="text-xs text-white/50">No banner image URL entered. A high-res esports card graphic will be used by default.</p>
+              <div className="rounded-2xl border border-dashed border-white/20 p-6 text-center bg-surface-200/40">
+                <p className="text-xs text-white/50">No banner image attached yet. Standard high-res esports graphic will be displayed.</p>
               </div>
             )}
 
