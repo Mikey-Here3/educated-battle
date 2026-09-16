@@ -39,8 +39,9 @@ interface TournamentContextType {
   withdrawals: WithdrawalRequest[];
   leaderboard: PlayerRank[];
   loadingTournaments: boolean;
-  createTournament: (tournament: Omit<Tournament, 'id' | 'slotsFilled'>) => Promise<boolean>;
+  createTournament: (tournament: Omit<Tournament, 'id' | 'slotsFilled'>) => Promise<{ success: boolean; error?: string }>;
   updateTournament: (id: string, updatedFields: Partial<Tournament>) => Promise<void>;
+
   deleteTournament: (id: string) => void;
   setTournamentWinner: (id: string, winner: TournamentWinner) => void;
   submitDeposit: (data: Omit<DepositRequest, 'id' | 'date' | 'status'>) => Promise<{ success: boolean; error?: string }>;
@@ -170,7 +171,7 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     refreshTransactions();
   }, [refreshTournaments, refreshLeaderboard, refreshTransactions]);
 
-  const createTournament = async (data: Omit<Tournament, 'id' | 'slotsFilled'>): Promise<boolean> => {
+  const createTournament = async (data: Omit<Tournament, 'id' | 'slotsFilled'>): Promise<{ success: boolean; error?: string }> => {
     try {
       const res = await fetch('/api/admin/tournaments', {
         method: 'POST',
@@ -200,16 +201,18 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         }),
       });
 
-      if (res.ok) {
+      const resData = await res.json().catch(() => ({}));
+      if (res.ok && resData.success) {
         await refreshTournaments();
-        return true;
+        return { success: true };
       }
-      return false;
-    } catch (error) {
+      return { success: false, error: resData.error || 'Failed to create tournament in database.' };
+    } catch (error: any) {
       console.error('Create tournament error:', error);
-      return false;
+      return { success: false, error: error?.message || 'Network error creating tournament.' };
     }
   };
+
 
 
   const updateTournament = async (id: string, updatedFields: Partial<Tournament>) => {

@@ -384,15 +384,16 @@ export default function AdminPortalPage() {
         setTournamentSaveError(err?.message || 'Failed to save tournament. Please try again.');
       }
     } else {
-      const success = await createTournament(data);
-      if (success) {
+      const result = await createTournament(data);
+      if (result.success) {
         setShowCreateModal(false);
         resetTournamentForm();
       } else {
-        setTournamentSaveError('Tournament creation failed. Check your inputs and try again.');
+        setTournamentSaveError(result.error || 'Tournament creation failed. Check your inputs and try again.');
       }
     }
   };
+
 
 
 

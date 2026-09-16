@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(req: NextRequest) {
@@ -16,7 +16,14 @@ export async function POST(req: NextRequest) {
     }
 
     const id = `eg-${(category || "ff").toLowerCase().replace(/\s+/g, "-")}-${Date.now().toString().slice(-5)}`;
-    const parsedStartTime = startTime ? new Date(startTime) : new Date(Date.now() + 1000 * 60 * 60 * 24);
+    let parsedStartTime: Date;
+    if (startTime) {
+      const d = new Date(startTime);
+      parsedStartTime = isNaN(d.getTime()) ? new Date(Date.now() + 1000 * 60 * 60 * 24) : d;
+    } else {
+      parsedStartTime = new Date(Date.now() + 1000 * 60 * 60 * 24);
+    }
+
 
     const created = await prisma.tournament.create({
       data: {
@@ -90,8 +97,12 @@ export async function PATCH(req: NextRequest) {
     if (fields.matchDate !== undefined) updateData.matchDate = fields.matchDate;
     if (fields.matchTime !== undefined) updateData.matchTime = fields.matchTime;
     if (fields.startTime !== undefined) {
-      try { updateData.startTime = new Date(fields.startTime); } catch {}
+      const d = new Date(fields.startTime);
+      if (!isNaN(d.getTime())) {
+        updateData.startTime = d;
+      }
     }
+
     // bannerUrl is the DB column — mapped from bannerImage on the front-end
     if (fields.bannerUrl !== undefined) updateData.bannerUrl = fields.bannerUrl || null;
     if (fields.roomId !== undefined) updateData.roomId = fields.roomId || null;

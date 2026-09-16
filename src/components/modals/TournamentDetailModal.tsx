@@ -118,39 +118,47 @@ export const TournamentDetailModal: React.FC<TournamentDetailModalProps> = ({
               </span>
             )}
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 text-center">
-            <div className="rounded-xl border border-neon-gold/50 bg-neon-gold/10 p-2.5">
-              <span className="text-[10px] font-black uppercase text-neon-gold block">🥇 1st (Booyah)</span>
-              <p className="text-sm font-black text-white mt-0.5">PKR {tournament.prizes.first.toLocaleString()}</p>
-            </div>
-            <div className="rounded-xl border border-white/20 bg-surface-200 p-2.5">
-              <span className="text-[10px] font-bold uppercase text-slate-300 block">🥈 2nd Place</span>
-              <p className="text-sm font-black text-white mt-0.5">PKR {tournament.prizes.second.toLocaleString()}</p>
-            </div>
-            <div className="rounded-xl border border-white/10 bg-surface-200 p-2.5">
-              <span className="text-[10px] font-bold uppercase text-slate-400 block">🥉 3rd Place</span>
-              <p className="text-sm font-black text-slate-200 mt-0.5">PKR {tournament.prizes.third.toLocaleString()}</p>
-            </div>
-            {tournament.prizes.fourth !== undefined && (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 text-center">
+            {tournament.prizes.first > 0 && (
+              <div className="rounded-xl border border-neon-gold/50 bg-neon-gold/10 p-2.5">
+                <span className="text-[10px] font-black uppercase text-neon-gold block">🥇 1st (Booyah)</span>
+                <p className="text-sm font-black text-white mt-0.5">PKR {tournament.prizes.first.toLocaleString()}</p>
+              </div>
+            )}
+            {Boolean(tournament.prizes.second && tournament.prizes.second > 0) && (
+              <div className="rounded-xl border border-white/20 bg-surface-200 p-2.5">
+                <span className="text-[10px] font-bold uppercase text-slate-300 block">🥈 2nd Place</span>
+                <p className="text-sm font-black text-white mt-0.5">PKR {tournament.prizes.second.toLocaleString()}</p>
+              </div>
+            )}
+            {Boolean(tournament.prizes.third && tournament.prizes.third > 0) && (
+              <div className="rounded-xl border border-white/10 bg-surface-200 p-2.5">
+                <span className="text-[10px] font-bold uppercase text-slate-400 block">🥉 3rd Place</span>
+                <p className="text-sm font-black text-slate-200 mt-0.5">PKR {tournament.prizes.third.toLocaleString()}</p>
+              </div>
+            )}
+            {Boolean(tournament.prizes.fourth && tournament.prizes.fourth > 0) && (
               <div className="rounded-xl border border-white/10 bg-surface-200 p-2.5">
                 <span className="text-[10px] font-bold uppercase text-slate-400 block">4th Place</span>
-                <p className="text-sm font-black text-slate-200 mt-0.5">PKR {tournament.prizes.fourth.toLocaleString()}</p>
+                <p className="text-sm font-black text-slate-200 mt-0.5">PKR {tournament.prizes.fourth?.toLocaleString()}</p>
               </div>
             )}
-            {tournament.prizes.fifth !== undefined && (
+            {Boolean(tournament.prizes.fifth && tournament.prizes.fifth > 0) && (
               <div className="rounded-xl border border-white/10 bg-surface-200 p-2.5">
                 <span className="text-[10px] font-bold uppercase text-slate-400 block">5th Place</span>
-                <p className="text-sm font-black text-slate-200 mt-0.5">PKR {tournament.prizes.fifth.toLocaleString()}</p>
+                <p className="text-sm font-black text-slate-200 mt-0.5">PKR {tournament.prizes.fifth?.toLocaleString()}</p>
               </div>
             )}
-            {tournament.prizes.sixth !== undefined && (
+            {Boolean(tournament.prizes.sixth && tournament.prizes.sixth > 0) && (
               <div className="rounded-xl border border-white/10 bg-surface-200 p-2.5">
                 <span className="text-[10px] font-bold uppercase text-slate-400 block">6th Place</span>
-                <p className="text-sm font-black text-slate-200 mt-0.5">PKR {tournament.prizes.sixth.toLocaleString()}</p>
+                <p className="text-sm font-black text-slate-200 mt-0.5">PKR {tournament.prizes.sixth?.toLocaleString()}</p>
               </div>
             )}
           </div>
         </div>
+
+
 
         {/* Match Highlights & Details */}
         {tournament.bulletPoints && tournament.bulletPoints.length > 0 && (
