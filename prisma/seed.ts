@@ -7,7 +7,7 @@ async function main() {
 
   // Tournament #1: CS 1V1 HEADSHOT
   await prisma.tournament.upsert({
-    where: { slug: 'cs-1v1-headshot' },
+    where: { id: 'eg-cs-1v1-hs' },
     update: {
       title: 'CS 1V1 HEADSHOT',
       category: 'Clash Squad',
@@ -57,7 +57,7 @@ async function main() {
 
   // Tournament #2: CS 2V2 HEADSHOT
   await prisma.tournament.upsert({
-    where: { slug: 'cs-2v2-headshot' },
+    where: { id: 'eg-cs-2v2-hs' },
     update: {
       title: 'CS 2V2 HEADSHOT',
       category: 'Clash Squad',
@@ -107,7 +107,7 @@ async function main() {
 
   // Tournament #3: BR 48 ESPORTS
   await prisma.tournament.upsert({
-    where: { slug: 'br-48-esports' },
+    where: { id: 'eg-br-48-esports' },
     update: {
       title: 'BR 48 ESPORTS',
       category: 'Battle Royale',
@@ -169,7 +169,7 @@ async function main() {
 
   // Tournament #4: BR 48 HEADSHOT
   await prisma.tournament.upsert({
-    where: { slug: 'br-48-headshot' },
+    where: { id: 'eg-br-48-headshot' },
     update: {
       title: 'BR 48 HEADSHOT',
       category: 'Battle Royale',
