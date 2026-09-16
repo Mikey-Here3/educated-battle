@@ -9,9 +9,15 @@ export interface TournamentWinner {
 
 export interface Tournament {
   id: string;
+  slug?: string;
   title: string;
   game: 'Free Fire' | 'Free Fire MAX';
   type: 'Solo' | 'Duo' | 'Squad' | 'Clash Squad';
+  category?: 'Clash Squad' | 'Battle Royale' | 'Esports' | string;
+  format?: '1v1' | '2v2' | 'Solo' | 'Duo' | 'Squad' | string;
+  mode?: 'Headshot' | 'Classic' | 'Esports' | 'Survival' | string;
+  allowedWeapons?: string[];
+  platform?: string;
   map: 'Bermuda' | 'Purgatory' | 'Kalahari' | 'Nexterra' | 'Solara' | 'Custom/Craftland';
   status: 'live' | 'upcoming' | 'completed' | 'special';
   prizePool: number; // PKR — Overall prize pool
@@ -79,6 +85,179 @@ export const SOCIAL_LINKS = {
 };
 
 export const INITIAL_TOURNAMENTS: Tournament[] = [
+  {
+    id: 'eg-cs-1v1-hs',
+    slug: 'cs-1v1-headshot',
+    title: 'CS 1V1 HEADSHOT',
+    game: 'Free Fire MAX',
+    type: 'Solo',
+    category: 'Clash Squad',
+    format: '1v1',
+    mode: 'Headshot',
+    map: 'Bermuda',
+    allowedWeapons: ['Desert Eagle', 'M1887'],
+    status: 'live',
+    prizePool: 90,
+    hasPerKill: false,
+    perKill: 0,
+    booyahPrize: 90,
+    entryFee: 50,
+    slotsFilled: 1,
+    totalSlots: 2,
+    startTime: 'Today (Live), 08:00 PM PKT',
+    matchDate: 'Today (Live)',
+    matchTime: '08:00 PM PKT',
+    isFeatured: true,
+    description: '1v1 Clash Squad Headshot duel. Only Desert Eagle and M1887 permitted. Fast 1-on-1 showdown.',
+    bulletPoints: [
+      '• 1v1 Clash Squad duel — Mobile devices strictly verified.',
+      '• Allowed weapons: Desert Eagle & M1887 only.',
+      '• Winner takes PKR 90 instant cash via JazzCash/EasyPaisa.',
+      '• Headshot elimination only.'
+    ],
+    prizes: {
+      first: 90,
+      second: 0,
+      third: 0,
+      perKillBonus: 0,
+    },
+    rules: [
+      '📱 Mobile devices only (Zero emulators/PC).',
+      '🔫 Weapons allowed: Desert Eagle & M1887 ONLY.',
+      '🎯 Headshots only required for elimination.',
+      '⚡ Winner paid out immediately after match verification.',
+    ]
+  },
+  {
+    id: 'eg-cs-2v2-hs',
+    slug: 'cs-2v2-headshot',
+    title: 'CS 2V2 HEADSHOT',
+    game: 'Free Fire MAX',
+    type: 'Duo',
+    category: 'Clash Squad',
+    format: '2v2',
+    mode: 'Headshot',
+    map: 'Bermuda',
+    allowedWeapons: ['Desert Eagle', 'M1887'],
+    status: 'live',
+    prizePool: 200,
+    hasPerKill: false,
+    perKill: 0,
+    booyahPrize: 200,
+    entryFee: 120,
+    slotsFilled: 2,
+    totalSlots: 4,
+    startTime: 'Today (Live), 09:00 PM PKT',
+    matchDate: 'Today (Live)',
+    matchTime: '09:00 PM PKT',
+    isFeatured: true,
+    description: '2v2 Clash Squad tactical headshot battle with official marshals.',
+    bulletPoints: [
+      '• 2v2 tactical Clash Squad — Headshot only.',
+      '• Allowed weapons: Desert Eagle & M1887 only.',
+      '• Winning duo receives PKR 200 cash prize.',
+      '• Both players must join custom room on time.'
+    ],
+    prizes: {
+      first: 200,
+      second: 0,
+      third: 0,
+      perKillBonus: 0,
+    },
+    rules: [
+      '📱 Mobile only. Emulators strictly blocked.',
+      '🔫 Only Desert Eagle and M1887 allowed in custom room.',
+      '⚡ Headshot only rule enforced by spectator marshals.',
+    ]
+  },
+  {
+    id: 'eg-br-48-esports',
+    slug: 'br-48-esports',
+    title: 'BR 48 ESPORTS',
+    game: 'Free Fire MAX',
+    type: 'Solo',
+    category: 'Battle Royale',
+    format: 'Solo',
+    mode: 'Esports',
+    map: 'Bermuda',
+    status: 'upcoming',
+    prizePool: 2500,
+    hasPerKill: true,
+    perKill: 30,
+    booyahPrize: 1000,
+    entryFee: 50,
+    slotsFilled: 18,
+    totalSlots: 48,
+    startTime: 'Saturday Night, 09:30 PM PKT',
+    matchDate: 'Saturday Night',
+    matchTime: '09:30 PM PKT',
+    isFeatured: true,
+    description: '48-Player Battle Royale Esports Championship. Placement prizes 1st through 5th plus PKR 30 per kill.',
+    bulletPoints: [
+      '• 48-Player Solo Battle Royale Championship.',
+      '• Placement rewards for Top 5 players (1st: 1000, 2nd: 600, 3rd: 400, 4th: 250, 5th: 150).',
+      '• Per Kill Bounty: PKR 30 per verified frag.',
+      '• Broadcast live on Educated Gamer YouTube channel.'
+    ],
+    prizes: {
+      first: 1000,
+      second: 600,
+      third: 400,
+      fourth: 250,
+      fifth: 150,
+      perKillBonus: 30,
+    },
+    rules: [
+      '📱 Mobile devices only (Zero emulators/PC allowed).',
+      '💀 PKR 30 bounty added for every verified frag.',
+      '🏆 Top 5 placement payouts guaranteed.',
+      '🛡️ Anti-cheat and fair play strictly enforced.'
+    ]
+  },
+  {
+    id: 'eg-br-48-headshot',
+    slug: 'br-48-headshot',
+    title: 'BR 48 HEADSHOT',
+    game: 'Free Fire MAX',
+    type: 'Solo',
+    category: 'Battle Royale',
+    format: 'Solo',
+    mode: 'Headshot',
+    map: 'Bermuda',
+    status: 'upcoming',
+    prizePool: 2500,
+    hasPerKill: true,
+    perKill: 30,
+    booyahPrize: 1000,
+    entryFee: 50,
+    slotsFilled: 32,
+    totalSlots: 48,
+    startTime: 'Sunday Night, 10:00 PM PKT',
+    matchDate: 'Sunday Night',
+    matchTime: '10:00 PM PKT',
+    isFeatured: false,
+    description: '48-Player Battle Royale with Headshot Mode. Top 5 placement rewards plus PKR 30 bounty per kill.',
+    bulletPoints: [
+      '• 48-Player Solo BR with Headshot Mode.',
+      '• Placement prizes: 1st: 1000, 2nd: 600, 3rd: 400, 4th: 250, 5th: 150.',
+      '• Per Kill bounty: PKR 30 per frag.',
+      '• Instant JazzCash/EasyPaisa payout.'
+    ],
+    prizes: {
+      first: 1000,
+      second: 600,
+      third: 400,
+      fourth: 250,
+      fifth: 150,
+      perKillBonus: 30,
+    },
+    rules: [
+      '📱 Mobile devices only.',
+      '🎯 Headshot mode active in match settings.',
+      '💀 PKR 30 bonus per verified kill.',
+      '⚡ Results recorded by official tournament spectator.'
+    ]
+  },
   {
     id: 'eg-ff-101',
     title: 'PAKISTAN CHAMPIONS CLASH #101',

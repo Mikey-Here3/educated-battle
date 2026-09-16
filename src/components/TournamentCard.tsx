@@ -38,10 +38,62 @@ export const TournamentCard: React.FC<TournamentCardProps> = ({
         : 'border-crimson/30 hover:border-crimson hover:shadow-[0_0_35px_rgba(255,0,60,0.25)]'
     }`}>
       
+      {/* Banner Image (if set) */}
+      {tournament.bannerImage ? (
+        <div
+          className="relative w-full overflow-hidden cursor-pointer"
+          style={{ aspectRatio: '16/7' }}
+          onClick={() => onViewDetails(tournament)}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={tournament.bannerImage}
+            alt={tournament.title}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            onError={e => { (e.target as HTMLImageElement).parentElement!.style.display = 'none'; }}
+          />
+          {/* Gradient overlay with prize info */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
+          {/* Status badge on image */}
+          <div className="absolute top-3 left-3 flex items-center gap-2">
+            {isLive ? (
+              <span className="flex items-center space-x-1.5 rounded-lg bg-primary/90 border border-primary px-2.5 py-1 text-[11px] font-black text-white uppercase animate-pulse backdrop-blur-sm">
+                <span className="h-2 w-2 rounded-full bg-white animate-ping" />
+                <span>LIVE</span>
+              </span>
+            ) : isCompleted ? (
+              <span className="flex items-center space-x-1 rounded-lg bg-emerald-500/90 px-2.5 py-1 text-[11px] font-black text-white uppercase backdrop-blur-sm">
+                <CheckCircle2 className="h-3.5 w-3.5 mr-0.5" />COMPLETED
+              </span>
+            ) : isSpecial ? (
+              <span className="rounded-lg bg-neon-gold/90 px-2.5 py-1 text-[11px] font-black text-black uppercase backdrop-blur-sm">⚡ MAJOR EVENT</span>
+            ) : (
+              <span className="flex items-center space-x-1 rounded-lg bg-black/60 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur-sm border border-white/20">
+                <Clock className="h-3 w-3 text-primary mr-0.5" />
+                {tournament.matchDate ? `${tournament.matchDate}` : 'UPCOMING'}
+              </span>
+            )}
+          </div>
+          {/* Prize overlay bottom */}
+          <div className="absolute bottom-0 left-0 right-0 p-3 flex items-end justify-between">
+            <div>
+              <p className="text-[10px] font-bold text-white/60 uppercase tracking-wider">Prize Pool</p>
+              <p className="text-xl font-black text-neon-gold font-display">PKR {tournament.prizePool.toLocaleString()}</p>
+            </div>
+            <div className="text-right">
+              <p className="text-[10px] font-bold text-white/60 uppercase tracking-wider">Entry</p>
+              <p className={`text-base font-black ${tournament.entryFee === 0 ? 'text-emerald-400' : 'text-white'}`}>
+                {tournament.entryFee === 0 ? 'FREE' : `PKR ${tournament.entryFee}`}
+              </p>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       {/* Top Banner & Header Tags */}
       <div className="relative p-5 pb-4">
         
-        {/* Category Badges & Status */}
+        {/* Category Badges & Status — only show status badge if no banner image */}
         <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
           
           <div className="flex items-center space-x-2">

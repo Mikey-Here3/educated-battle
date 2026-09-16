@@ -28,87 +28,94 @@ export const Hero: React.FC = () => {
 
       <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         
-        {/* Clean Sleek Badge (Without Clunky Artificial Borders) */}
+        {/* Clean Sleek Badge */}
         <div className="flex justify-center">
-          <div className="inline-flex items-center space-x-2.5 rounded-full bg-gradient-to-r from-crimson-dark/80 via-surface-200 to-crimson-dark/80 px-5 py-2 backdrop-blur-xl shadow-[0_0_25px_rgba(255,0,60,0.35)]">
-            <span className="flex h-2.5 w-2.5 rounded-full bg-crimson animate-pulse" />
-            <span className="text-xs font-black uppercase tracking-wider text-slate-100 font-display">
-              FREE FIRE & FREE FIRE MAX ARENA
+          <div className="inline-flex items-center space-x-2 rounded-full bg-surface-200/90 border border-white/10 px-4 py-1.5 backdrop-blur-xl shadow-[0_0_20px_rgba(0,0,0,0.5)]">
+            <span className="flex h-2 w-2 rounded-full bg-primary animate-pulse" />
+            <span className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-200 font-display">
+              FREE FIRE & FF MAX ARENA
             </span>
-            <span className="rounded-full bg-neon-gold px-2.5 py-0.5 text-[10px] font-black text-slate-950 uppercase shadow-md">
+            <span className="rounded-full bg-neon-gold px-2 py-0.5 text-[9px] sm:text-[10px] font-black text-slate-950 uppercase shadow-md">
               PAKISTAN 🇵🇰
             </span>
           </div>
         </div>
 
         {/* Main Headline */}
-        <div className="mt-7 text-center max-w-4xl mx-auto">
-          <h1 className="text-4xl font-extrabold tracking-tight text-white sm:text-6xl lg:text-7xl font-display uppercase leading-none">
+        <div className="mt-5 sm:mt-7 text-center max-w-4xl mx-auto">
+          <h1 className="text-3xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-white font-display uppercase leading-tight">
             COMPETE • WIN • EARN
-            <span className="mt-2.5 block bg-gradient-to-r from-crimson-light via-neon-gold to-crimson bg-clip-text text-transparent neon-glow-crimson">
+            <span 
+              className="mt-1 sm:mt-2.5 block bg-clip-text text-transparent"
+              style={{
+                backgroundImage: 'linear-gradient(90deg, var(--color-primary), var(--color-accent), #ffd700)',
+                textShadow: '0 0 35px rgba(var(--color-primary-rgb), 0.4)',
+              }}
+            >
               PRO ESPORTS ARENA
             </span>
           </h1>
 
-          <p className="mt-6 text-base text-slate-300 sm:text-xl lg:text-2xl font-medium max-w-3xl mx-auto leading-relaxed">
-            Join daily Pakistan Free Fire custom room matches. Win guaranteed <strong className="text-neon-gold">PKR Cash Prizes</strong>, earn <strong className="text-crimson-light">Per-Kill Rewards</strong>, and withdraw instantly to EasyPaisa or JazzCash.
+          <p className="mt-3.5 sm:mt-6 text-xs sm:text-lg lg:text-xl text-slate-300 font-medium max-w-2xl mx-auto leading-relaxed">
+            Daily verified Free Fire custom room matches. Win real <strong className="text-neon-gold">PKR Cash Prizes</strong>, earn <strong className="text-primary">Per-Kill Bounties</strong>, with instant JazzCash & EasyPaisa payouts.
           </p>
         </div>
 
         {/* Action Buttons */}
-        <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+        <div className="mt-6 sm:mt-9 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 max-w-md sm:max-w-none mx-auto">
           <Link
             href="/matches"
-            className="w-full sm:w-auto flex items-center justify-center space-x-3 rounded-2xl bg-gradient-to-r from-crimson-dark via-crimson to-crimson-light px-9 py-4 text-base font-black uppercase tracking-wider text-white shadow-[0_0_35px_rgba(255,0,60,0.55)] transition-all duration-300 hover:scale-105 hover:shadow-[0_0_50px_rgba(255,0,60,0.75)] active:scale-95 border border-crimson-light/50"
+            className="w-full sm:w-auto flex items-center justify-center space-x-2.5 rounded-2xl px-8 py-3.5 sm:py-4 text-sm sm:text-base font-black uppercase tracking-wider text-white shadow-[0_0_30px_rgba(var(--color-primary-rgb),0.5)] transition-all duration-300 hover:scale-105 active:scale-95 border border-white/20"
+            style={{
+              background: 'linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%)',
+            }}
           >
-            <Zap className="h-5 w-5 text-neon-gold fill-neon-gold" />
+            <Zap className="h-4 w-4 sm:h-5 sm:w-5 text-neon-gold fill-neon-gold" />
             <span>BROWSE MATCHES</span>
           </Link>
 
           <Link
-            href="/contact"
-            className="w-full sm:w-auto flex items-center justify-center space-x-3 rounded-2xl border border-crimson/40 bg-surface-200/90 px-9 py-4 text-base font-black uppercase tracking-wider text-slate-200 backdrop-blur-md transition-all duration-300 hover:border-crimson hover:bg-surface-300 hover:text-white hover:shadow-[0_0_25px_rgba(255,0,60,0.35)] active:scale-95"
+            href="/wallet"
+            className="w-full sm:w-auto flex items-center justify-center space-x-2.5 rounded-2xl border border-white/15 bg-surface-200/90 px-8 py-3.5 sm:py-4 text-sm sm:text-base font-black uppercase tracking-wider text-slate-200 backdrop-blur-md transition-all duration-300 hover:border-primary hover:text-white active:scale-95"
           >
-            <MessageSquareCode className="h-5 w-5 text-crimson-light" />
-            <span>JOIN WHATSAPP GROUP</span>
+            <Trophy className="h-4 w-4 sm:h-5 sm:w-5 text-neon-gold" />
+            <span>DEPOSIT / WALLET</span>
           </Link>
         </div>
 
         {/* Live Statistics Counter Grid */}
-        <div className="mt-12 lg:mt-16 grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-          
-          <div className="rounded-2xl border border-crimson/30 bg-surface-200/80 p-5 backdrop-blur-md text-center card-glass-hover">
-            <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-neon-gold/20 text-neon-gold border border-neon-gold/40 mb-3">
-              <Trophy className="h-5 w-5" />
+        <div className="mt-8 sm:mt-14 grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div className="rounded-2xl border border-white/10 bg-surface-200/80 p-3.5 sm:p-5 backdrop-blur-md text-center card-glass-hover">
+            <div className="mx-auto flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-neon-gold/20 text-neon-gold border border-neon-gold/40 mb-2 sm:mb-3">
+              <Trophy className="h-4 w-4 sm:h-5 sm:w-5" />
             </div>
-            <p className="text-2xl sm:text-3xl font-black text-white font-display">PKR 2.5M+</p>
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mt-1">Total Cash Distributed</p>
+            <p className="text-xl sm:text-3xl font-black text-white font-display">PKR 2.5M+</p>
+            <p className="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider mt-0.5 sm:mt-1">Cash Distributed</p>
           </div>
 
-          <div className="rounded-2xl border border-crimson/30 bg-surface-200/80 p-5 backdrop-blur-md text-center card-glass-hover">
-            <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-crimson/20 text-crimson-light border border-crimson/40 mb-3">
-              <Flame className="h-5 w-5" />
+          <div className="rounded-2xl border border-white/10 bg-surface-200/80 p-3.5 sm:p-5 backdrop-blur-md text-center card-glass-hover">
+            <div className="mx-auto flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-primary/20 text-primary border border-primary/40 mb-2 sm:mb-3">
+              <Flame className="h-4 w-4 sm:h-5 sm:w-5" />
             </div>
-            <p className="text-2xl sm:text-3xl font-black text-white font-display">1,250+</p>
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mt-1">Daily Matches Hosted</p>
+            <p className="text-xl sm:text-3xl font-black text-white font-display">1,250+</p>
+            <p className="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider mt-0.5 sm:mt-1">Matches Hosted</p>
           </div>
 
-          <div className="rounded-2xl border border-crimson/30 bg-surface-200/80 p-5 backdrop-blur-md text-center card-glass-hover">
-            <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-crimson/20 text-crimson-light border border-crimson/40 mb-3">
-              <Zap className="h-5 w-5" />
+          <div className="rounded-2xl border border-white/10 bg-surface-200/80 p-3.5 sm:p-5 backdrop-blur-md text-center card-glass-hover">
+            <div className="mx-auto flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-primary/20 text-primary border border-primary/40 mb-2 sm:mb-3">
+              <Zap className="h-4 w-4 sm:h-5 sm:w-5" />
             </div>
-            <p className="text-2xl sm:text-3xl font-black text-white font-display">45,000+</p>
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mt-1">Registered Gamers</p>
+            <p className="text-xl sm:text-3xl font-black text-white font-display">45,000+</p>
+            <p className="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider mt-0.5 sm:mt-1">Active Gamers</p>
           </div>
 
-          <div className="rounded-2xl border border-crimson/30 bg-surface-200/80 p-5 backdrop-blur-md text-center card-glass-hover">
-            <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-neon-gold/20 text-neon-gold border border-neon-gold/40 mb-3">
-              <ShieldAlert className="h-5 w-5" />
+          <div className="rounded-2xl border border-white/10 bg-surface-200/80 p-3.5 sm:p-5 backdrop-blur-md text-center card-glass-hover">
+            <div className="mx-auto flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 mb-2 sm:mb-3">
+              <ShieldAlert className="h-4 w-4 sm:h-5 sm:w-5" />
             </div>
-            <p className="text-2xl sm:text-3xl font-black text-white font-display">INSTANT</p>
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mt-1">EasyPaisa & JazzCash</p>
+            <p className="text-xl sm:text-3xl font-black text-white font-display">INSTANT</p>
+            <p className="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider mt-0.5 sm:mt-1">JazzCash Payout</p>
           </div>
-
         </div>
 
       </div>

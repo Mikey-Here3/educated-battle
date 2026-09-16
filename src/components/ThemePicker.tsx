@@ -49,22 +49,25 @@ export const ThemePicker: React.FC = () => {
         />
       </button>
 
-      {/* Modal / Popover */}
+      {/* Modal / Native Mobile Bottom Sheet */}
       {open && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
           {/* Solid Backdrop */}
           <div 
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity" 
+            className="fixed inset-0 bg-black/85 backdrop-blur-md transition-opacity" 
             onClick={() => setOpen(false)} 
           />
 
-          {/* Opaque Content Box (No See-Through Mess) */}
+          {/* Bottom Sheet on Mobile, Centered Modal on Desktop */}
           <div 
-            className="relative z-[101] w-full max-w-sm rounded-3xl border border-white/15 bg-[#0b1020] p-5 shadow-[0_0_50px_rgba(0,0,0,0.9)] max-h-[90vh] overflow-y-auto"
+            className="relative z-[101] w-full max-w-md rounded-t-[32px] sm:rounded-3xl border border-white/20 bg-[#0a0f1d] p-5 sm:p-6 shadow-[0_-15px_50px_rgba(0,0,0,0.9)] max-h-[88vh] overflow-y-auto animate-in slide-in-from-bottom-5 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
+            {/* Mobile Drag Handle */}
+            <div className="sm:hidden w-12 h-1.5 rounded-full bg-white/25 mx-auto mb-4" />
+
             {/* Header */}
-            <div className="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
+            <div className="flex items-center justify-between pb-3.5 border-b border-white/10 mb-4">
               <div className="flex items-center gap-2">
                 <div 
                   className="w-8 h-8 rounded-lg flex items-center justify-center"

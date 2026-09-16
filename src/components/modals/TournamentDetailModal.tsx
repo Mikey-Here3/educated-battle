@@ -37,11 +37,25 @@ export const TournamentDetailModal: React.FC<TournamentDetailModalProps> = ({
           <X className="h-5 w-5" />
         </button>
 
+        {/* Banner image if present */}
+        {tournament.bannerImage && (
+          <div className="relative w-full h-40 sm:h-52 rounded-2xl overflow-hidden mb-4 border border-white/10">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={tournament.bannerImage} alt={tournament.title} className="w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
+          </div>
+        )}
+
         {/* Modal Title & Badges */}
         <div className="flex flex-wrap items-center gap-2 mb-3">
           <span className="rounded-lg bg-crimson/20 px-3 py-1 text-xs font-black uppercase text-crimson border border-crimson/40">
-            {tournament.type}
+            {tournament.category || tournament.type} • {tournament.format || tournament.type}
           </span>
+          {tournament.mode && (
+            <span className="rounded-lg bg-primary/20 px-2.5 py-1 text-xs font-black uppercase text-primary border border-primary/40">
+              {tournament.mode}
+            </span>
+          )}
           <span className="rounded-lg bg-neon-gold/20 px-3 py-1 text-xs font-black uppercase text-neon-gold border border-neon-gold/40">
             {tournament.game}
           </span>
@@ -64,6 +78,13 @@ export const TournamentDetailModal: React.FC<TournamentDetailModalProps> = ({
           {tournament.title}
         </h2>
         <p className="text-xs text-slate-400 mt-1">{tournament.description || 'Official competitive Free Fire custom match'}</p>
+
+        {tournament.allowedWeapons && tournament.allowedWeapons.length > 0 && (
+          <div className="mt-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-bold">
+            <span>🔫 Allowed Weapons:</span>
+            <span>{tournament.allowedWeapons.join(' • ')}</span>
+          </div>
+        )}
 
         {/* Winner Highlight if match completed */}
         {isCompleted && tournament.winner && (
@@ -189,19 +210,28 @@ export const TournamentDetailModal: React.FC<TournamentDetailModalProps> = ({
           </div>
         </div>
 
-        {/* Live Stream & Action Buttons */}
-        <div className="mt-6 pt-4 border-t border-white/10 flex flex-col sm:flex-row gap-3">
+        {/* Live Stream, WhatsApp & Action Buttons */}
+        <div className="mt-6 pt-4 border-t border-white/10 flex flex-col sm:flex-row gap-2.5">
           {tournament.liveStreamUrl && (
             <a
               href={tournament.liveStreamUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center space-x-2 rounded-xl bg-red-600 hover:bg-red-700 px-5 py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg transition"
+              className="flex items-center justify-center space-x-2 rounded-xl bg-red-600 hover:bg-red-700 px-4 py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg transition shrink-0"
             >
               <Youtube className="h-4 w-4" />
-              <span>Watch on YouTube</span>
+              <span>Watch Live</span>
             </a>
           )}
+
+          <a
+            href={`https://wa.me/923190799711?text=${encodeURIComponent(`Hello Admin, I need help with match: "${tournament.title}" (ID: ${tournament.id})`)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center space-x-2 rounded-xl bg-emerald-600/20 border border-emerald-500/40 hover:bg-emerald-600 text-emerald-400 hover:text-white px-4 py-3 text-xs font-black uppercase tracking-wider transition shrink-0"
+          >
+            <span>💬 Match Support</span>
+          </a>
 
           {!isCompleted && !isFull && !isUserRegistered && (
             <button

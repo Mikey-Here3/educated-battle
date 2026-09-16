@@ -71,6 +71,33 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       if (savedTournaments) {
         setTournaments(JSON.parse(savedTournaments));
       }
+
+      // Fetch from PostgreSQL database via /api/tournaments
+      fetch('/api/tournaments')
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.success && Array.isArray(data.data) && data.data.length > 0) {
+            setTournaments(prev => {
+              // Merge db tournaments, keeping local storage customizations if any
+              const dbTourneys: Tournament[] = data.data;
+              const localIds = new Set(prev.map(t => t.id));
+              const combined = [
+                ...prev,
+                ...dbTourneys.filter(t => !localIds.has(t.id)),
+              ];
+              // Update existing ones with DB values if applicable
+              const merged = combined.map(item => {
+                const dbMatch = dbTourneys.find(d => d.id === item.id || (d.slug && d.slug === item.slug));
+                return dbMatch ? { ...item, ...dbMatch } : item;
+              });
+              try {
+                localStorage.setItem('eg_tournaments_list', JSON.stringify(merged));
+              } catch {}
+              return merged;
+            });
+          }
+        })
+        .catch(() => {});
       const savedDeposits = localStorage.getItem('eg_deposits_list');
       if (savedDeposits) {
         setDeposits(JSON.parse(savedDeposits));

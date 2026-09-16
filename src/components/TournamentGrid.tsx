@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Tournament } from '../data/mockData';
 import { TournamentCard } from './TournamentCard';
-import { Search, Filter, Gamepad2, Flame, Clock, Trophy, Sparkles } from 'lucide-react';
+import { Search, Filter, Gamepad2, Flame, Clock, Trophy, Sparkles, Swords, Crosshair, ArrowUpDown } from 'lucide-react';
 
 interface TournamentGridProps {
   tournaments: Tournament[];
@@ -18,102 +18,137 @@ export const TournamentGrid: React.FC<TournamentGridProps> = ({
   onViewRoomDetails,
   onViewDetails,
 }) => {
-  const [selectedStatus, setSelectedStatus] = useState<string>('all');
-  const [selectedMode, setSelectedMode] = useState<string>('all');
+  const [selectedFilter, setSelectedFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [sortBy, setSortBy] = useState<'soon' | 'prize' | 'entry'>('soon');
 
-  const statusTabs = [
-    { id: 'all', label: 'ALL MATCHES', icon: Gamepad2 },
-    { id: 'live', label: 'LIVE NOW 🔴', icon: Flame },
+  // Comprehensive Category & Format Filters as specified in Phase 3
+  const filterTabs = [
+    { id: 'all', label: 'ALL', icon: Gamepad2 },
+    { id: 'live', label: 'LIVE 🔴', icon: Flame },
     { id: 'upcoming', label: 'UPCOMING ⏰', icon: Clock },
-    { id: 'special', label: 'SPECIAL EVENTS ⚡', icon: Sparkles },
-    { id: 'completed', label: 'COMPLETED 🏆', icon: Trophy },
+    { id: 'clash-squad', label: 'CLASH SQUAD', icon: Swords },
+    { id: 'battle-royale', label: 'BATTLE ROYALE', icon: Trophy },
+    { id: 'headshot', label: 'HEADSHOT 🎯', icon: Crosshair },
+    { id: 'esports', label: 'ESPORTS ⚡', icon: Sparkles },
+    { id: '1v1', label: '1V1', icon: Swords },
+    { id: '2v2', label: '2V2', icon: Swords },
+    { id: '48-players', label: '48 PLAYERS', icon: Trophy },
   ];
 
-  const modeFilters = ['all', 'Solo', 'Duo', 'Squad', 'Clash Squad'];
+  const filteredTournaments = useMemo(() => {
+    return tournaments
+      .filter((t) => {
+        // Status & Category Matching
+        let matchesFilter = true;
+        if (selectedFilter === 'live') matchesFilter = t.status === 'live';
+        else if (selectedFilter === 'upcoming') matchesFilter = t.status === 'upcoming' || t.status === 'special';
+        else if (selectedFilter === 'clash-squad') {
+          matchesFilter = t.category === 'Clash Squad' || t.type === 'Clash Squad' || t.title.includes('CS');
+        } else if (selectedFilter === 'battle-royale') {
+          matchesFilter = t.category === 'Battle Royale' || t.type === 'Squad' || t.type === 'Solo' || t.title.includes('BR');
+        } else if (selectedFilter === 'headshot') {
+          matchesFilter = t.mode === 'Headshot' || t.title.toLowerCase().includes('headshot');
+        } else if (selectedFilter === 'esports') {
+          matchesFilter = t.mode === 'Esports' || t.category === 'Esports' || t.title.toLowerCase().includes('esports');
+        } else if (selectedFilter === '1v1') {
+          matchesFilter = t.format === '1v1' || t.title.includes('1V1') || t.title.includes('1v1');
+        } else if (selectedFilter === '2v2') {
+          matchesFilter = t.format === '2v2' || t.type === 'Duo' || t.title.includes('2V2') || t.title.includes('2v2');
+        } else if (selectedFilter === '48-players') {
+          matchesFilter = t.totalSlots === 48 || t.title.includes('48');
+        }
 
-  const filteredTournaments = tournaments.filter((t) => {
-    const matchesStatus = selectedStatus === 'all' || t.status === selectedStatus;
-    const matchesMode = selectedMode === 'all' || t.type === selectedMode;
-    const matchesSearch = 
-      t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      t.map.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      t.game.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesStatus && matchesMode && matchesSearch;
-  });
+        // Search matching (title, map, category, mode, format, weapons)
+        const q = searchQuery.toLowerCase().trim();
+        const matchesSearch =
+          !q ||
+          t.title.toLowerCase().includes(q) ||
+          t.map.toLowerCase().includes(q) ||
+          t.game.toLowerCase().includes(q) ||
+          (t.category && t.category.toLowerCase().includes(q)) ||
+          (t.mode && t.mode.toLowerCase().includes(q)) ||
+          (t.format && t.format.toLowerCase().includes(q)) ||
+          (t.allowedWeapons && t.allowedWeapons.some((w) => w.toLowerCase().includes(q)));
+
+        return matchesFilter && matchesSearch;
+      })
+      .sort((a, b) => {
+        if (sortBy === 'prize') return b.prizePool - a.prizePool;
+        if (sortBy === 'entry') return a.entryFee - b.entryFee;
+        // Default: Live first, then upcoming
+        if (a.status === 'live' && b.status !== 'live') return -1;
+        if (b.status === 'live' && a.status !== 'live') return 1;
+        return 0;
+      });
+  }, [tournaments, selectedFilter, searchQuery, sortBy]);
 
   return (
     <section id="tournaments" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
-      
       {/* Section Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
         <div>
-          <div className="flex items-center space-x-2 text-neon-cyan font-bold text-xs uppercase tracking-widest mb-1">
-            <span className="h-2 w-2 rounded-full bg-neon-cyan animate-pulse" />
+          <div className="flex items-center space-x-2 text-primary font-bold text-xs uppercase tracking-widest mb-1.5">
+            <span className="h-2 w-2 rounded-full bg-crimson animate-pulse" />
             <span>DAILY FREE FIRE CUSTOM ROOMS</span>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-white font-display uppercase tracking-tight">
+          <h2 className="text-3xl sm:text-4xl font-black text-white font-display uppercase tracking-tight">
             TOURNAMENT ARENA
           </h2>
+          <p className="mt-1 text-xs sm:text-sm text-slate-400">
+            Choose your tournament, verify your UID slot, and enter the battle.
+          </p>
         </div>
 
-        {/* Search Input Box */}
-        <div className="relative w-full md:w-72">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-          <input
-            type="text"
-            placeholder="Search map or title..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-xl border border-purple-900/40 bg-surface-200/90 pl-10 pr-4 py-2.5 text-sm text-slate-100 placeholder-slate-400 focus:border-neon-purple focus:outline-none focus:ring-1 focus:ring-neon-purple backdrop-blur-md"
-          />
+        {/* Search & Sort Controls */}
+        <div className="flex items-center gap-2.5 w-full md:w-auto">
+          {/* Search Input */}
+          <div className="relative flex-1 md:w-72">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search tournaments, maps, modes..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full rounded-xl border border-white/10 bg-surface-200/90 pl-10 pr-4 py-2.5 text-xs sm:text-sm text-slate-100 placeholder-slate-400 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary backdrop-blur-md"
+            />
+          </div>
+
+          {/* Sort Selector */}
+          <div className="relative shrink-0">
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as any)}
+              className="rounded-xl border border-white/10 bg-surface-200 px-3 py-2.5 text-xs font-bold text-slate-300 focus:outline-none focus:border-primary cursor-pointer"
+            >
+              <option value="soon">Starting Soon</option>
+              <option value="prize">Highest Prize</option>
+              <option value="entry">Lowest Fee</option>
+            </select>
+          </div>
         </div>
       </div>
 
-      {/* Main Status Category Tabs */}
-      <div className="flex overflow-x-auto pb-3 pt-1 no-scrollbar gap-2 mb-6 border-b border-purple-900/30">
-        {statusTabs.map((tab) => {
+      {/* Main Filter Scrollable Tabs Bar */}
+      <div className="flex overflow-x-auto pb-3 pt-1 no-scrollbar gap-2 mb-8 border-b border-white/10">
+        {filterTabs.map((tab) => {
           const Icon = tab.icon;
-          const isActive = selectedStatus === tab.id;
+          const isActive = selectedFilter === tab.id;
           return (
             <button
               key={tab.id}
-              onClick={() => setSelectedStatus(tab.id)}
+              onClick={() => setSelectedFilter(tab.id)}
               className={`flex shrink-0 items-center space-x-2 rounded-xl px-4 py-2.5 text-xs font-black uppercase tracking-wider transition-all duration-200 ${
                 isActive
-                  ? 'bg-neon-purple/20 text-neon-purple-light border border-neon-purple/60 shadow-[0_0_20px_rgba(168,85,247,0.3)]'
-                  : 'bg-surface-200/60 text-slate-400 border border-transparent hover:bg-surface-300 hover:text-white'
+                  ? 'bg-crimson text-white shadow-[0_0_20px_rgba(255,0,60,0.4)] border border-crimson/80'
+                  : 'bg-surface-200 text-slate-400 border border-white/5 hover:bg-surface-300 hover:text-white'
               }`}
             >
-              <Icon className={`h-4 w-4 ${isActive ? 'text-neon-cyan' : 'text-slate-400'}`} />
+              <Icon className={`h-3.5 w-3.5 ${isActive ? 'text-white' : 'text-slate-400'}`} />
               <span>{tab.label}</span>
             </button>
           );
         })}
-      </div>
-
-      {/* Mode Sub-Filter Pills */}
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-8 bg-surface-200/40 p-3 rounded-2xl border border-purple-900/20">
-        <div className="flex items-center space-x-2">
-          <Filter className="h-4 w-4 text-neon-purple-light" />
-          <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">Game Mode:</span>
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          {modeFilters.map((mode) => (
-            <button
-              key={mode}
-              onClick={() => setSelectedMode(mode)}
-              className={`rounded-lg px-3 py-1.5 text-xs font-extrabold uppercase transition-all ${
-                selectedMode === mode
-                  ? 'bg-neon-purple text-white shadow-md'
-                  : 'bg-surface-300 text-slate-400 hover:text-white hover:bg-surface-400'
-              }`}
-            >
-              {mode === 'all' ? 'All Modes' : mode}
-            </button>
-          ))}
-        </div>
       </div>
 
       {/* Tournaments Card Grid */}
@@ -130,25 +165,24 @@ export const TournamentGrid: React.FC<TournamentGridProps> = ({
           ))}
         </div>
       ) : (
-        <div className="rounded-3xl border border-purple-900/30 bg-surface-200/50 p-12 text-center my-8">
+        <div className="rounded-3xl border border-white/10 bg-surface-200/50 p-12 text-center my-8">
           <Gamepad2 className="mx-auto h-12 w-12 text-slate-500 mb-3 animate-bounce" />
           <h3 className="text-xl font-bold text-white uppercase font-display">No Tournaments Found</h3>
           <p className="mt-1 text-sm text-slate-400 max-w-md mx-auto">
-            Try adjusting your search criteria or mode filters to explore more matches.
+            Try adjusting your search criteria or selecting a different category filter.
           </p>
           <button
             onClick={() => {
-              setSelectedStatus('all');
-              setSelectedMode('all');
+              setSelectedFilter('all');
               setSearchQuery('');
+              setSortBy('soon');
             }}
-            className="mt-4 rounded-xl bg-neon-purple/20 px-4 py-2 text-xs font-bold text-neon-purple-light border border-neon-purple/40 hover:bg-neon-purple/30"
+            className="mt-4 rounded-xl bg-crimson/20 px-5 py-2.5 text-xs font-black uppercase text-crimson border border-crimson/40 hover:bg-crimson/30 transition-colors"
           >
             RESET ALL FILTERS
           </button>
         </div>
       )}
-
     </section>
   );
 };

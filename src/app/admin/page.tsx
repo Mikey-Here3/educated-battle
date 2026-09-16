@@ -151,6 +151,13 @@ export default function AdminPortalPage() {
   const [tRules, setTRules] = useState(
     '📱 Mobile devices strictly required (Zero emulators / PC players permitted).\n🛡️ Anti-cheat and fair play strictly enforced. Teaming equals permanent ban.\n🆔 All players must enter custom room with registered Free Fire UIDs.\n⚡ Match results and frags recorded live by official tournament marshals.'
   );
+  const [tBannerImage, setTBannerImage] = useState('');
+  const [wizardStep, setWizardStep] = useState<number>(1);
+  const [tCategory, setTCategory] = useState<'Clash Squad' | 'Battle Royale' | 'Esports'>('Clash Squad');
+  const [tFormat, setTFormat] = useState<'1v1' | '2v2' | 'Solo' | 'Duo' | 'Squad'>('1v1');
+  const [tMode, setTMode] = useState<'Headshot' | 'Classic' | 'Esports' | 'Survival'>('Headshot');
+  const [tAllowedWeapons, setTAllowedWeapons] = useState('Desert Eagle, M1887');
+  const [tDescription, setTDescription] = useState('');
 
   const autoDistributePrizes = (total: number) => {
     const p1 = Math.round(total * 0.45);
@@ -197,7 +204,10 @@ export default function AdminPortalPage() {
 
   // helpers
   const resetTournamentForm = () => {
+    setWizardStep(1);
     setTTitle(''); setTGame('Free Fire MAX'); setTType('Squad'); setTMap('Bermuda');
+    setTCategory('Clash Squad'); setTFormat('1v1'); setTMode('Headshot');
+    setTAllowedWeapons('Desert Eagle, M1887'); setTDescription('');
     setTMapCode('');
     setTStatus('upcoming'); setTPrize(15000); setTBooyah(7000); setTHasPerKill(true);
     setTPrize1(7000); setTPrize2(3500); setTPrize3(2000); setTPrize4(1000); setTPrize5(800); setTPrize6(700);
@@ -206,13 +216,20 @@ export default function AdminPortalPage() {
     setTMatchDate('Saturday Night');
     setTMatchTime('09:00 PM PKT');
     setTLiveUrl('https://www.youtube.com/channel/UCNCXkynVdk3Xt2MHjMwHXaw');
+    setTBannerImage('');
     setTBullets('• Official YouTube Live shoutcasting & spectator broadcast.\n• Mobile devices strictly verified (Zero emulators permitted).\n• Booyah & Kill rewards distributed instantly via JazzCash.');
     setTRules('📱 Mobile devices strictly required (Zero emulators / PC players permitted).\n🛡️ Anti-cheat and fair play strictly enforced. Teaming equals permanent ban.\n🆔 All players must enter custom room with registered Free Fire UIDs.\n⚡ Match results and frags recorded live by official tournament marshals.');
   };
 
   const openEditTourney = (t: Tournament) => {
     setEditingTourney(t);
+    setWizardStep(1);
     setTTitle(t.title); setTGame(t.game); setTType(t.type); setTMap(t.map);
+    setTCategory((t.category as any) || 'Clash Squad');
+    setTFormat((t.format as any) || '1v1');
+    setTMode((t.mode as any) || 'Headshot');
+    setTAllowedWeapons(Array.isArray(t.allowedWeapons) ? t.allowedWeapons.join(', ') : (t.allowedWeapons || ''));
+    setTDescription(t.description || '');
     setTMapCode(t.mapCode || '');
     setTStatus(t.status); setTPrize(t.prizePool); setTBooyah(t.booyahPrize);
     setTPrize1(t.prizes?.first || t.booyahPrize || 7000);
@@ -227,6 +244,7 @@ export default function AdminPortalPage() {
     setTMatchDate(t.matchDate || 'Saturday Night');
     setTMatchTime(t.matchTime || '09:00 PM PKT');
     setTLiveUrl(t.liveStreamUrl || '');
+    setTBannerImage(t.bannerImage || '');
     setTBullets((t.bulletPoints || []).join('\n'));
     setTRules((t.rules || []).join('\n') || '📱 Mobile devices strictly required (Zero emulators / PC players permitted).\n🛡️ Anti-cheat and fair play strictly enforced. Teaming equals permanent ban.\n🆔 All players must enter custom room with registered Free Fire UIDs.\n⚡ Match results and frags recorded live by official tournament marshals.');
   };
@@ -236,6 +254,11 @@ export default function AdminPortalPage() {
       title: tTitle,
       game: tGame,
       type: tType,
+      category: tCategory,
+      format: tFormat,
+      mode: tMode,
+      allowedWeapons: tAllowedWeapons ? tAllowedWeapons.split(',').map(s => s.trim()).filter(Boolean) : undefined,
+      description: tDescription || undefined,
       map: tMap,
       mapCode: tMap === 'Custom/Craftland' ? tMapCode : undefined,
       status: tStatus,
@@ -249,6 +272,7 @@ export default function AdminPortalPage() {
       matchDate: tMatchDate,
       matchTime: tMatchTime,
       liveStreamUrl: tLiveUrl,
+      bannerImage: tBannerImage || undefined,
       bulletPoints: tBullets.split('\n').map(s => s.trim()).filter(Boolean),
       prizes: {
         first: tPrize1,
@@ -353,225 +377,461 @@ export default function AdminPortalPage() {
   const labelClass = "block text-white/60 text-xs mb-1";
   const selectClass = inputClass + " cursor-pointer";
 
-  // ── Plain function (NOT a React component) to avoid remounting on every keystroke ──
-  const renderTournamentForm = () => (
-    <div className="space-y-4">
-      <div>
-        <label className={labelClass}>Tournament Title *</label>
-        <input className={inputClass} value={tTitle} onChange={e => setTTitle(e.target.value)} placeholder="e.g. PAKISTAN NIGHT WARRIORS #104" />
-      </div>
+  // ── 6-Step Tournament Creation & Edit Wizard with Live Public Preview ──
+  const renderTournamentForm = () => {
+    const steps = [
+      { id: 1, label: '1. Basics' },
+      { id: 2, label: '2. Media' },
+      { id: 3, label: '3. Schedule' },
+      { id: 4, label: '4. Rewards' },
+      { id: 5, label: '5. Rules' },
+      { id: 6, label: '6. Review' },
+    ];
 
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className={labelClass}>Game</label>
-          <select className={selectClass} value={tGame} onChange={e => setTGame(e.target.value as typeof tGame)}>
-            <option>Free Fire MAX</option>
-            <option>Free Fire</option>
-          </select>
-        </div>
-        <div>
-          <label className={labelClass}>Type</label>
-          <select className={selectClass} value={tType} onChange={e => setTType(e.target.value as typeof tType)}>
-            <option>Solo</option><option>Duo</option><option>Squad</option><option>Clash Squad</option>
-          </select>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className={labelClass}>Map</label>
-          <select className={selectClass} value={tMap} onChange={e => setTMap(e.target.value as typeof tMap)}>
-            <option>Bermuda</option>
-            <option>Purgatory</option>
-            <option>Kalahari</option>
-            <option>Nexterra</option>
-            <option>Solara</option>
-            <option>Custom/Craftland</option>
-          </select>
-        </div>
-        <div>
-          <label className={labelClass}>Status</label>
-          <select className={selectClass} value={tStatus} onChange={e => setTStatus(e.target.value as typeof tStatus)}>
-            <option value="upcoming">Upcoming</option>
-            <option value="live">Live</option>
-            <option value="completed">Completed</option>
-            <option value="special">Special</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Custom/Craftland Map Code field */}
-      {tMap === 'Custom/Craftland' && (
-        <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl">
-          <label className="block text-amber-300 text-xs font-bold mb-1">Craftland Map Code (shared with registered players)</label>
-          <input className={inputClass} value={tMapCode} onChange={e => setTMapCode(e.target.value)} placeholder="e.g. #FREEFIRE98210-CRAFT" />
-        </div>
-      )}
-
-      {/* Match Night Scheduling */}
-      <div className="p-3.5 bg-surface-300/50 border border-white/10 rounded-xl space-y-2.5">
-        <div className="flex items-center justify-between">
-          <label className="text-white font-bold text-xs flex items-center gap-1.5">
-            <span>🌙 Match Schedule (Night Matches: Sat & Sun, 7:00 PM – 11:00 PM)</span>
-          </label>
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className={labelClass}>Match Day / Date</label>
-            <input
-              className={inputClass}
-              value={tMatchDate}
-              onChange={e => { setTMatchDate(e.target.value); setTStartTime(`${e.target.value}, ${tMatchTime}`); }}
-              placeholder="e.g. Saturday Night"
-            />
-          </div>
-          <div>
-            <label className={labelClass}>Match Time (PKT)</label>
-            <input
-              className={inputClass}
-              value={tMatchTime}
-              onChange={e => { setTMatchTime(e.target.value); setTStartTime(`${tMatchDate}, ${e.target.value}`); }}
-              placeholder="e.g. 09:00 PM PKT"
-            />
-          </div>
-        </div>
-        <div className="flex items-center gap-1.5 flex-wrap pt-1">
-          <span className="text-[10px] text-white/40 font-bold uppercase mr-1">Quick Presets:</span>
-          {[
-            { label: 'Sat 8:00 PM', d: 'Saturday Night', t: '08:00 PM PKT' },
-            { label: 'Sat 9:30 PM', d: 'Saturday Night', t: '09:30 PM PKT' },
-            { label: 'Sat 11:00 PM', d: 'Saturday Night', t: '11:00 PM PKT' },
-            { label: 'Sun 8:00 PM', d: 'Sunday Night', t: '08:00 PM PKT' },
-            { label: 'Sun 9:30 PM', d: 'Sunday Night', t: '09:30 PM PKT' },
-            { label: 'Sun 11:00 PM', d: 'Sunday Night', t: '11:00 PM PKT' },
-          ].map(p => (
+    return (
+      <div className="space-y-4">
+        {/* Step Indicator Tabs */}
+        <div className="flex overflow-x-auto pb-2 gap-1.5 no-scrollbar border-b border-white/10">
+          {steps.map((s) => (
             <button
               type="button"
-              key={p.label}
-              onClick={() => {
-                setTMatchDate(p.d);
-                setTMatchTime(p.t);
-                setTStartTime(`${p.d}, ${p.t}`);
-              }}
-              className="text-[11px] px-2 py-0.5 rounded-md bg-white/5 hover:bg-white/15 border border-white/10 text-white/80 transition-colors"
+              key={s.id}
+              onClick={() => setWizardStep(s.id)}
+              className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider transition-all ${
+                wizardStep === s.id
+                  ? 'bg-crimson text-white shadow-[0_0_15px_rgba(255,0,60,0.4)]'
+                  : wizardStep > s.id
+                  ? 'bg-surface-300 text-emerald-400 border border-emerald-500/30'
+                  : 'bg-surface-200 text-white/50 hover:text-white border border-white/10'
+              }`}
             >
-              {p.label}
+              {s.label}
             </button>
           ))}
         </div>
-      </div>
 
-      {/* Prize Pool & 1st to 6th Winner Distribution */}
-      <div className="p-3.5 bg-surface-300/50 border border-white/10 rounded-xl space-y-3">
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <div>
-            <label className="text-white font-bold text-xs">🏆 Prize Pool & Winner Payout Distribution (1st – 6th)</label>
-            <p className="text-[11px] text-white/50">Overall pool distributed among top 6 placements</p>
+        {/* STEP 1: BASICS */}
+        {wizardStep === 1 && (
+          <div className="space-y-3.5 animate-in fade-in duration-200">
+            <div>
+              <label className={labelClass}>Tournament Title *</label>
+              <input
+                className={inputClass}
+                value={tTitle}
+                onChange={e => setTTitle(e.target.value)}
+                placeholder="e.g. CS 1V1 HEADSHOT or BR 48 ESPORTS"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <div>
+                <label className={labelClass}>Category</label>
+                <select className={selectClass} value={tCategory} onChange={e => setTCategory(e.target.value as any)}>
+                  <option>Clash Squad</option>
+                  <option>Battle Royale</option>
+                  <option>Esports</option>
+                </select>
+              </div>
+              <div>
+                <label className={labelClass}>Format</label>
+                <select className={selectClass} value={tFormat} onChange={e => setTFormat(e.target.value as any)}>
+                  <option>1v1</option>
+                  <option>2v2</option>
+                  <option>Solo</option>
+                  <option>Duo</option>
+                  <option>Squad</option>
+                </select>
+              </div>
+              <div>
+                <label className={labelClass}>Mode</label>
+                <select className={selectClass} value={tMode} onChange={e => setTMode(e.target.value as any)}>
+                  <option>Headshot</option>
+                  <option>Classic</option>
+                  <option>Esports</option>
+                  <option>Survival</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className={labelClass}>Game</label>
+                <select className={selectClass} value={tGame} onChange={e => setTGame(e.target.value as any)}>
+                  <option>Free Fire MAX</option>
+                  <option>Free Fire</option>
+                </select>
+              </div>
+              <div>
+                <label className={labelClass}>Map</label>
+                <select className={selectClass} value={tMap} onChange={e => setTMap(e.target.value as any)}>
+                  <option>Bermuda</option>
+                  <option>Purgatory</option>
+                  <option>Kalahari</option>
+                  <option>Nexterra</option>
+                  <option>Solara</option>
+                  <option>Custom/Craftland</option>
+                </select>
+              </div>
+            </div>
+
+            {tMap === 'Custom/Craftland' && (
+              <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl">
+                <label className="block text-amber-300 text-xs font-bold mb-1">Craftland Map Code</label>
+                <input className={inputClass} value={tMapCode} onChange={e => setTMapCode(e.target.value)} placeholder="e.g. #FREEFIRE98210-CRAFT" />
+              </div>
+            )}
+
+            <div>
+              <label className={labelClass}>Short Description</label>
+              <input
+                className={inputClass}
+                value={tDescription}
+                onChange={e => setTDescription(e.target.value)}
+                placeholder="e.g. High-intensity 1v1 Clash Squad duel with Desert Eagle & M1887 only."
+              />
+            </div>
           </div>
+        )}
+
+        {/* STEP 2: MEDIA */}
+        {wizardStep === 2 && (
+          <div className="space-y-4 animate-in fade-in duration-200">
+            <div>
+              <label className={labelClass}>Tournament Banner Image URL (Optional)</label>
+              <input
+                className={inputClass}
+                value={tBannerImage}
+                onChange={e => setTBannerImage(e.target.value)}
+                placeholder="https://images.unsplash.com/... or direct image link"
+              />
+            </div>
+
+            {tBannerImage ? (
+              <div className="relative rounded-2xl overflow-hidden h-36 border border-neon-gold/40 shadow-lg">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={tBannerImage}
+                  alt="Banner preview"
+                  className="w-full h-full object-cover"
+                  onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-3">
+                  <span className="text-xs text-white font-bold">Live Banner Preview</span>
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-dashed border-white/20 p-8 text-center bg-surface-200/40">
+                <p className="text-xs text-white/50">No banner image URL entered. A high-res esports card graphic will be used by default.</p>
+              </div>
+            )}
+
+            <div>
+              <label className={labelClass}>YouTube Live URL / Stream Link</label>
+              <input
+                className={inputClass}
+                value={tLiveUrl}
+                onChange={e => setTLiveUrl(e.target.value)}
+                placeholder="https://youtube.com/live/..."
+              />
+            </div>
+          </div>
+        )}
+
+        {/* STEP 3: SCHEDULE */}
+        {wizardStep === 3 && (
+          <div className="space-y-4 animate-in fade-in duration-200">
+            <div>
+              <label className={labelClass}>Tournament Status</label>
+              <select className={selectClass} value={tStatus} onChange={e => setTStatus(e.target.value as any)}>
+                <option value="upcoming">Upcoming</option>
+                <option value="live">🔴 Live Now</option>
+                <option value="special">⚡ Major Special Event</option>
+                <option value="completed">🏆 Completed</option>
+              </select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className={labelClass}>Match Day / Date</label>
+                <input
+                  className={inputClass}
+                  value={tMatchDate}
+                  onChange={e => { setTMatchDate(e.target.value); setTStartTime(`${e.target.value}, ${tMatchTime}`); }}
+                  placeholder="e.g. Saturday Night or Today (Live)"
+                />
+              </div>
+              <div>
+                <label className={labelClass}>Match Time (PKT)</label>
+                <input
+                  className={inputClass}
+                  value={tMatchTime}
+                  onChange={e => { setTMatchTime(e.target.value); setTStartTime(`${tMatchDate}, ${e.target.value}`); }}
+                  placeholder="e.g. 09:00 PM PKT"
+                />
+              </div>
+            </div>
+
+            <div className="p-3 bg-surface-300/40 rounded-xl border border-white/10 space-y-2">
+              <span className="text-[10px] text-white/60 font-black uppercase tracking-wider block">
+                🌙 Night Match Schedule Presets:
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {[
+                  { label: 'Sat 8:00 PM', d: 'Saturday Night', t: '08:00 PM PKT' },
+                  { label: 'Sat 9:30 PM', d: 'Saturday Night', t: '09:30 PM PKT' },
+                  { label: 'Sat 11:00 PM', d: 'Saturday Night', t: '11:00 PM PKT' },
+                  { label: 'Sun 8:00 PM', d: 'Sunday Night', t: '08:00 PM PKT' },
+                  { label: 'Sun 9:30 PM', d: 'Sunday Night', t: '09:30 PM PKT' },
+                  { label: 'Sun 11:00 PM', d: 'Sunday Night', t: '11:00 PM PKT' },
+                ].map(p => (
+                  <button
+                    type="button"
+                    key={p.label}
+                    onClick={() => {
+                      setTMatchDate(p.d);
+                      setTMatchTime(p.t);
+                      setTStartTime(`${p.d}, ${p.t}`);
+                    }}
+                    className="text-[11px] px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/15 border border-white/10 text-white/80 transition-colors"
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* STEP 4: ENTRY & REWARDS */}
+        {wizardStep === 4 && (
+          <div className="space-y-4 animate-in fade-in duration-200">
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <label className={labelClass}>Entry Fee (PKR, 0=Free)</label>
+                <input type="number" className={inputClass} value={tEntryFee} onChange={e => setTEntryFee(Number(e.target.value))} />
+              </div>
+              <div>
+                <label className={labelClass}>Total Slots</label>
+                <input type="number" className={inputClass} value={tSlots} onChange={e => setTSlots(Number(e.target.value))} />
+              </div>
+              <div>
+                <label className={labelClass}>Per Kill Bonus (PKR)</label>
+                <input type="number" className={inputClass} value={tPerKill} onChange={e => setTPerKill(Number(e.target.value))} />
+              </div>
+            </div>
+
+            <div className="p-3.5 bg-surface-300/50 border border-white/10 rounded-xl space-y-3">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div>
+                  <label className="text-white font-bold text-xs">🏆 Prize Pool & Placement Distribution (1st – 6th)</label>
+                  <p className="text-[11px] text-white/50">Overall pool distributed among top placements</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => autoDistributePrizes(tPrize)}
+                  className="text-xs font-bold px-2.5 py-1 rounded-lg bg-neon-gold/20 text-neon-gold border border-neon-gold/40 hover:bg-neon-gold/30 transition-colors"
+                >
+                  ⚡ Auto-Calculate Distribution
+                </button>
+              </div>
+
+              <div>
+                <label className={labelClass}>Overall Tournament Prize Pool (PKR)</label>
+                <input
+                  type="number"
+                  className={inputClass + " font-bold text-neon-gold"}
+                  value={tPrize}
+                  onChange={e => {
+                    const val = Number(e.target.value);
+                    setTPrize(val);
+                  }}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                <div className="bg-surface-200 p-2.5 rounded-lg border border-neon-gold/40">
+                  <label className="text-[11px] font-bold text-neon-gold block mb-1">🥇 1st Place (Booyah)</label>
+                  <input
+                    type="number"
+                    className={inputClass}
+                    value={tPrize1}
+                    onChange={e => {
+                      const val = Number(e.target.value);
+                      setTPrize1(val);
+                      setTBooyah(val);
+                    }}
+                  />
+                </div>
+                <div className="bg-surface-200 p-2.5 rounded-lg border border-white/10">
+                  <label className="text-[11px] font-bold text-slate-300 block mb-1">🥈 2nd Place</label>
+                  <input type="number" className={inputClass} value={tPrize2} onChange={e => setTPrize2(Number(e.target.value))} />
+                </div>
+                <div className="bg-surface-200 p-2.5 rounded-lg border border-white/10">
+                  <label className="text-[11px] font-bold text-slate-300 block mb-1">🥉 3rd Place</label>
+                  <input type="number" className={inputClass} value={tPrize3} onChange={e => setTPrize3(Number(e.target.value))} />
+                </div>
+                <div className="bg-surface-200 p-2.5 rounded-lg border border-white/10">
+                  <label className="text-[11px] font-bold text-slate-400 block mb-1">4th Place</label>
+                  <input type="number" className={inputClass} value={tPrize4} onChange={e => setTPrize4(Number(e.target.value))} />
+                </div>
+                <div className="bg-surface-200 p-2.5 rounded-lg border border-white/10">
+                  <label className="text-[11px] font-bold text-slate-400 block mb-1">5th Place</label>
+                  <input type="number" className={inputClass} value={tPrize5} onChange={e => setTPrize5(Number(e.target.value))} />
+                </div>
+                <div className="bg-surface-200 p-2.5 rounded-lg border border-white/10">
+                  <label className="text-[11px] font-bold text-slate-400 block mb-1">6th Place</label>
+                  <input type="number" className={inputClass} value={tPrize6} onChange={e => setTPrize6(Number(e.target.value))} />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* STEP 5: RULES */}
+        {wizardStep === 5 && (
+          <div className="space-y-4 animate-in fade-in duration-200">
+            <div>
+              <label className={labelClass}>Allowed Weapons (comma-separated)</label>
+              <input
+                className={inputClass}
+                value={tAllowedWeapons}
+                onChange={e => setTAllowedWeapons(e.target.value)}
+                placeholder="e.g. Desert Eagle, M1887"
+              />
+            </div>
+
+            <div className="p-3.5 bg-surface-300/40 border border-primary/30 rounded-xl space-y-1.5">
+              <label className="text-primary font-bold text-xs block">
+                📋 Highlighted Tournament Rules (one rule per line)
+              </label>
+              <textarea
+                className={inputClass + " resize-none h-24 font-sans leading-relaxed"}
+                value={tRules}
+                onChange={e => setTRules(e.target.value)}
+                placeholder="Enter tournament rules..."
+              />
+            </div>
+
+            <div>
+              <label className={labelClass}>Match Highlights / Bullet Points (one per line)</label>
+              <textarea
+                className={inputClass + " resize-none h-20"}
+                value={tBullets}
+                onChange={e => setTBullets(e.target.value)}
+                placeholder="• One bullet point per line"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* STEP 6: REVIEW & LIVE PREVIEW */}
+        {wizardStep === 6 && (
+          <div className="space-y-4 animate-in fade-in duration-200">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-black text-neon-gold uppercase tracking-wider">
+                🔴 LIVE TOURNAMENT CARD PREVIEW
+              </span>
+              <span className="text-[11px] text-white/50">As seen by public users</span>
+            </div>
+
+            {/* Public Card Mockup */}
+            <div className="rounded-3xl border border-crimson/50 bg-[#080b16] overflow-hidden shadow-[0_0_30px_rgba(255,0,60,0.25)]">
+              {tBannerImage && (
+                <div className="relative w-full h-32 overflow-hidden">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={tBannerImage} alt="Banner preview" className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
+                </div>
+              )}
+
+              <div className="p-4 space-y-3">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div className="flex items-center gap-1.5">
+                    <span className="rounded-lg bg-crimson/20 px-2 py-0.5 text-[10px] font-black uppercase text-crimson border border-crimson/40">
+                      {tCategory} • {tFormat}
+                    </span>
+                    <span className="rounded-lg bg-surface-300 px-2 py-0.5 text-[10px] font-bold text-slate-300">
+                      {tMap}
+                    </span>
+                  </div>
+                  <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${
+                    tStatus === 'live' ? 'bg-crimson text-white animate-pulse' : 'bg-blue-500/20 text-blue-400'
+                  }`}>
+                    {tStatus.toUpperCase()}
+                  </span>
+                </div>
+
+                <h3 className="text-base font-black text-white uppercase font-display">{tTitle || 'UNTITLED TOURNAMENT'}</h3>
+
+                {tAllowedWeapons && (
+                  <p className="text-xs text-amber-400 font-medium">🔫 Weapons: {tAllowedWeapons}</p>
+                )}
+
+                <div className="grid grid-cols-3 gap-2 p-2.5 rounded-xl bg-surface-200/80 text-center border border-white/10">
+                  <div>
+                    <span className="text-[9px] text-slate-400 uppercase block font-bold">Prize Pool</span>
+                    <span className="text-sm font-black text-neon-gold">PKR {tPrize.toLocaleString()}</span>
+                  </div>
+                  <div className="border-x border-white/10">
+                    <span className="text-[9px] text-slate-400 uppercase block font-bold">Per Kill</span>
+                    <span className="text-sm font-black text-crimson">
+                      {tHasPerKill && tPerKill > 0 ? `PKR ${tPerKill}` : 'Survival'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[9px] text-slate-400 uppercase block font-bold">Entry</span>
+                    <span className={`text-sm font-black ${tEntryFee === 0 ? 'text-emerald-400' : 'text-white'}`}>
+                      {tEntryFee === 0 ? 'FREE' : `PKR ${tEntryFee}`}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="text-[11px] text-slate-400 flex justify-between">
+                  <span>Schedule: {tMatchDate}, {tMatchTime}</span>
+                  <span>Slots: 0 / {tSlots}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Wizard Bottom Navigation Bar */}
+        <div className="flex items-center justify-between pt-3 border-t border-white/10">
           <button
             type="button"
-            onClick={() => autoDistributePrizes(tPrize)}
-            className="text-xs font-bold px-2.5 py-1 rounded-lg bg-neon-gold/20 text-neon-gold border border-neon-gold/40 hover:bg-neon-gold/30 transition-colors"
+            onClick={() => setWizardStep(prev => Math.max(1, prev - 1))}
+            disabled={wizardStep === 1}
+            className="px-4 py-2 rounded-xl text-xs font-bold text-slate-300 bg-surface-200 border border-white/10 hover:text-white disabled:opacity-30 transition-colors"
           >
-            ⚡ Auto-Calculate Distribution
+            ← Back
           </button>
-        </div>
 
-        <div>
-          <label className={labelClass}>Overall Tournament Prize Pool (PKR)</label>
-          <input
-            type="number"
-            className={inputClass + " font-bold text-neon-gold"}
-            value={tPrize}
-            onChange={e => {
-              const val = Number(e.target.value);
-              setTPrize(val);
-            }}
-          />
-        </div>
+          <span className="text-xs font-bold text-white/50">
+            Step {wizardStep} of 6
+          </span>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-          <div className="bg-surface-200 p-2.5 rounded-lg border border-neon-gold/40">
-            <label className="text-[11px] font-bold text-neon-gold block mb-1">🥇 1st Place (Booyah)</label>
-            <input
-              type="number"
-              className={inputClass}
-              value={tPrize1}
-              onChange={e => {
-                const val = Number(e.target.value);
-                setTPrize1(val);
-                setTBooyah(val);
-              }}
-            />
-          </div>
-          <div className="bg-surface-200 p-2.5 rounded-lg border border-white/10">
-            <label className="text-[11px] font-bold text-slate-300 block mb-1">🥈 2nd Place</label>
-            <input type="number" className={inputClass} value={tPrize2} onChange={e => setTPrize2(Number(e.target.value))} />
-          </div>
-          <div className="bg-surface-200 p-2.5 rounded-lg border border-white/10">
-            <label className="text-[11px] font-bold text-slate-300 block mb-1">🥉 3rd Place</label>
-            <input type="number" className={inputClass} value={tPrize3} onChange={e => setTPrize3(Number(e.target.value))} />
-          </div>
-          <div className="bg-surface-200 p-2.5 rounded-lg border border-white/10">
-            <label className="text-[11px] font-bold text-slate-400 block mb-1">4th Place</label>
-            <input type="number" className={inputClass} value={tPrize4} onChange={e => setTPrize4(Number(e.target.value))} />
-          </div>
-          <div className="bg-surface-200 p-2.5 rounded-lg border border-white/10">
-            <label className="text-[11px] font-bold text-slate-400 block mb-1">5th Place</label>
-            <input type="number" className={inputClass} value={tPrize5} onChange={e => setTPrize5(Number(e.target.value))} />
-          </div>
-          <div className="bg-surface-200 p-2.5 rounded-lg border border-white/10">
-            <label className="text-[11px] font-bold text-slate-400 block mb-1">6th Place</label>
-            <input type="number" className={inputClass} value={tPrize6} onChange={e => setTPrize6(Number(e.target.value))} />
-          </div>
+          {wizardStep < 6 ? (
+            <button
+              type="button"
+              onClick={() => setWizardStep(prev => Math.min(6, prev + 1))}
+              className="px-5 py-2 rounded-xl text-xs font-black uppercase text-white bg-primary hover:bg-primary/80 transition-colors shadow-md"
+            >
+              Next Step →
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleSaveTournament}
+              disabled={!tTitle}
+              className="px-6 py-2 rounded-xl text-xs font-black uppercase text-white bg-crimson hover:bg-crimson/80 disabled:opacity-40 transition-colors shadow-[0_0_20px_rgba(255,0,60,0.5)]"
+            >
+              {editingTourney ? 'Save Changes' : 'Publish Tournament'}
+            </button>
+          )}
         </div>
       </div>
-
-      {/* Entry Fee, Slots & Kill Bonus */}
-      <div className="grid grid-cols-3 gap-3">
-        <div>
-          <label className={labelClass}>Entry Fee (PKR, 0=Free)</label>
-          <input type="number" className={inputClass} value={tEntryFee} onChange={e => setTEntryFee(Number(e.target.value))} />
-        </div>
-        <div>
-          <label className={labelClass}>Total Slots</label>
-          <input type="number" className={inputClass} value={tSlots} onChange={e => setTSlots(Number(e.target.value))} />
-        </div>
-        <div>
-          <label className={labelClass}>Per Kill Bonus (PKR)</label>
-          <input type="number" className={inputClass} value={tPerKill} onChange={e => setTPerKill(Number(e.target.value))} />
-        </div>
-      </div>
-
-      <div>
-        <label className={labelClass}>YouTube Live URL</label>
-        <input className={inputClass} value={tLiveUrl} onChange={e => setTLiveUrl(e.target.value)} placeholder="https://youtube.com/..." />
-      </div>
-
-      {/* Rules Box */}
-      <div className="p-3.5 bg-surface-300/40 border border-primary/30 rounded-xl space-y-1.5">
-        <label className="text-primary font-bold text-xs block">
-          📋 Highlighted Tournament Rules (one rule per line)
-        </label>
-        <textarea
-          className={inputClass + " resize-none h-24 font-sans leading-relaxed"}
-          value={tRules}
-          onChange={e => setTRules(e.target.value)}
-          placeholder="Enter tournament rules..."
-        />
-      </div>
-
-      <div>
-        <label className={labelClass}>Match Highlights / Bullet Points (one per line)</label>
-        <textarea
-          className={inputClass + " resize-none h-20"}
-          value={tBullets}
-          onChange={e => setTBullets(e.target.value)}
-          placeholder="• One bullet point per line"
-        />
-      </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="min-h-screen bg-surface-100">
@@ -1021,15 +1281,8 @@ export default function AdminPortalPage() {
 
       {/* ── CREATE TOURNAMENT MODAL ── */}
       {showCreateModal && (
-        <Modal title="Create New Tournament" onClose={() => setShowCreateModal(false)}>
+        <Modal title="Create Tournament — 6-Step Wizard" onClose={() => setShowCreateModal(false)}>
           {renderTournamentForm()}
-          <button
-            onClick={handleSaveTournament}
-            disabled={!tTitle}
-            className="mt-4 w-full bg-crimson hover:bg-crimson/80 disabled:opacity-40 text-white py-2.5 rounded-xl font-bold text-sm transition-colors"
-          >
-            Create Tournament
-          </button>
         </Modal>
       )}
 
@@ -1037,12 +1290,6 @@ export default function AdminPortalPage() {
       {editingTourney && (
         <Modal title={`Edit: ${editingTourney.title.slice(0, 30)}...`} onClose={() => setEditingTourney(null)}>
           {renderTournamentForm()}
-          <button
-            onClick={handleSaveTournament}
-            className="mt-4 w-full bg-blue-600 hover:bg-blue-500 text-white py-2.5 rounded-xl font-bold text-sm transition-colors"
-          >
-            Save Changes
-          </button>
         </Modal>
       )}
 

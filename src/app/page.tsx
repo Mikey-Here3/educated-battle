@@ -5,8 +5,11 @@ import { EntranceLoader } from '@/components/EntranceLoader';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { Navbar } from '@/components/Navbar';
 import { Hero } from '@/components/Hero';
+import { FeaturedTournaments } from '@/components/FeaturedTournaments';
 import { PromoCarousel } from '@/components/PromoCarousel';
 import { TournamentGrid } from '@/components/TournamentGrid';
+import { HowItWorks } from '@/components/HowItWorks';
+import { WhyEducatedGamer } from '@/components/WhyEducatedGamer';
 import { Leaderboard } from '@/components/Leaderboard';
 import { RulesAndFAQ } from '@/components/RulesAndFAQ';
 import { CommunityHub } from '@/components/CommunityHub';
@@ -33,19 +36,29 @@ export default function Home() {
       {/* Splash Entrance Loader */}
       <EntranceLoader onComplete={() => {}} />
 
-      {/* Navbar */}
+      {/* Responsive Header */}
       <Navbar />
 
       {/* Main Home Sections */}
       <main className="flex-grow">
+        {/* Cinematic Esports Hero */}
         <Hero />
 
+        {/* 🏆 Featured Tournaments Showcase (Live & Starting Soon) */}
+        <FeaturedTournaments
+          tournaments={tournaments}
+          onJoin={(t) => setActiveJoinTournament(t)}
+          onViewDetails={(t) => setActiveDetailTournament(t)}
+        />
+
+        {/* Action Promotions Banner */}
         <PromoCarousel
           onOpenWallet={() => {}}
           onJoinCommunity={() => {}}
           onExploreTournaments={() => {}}
         />
 
+        {/* Complete Tournament Arena Grid with Real Filters */}
         <TournamentGrid
           tournaments={tournaments}
           onJoin={(t) => setActiveJoinTournament(t)}
@@ -53,17 +66,26 @@ export default function Home() {
           onViewDetails={(t) => setActiveDetailTournament(t)}
         />
 
+        {/* How It Works: 5 Simple Steps */}
+        <HowItWorks />
+
+        {/* Why Educated Gamer: Verified Esports Platform */}
+        <WhyEducatedGamer />
+
+        {/* Hall of Fame Leaderboard */}
         <Leaderboard />
 
+        {/* Rules & Frequently Asked Questions */}
         <RulesAndFAQ />
 
+        {/* Community, YouTube & WhatsApp Hub */}
         <CommunityHub />
       </main>
 
-      {/* Footer */}
+      {/* Premium Esports Footer */}
       <Footer />
 
-      {/* Mobile Bottom Navigation */}
+      {/* Docked Mobile Bottom Navigation */}
       <MobileBottomNav />
 
       {/* Modals */}

@@ -11,40 +11,85 @@ export const MobileBottomNav: React.FC = () => {
   const tabs = [
     { href: '/', label: 'Home', icon: Home },
     { href: '/wallet', label: 'Wallet', icon: Wallet },
-    { href: '/matches', label: 'Matches', icon: Swords },
+    { href: '/matches', label: 'Matches', icon: Swords, isCenter: true },
     { href: '/leaderboard', label: 'Ranks', icon: Trophy },
     { href: '/profile', label: 'Profile', icon: User },
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 p-3 md:hidden pointer-events-none">
-      <div className="mx-auto max-w-md pointer-events-auto rounded-3xl border border-crimson/40 bg-surface-100/95 p-1.5 shadow-[0_-10px_30px_rgba(0,0,0,0.9)] backdrop-blur-xl">
-        <div className="flex items-center justify-around">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = pathname === tab.href;
+    <nav 
+      aria-label="Mobile Navigation"
+      className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-[#060914]/95 backdrop-blur-2xl border-t border-white/10 pt-1.5 pb-[max(env(safe-area-inset-bottom,8px),10px)] px-3 shadow-[0_-10px_35px_rgba(0,0,0,0.8)]"
+    >
+      <div className="flex items-center justify-between max-w-md mx-auto">
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = pathname === tab.href;
+
+          if (tab.isCenter) {
             return (
               <Link
                 key={tab.href}
                 href={tab.href}
-                className={`relative flex flex-col items-center justify-center py-2 px-3 transition-all duration-200 ${
-                  isActive ? 'text-neon-gold font-black' : 'text-slate-400 hover:text-slate-200'
-                }`}
+                className="relative -top-3 flex flex-col items-center justify-center group focus:outline-none"
               >
-                {/* Active Pill Glow */}
-                {isActive && (
-                  <div className="absolute inset-0 rounded-2xl bg-crimson/20 border border-crimson/60 shadow-[0_0_15px_rgba(255,0,60,0.35)]" />
-                )}
-
-                <Icon className={`relative z-10 h-5 w-5 ${isActive ? 'text-neon-gold animate-pulse' : 'text-slate-400'}`} />
-                <span className="relative z-10 text-[10px] font-bold mt-1 tracking-wider uppercase">
+                {/* Glowing elevated button for Matches */}
+                <div 
+                  className={`h-12 w-12 rounded-2xl flex items-center justify-center transition-all duration-300 shadow-lg ${
+                    isActive
+                      ? 'scale-110 shadow-[0_0_25px_var(--color-primary)]'
+                      : 'hover:scale-105 shadow-[0_4px_15px_rgba(0,0,0,0.6)]'
+                  }`}
+                  style={{
+                    background: 'linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%)',
+                    border: '1.5px solid rgba(255,255,255,0.25)',
+                  }}
+                >
+                  <Icon className="h-6 w-6 text-white drop-shadow-md animate-pulse" />
+                </div>
+                <span 
+                  className={`text-[10px] font-black uppercase tracking-wider mt-1 transition-colors ${
+                    isActive ? 'text-primary' : 'text-slate-300'
+                  }`}
+                >
                   {tab.label}
                 </span>
               </Link>
             );
-          })}
-        </div>
+          }
+
+          return (
+            <Link
+              key={tab.href}
+              href={tab.href}
+              className="flex-1 flex flex-col items-center justify-center py-1 relative group focus:outline-none"
+            >
+              {/* Top active neon indicator bar */}
+              {isActive && (
+                <span 
+                  className="absolute -top-1.5 h-0.5 w-8 rounded-full shadow-[0_0_8px_var(--color-primary)] transition-all"
+                  style={{ backgroundColor: 'var(--color-primary)' }}
+                />
+              )}
+
+              <div 
+                className={`p-1.5 rounded-xl transition-all ${
+                  isActive ? 'bg-primary/20 text-primary' : 'text-slate-400 group-hover:text-white'
+                }`}
+              >
+                <Icon className="h-5 w-5" />
+              </div>
+              <span 
+                className={`text-[10px] font-bold uppercase tracking-wider transition-colors ${
+                  isActive ? 'text-primary font-black' : 'text-slate-400'
+                }`}
+              >
+                {tab.label}
+              </span>
+            </Link>
+          );
+        })}
       </div>
-    </div>
+    </nav>
   );
 };
