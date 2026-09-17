@@ -42,7 +42,7 @@ interface AuthContextType {
   login: (email: string, pass: string) => Promise<{ success: boolean; role?: 'player' | 'admin'; error?: string }>;
   signup: (userData: { name: string; email: string; pass: string; phone: string; ign: string; uid: string }) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
-  joinTournament: (tournamentId: string, entryFee: number, slotNumber: number) => Promise<{ success: boolean; error?: string; remainingBalance?: number }>;
+  joinTournament: (tournamentId: string, entryFee: number, slotNumber: number, teamName?: string) => Promise<{ success: boolean; error?: string; remainingBalance?: number }>;
   submitContactQuery: (query: Omit<ContactQuery, 'id' | 'createdAt' | 'status'>) => void;
   updateUserBalance: (newBalance: number) => void;
   refreshUser: () => Promise<void>;
