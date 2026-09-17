@@ -26,21 +26,24 @@ export const TournamentDetailModal: React.FC<TournamentDetailModalProps> = ({
   const isUserRegistered = Boolean(currentUser) && registeredTournaments.includes(tournament.id);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 backdrop-blur-md">
-      <div className="relative w-full max-w-2xl max-h-[90vh] flex flex-col rounded-3xl border border-crimson/40 bg-surface-100 shadow-[0_0_50px_rgba(255,0,60,0.3)]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-3 sm:p-4 backdrop-blur-md">
+      <div className="relative w-full max-w-2xl max-h-[90vh] flex flex-col rounded-3xl border border-crimson/40 bg-surface-100 shadow-[0_0_50px_rgba(255,0,60,0.3)] overflow-hidden">
 
-        {/* Sticky Close Bar */}
-        <div className="sticky top-0 z-10 flex items-center justify-end px-5 pt-4 pb-2 bg-surface-100 rounded-t-3xl border-b border-white/5">
+        {/* ALWAYS-VISIBLE Close Bar — sits outside scroll, never moves */}
+        <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 bg-surface-200 border-b border-white/10">
+          <span className="text-xs font-black uppercase text-white/60 tracking-widest truncate pr-2">
+            {tournament.title}
+          </span>
           <button
             onClick={onClose}
-            className="flex items-center gap-1.5 rounded-full bg-surface-200 hover:bg-crimson/20 border border-white/10 hover:border-crimson/40 px-3 py-1.5 text-slate-400 hover:text-white transition-colors text-xs font-bold"
+            className="flex-shrink-0 flex items-center gap-1.5 rounded-xl bg-crimson/20 hover:bg-crimson border border-crimson/40 hover:border-crimson px-3 py-2 text-crimson hover:text-white transition-all text-xs font-black uppercase tracking-wider"
           >
             <X className="h-4 w-4" /> Close
           </button>
         </div>
 
         {/* Scrollable Content */}
-        <div className="overflow-y-auto p-6 sm:p-8 pt-4">
+        <div className="overflow-y-auto flex-1 p-5 sm:p-7">
 
         {/* Banner image if present */}
         {tournament.bannerImage && (

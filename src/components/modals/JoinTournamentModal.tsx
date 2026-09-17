@@ -77,30 +77,30 @@ export const JoinTournamentModal: React.FC<JoinTournamentModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 backdrop-blur-md">
-      <div className="relative w-full max-w-xl max-h-[90vh] flex flex-col rounded-3xl border border-crimson/40 bg-surface-100 shadow-[0_0_50px_rgba(255,0,60,0.3)]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-3 sm:p-4 backdrop-blur-md">
+      <div className="relative w-full max-w-xl max-h-[90vh] flex flex-col rounded-3xl border border-crimson/40 bg-surface-100 shadow-[0_0_50px_rgba(255,0,60,0.3)] overflow-hidden">
 
-        {/* Sticky Close Bar */}
-        <div className="sticky top-0 z-10 flex items-center justify-between px-5 pt-4 pb-2 bg-surface-100 rounded-t-3xl border-b border-white/5">
-          <div className="flex items-center space-x-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-crimson/20 text-crimson border border-crimson/40 shrink-0">
-              <Swords className="h-5 w-5" />
+        {/* ALWAYS-VISIBLE Close Bar */}
+        <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 bg-surface-200 border-b border-white/10">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-crimson/20 text-crimson border border-crimson/40 shrink-0">
+              <Swords className="h-4 w-4" />
             </div>
-            <div>
-              <span className="text-[9px] font-black uppercase text-neon-gold tracking-widest">SLOT RESERVATION & ENTRY</span>
-              <h3 className="text-base font-extrabold text-white uppercase font-display line-clamp-1">{tournament.title}</h3>
+            <div className="min-w-0">
+              <p className="text-[9px] font-black uppercase text-neon-gold tracking-widest leading-none">SLOT RESERVATION</p>
+              <p className="text-xs font-extrabold text-white uppercase truncate">{tournament.title}</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="flex items-center gap-1.5 rounded-full bg-surface-200 hover:bg-crimson/20 border border-white/10 hover:border-crimson/40 px-3 py-1.5 text-slate-400 hover:text-white transition-colors text-xs font-bold ml-2 shrink-0"
+            className="flex-shrink-0 flex items-center gap-1.5 rounded-xl bg-crimson/20 hover:bg-crimson border border-crimson/40 hover:border-crimson px-3 py-2 text-crimson hover:text-white transition-all text-xs font-black uppercase tracking-wider ml-2"
           >
             <X className="h-4 w-4" /> Close
           </button>
         </div>
 
         {/* Scrollable Content */}
-        <div className="overflow-y-auto p-6 sm:p-8 pt-4">
+        <div className="overflow-y-auto flex-1 p-5 sm:p-6">
 
         {confirmed ? (
           /* Confirmation Success Screen */
