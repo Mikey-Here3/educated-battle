@@ -7,17 +7,21 @@ import { Footer } from "@/components/Footer";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { ArrowLeft, Users, Search, ShieldAlert, CheckCircle2, User, Phone, MapPin, Gamepad2, Shield, Calendar, Clock, DollarSign } from "lucide-react";
 
+import { useAuth } from "@/context/AuthContext";
+
 export default function TournamentPlayersPage() {
   const { id } = useParams();
   const router = useRouter();
+  const { currentUser, authLoading } = useAuth();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [searchQ, setSearchQ] = useState("");
 
   useEffect(() => {
+    if (authLoading) return;
     const hasAdminCookie = typeof document !== "undefined" && document.cookie.includes("eg_admin=1");
-    if (!hasAdminCookie) {
+    if (!hasAdminCookie && currentUser?.role !== "admin") {
       router.push("/login");
       return;
     }
@@ -33,7 +37,7 @@ export default function TournamentPlayersPage() {
       })
       .catch(() => setError("Network error"))
       .finally(() => setLoading(false));
-  }, [id, router]);
+  }, [id, router, currentUser, authLoading]);
 
   if (loading) {
     return (
