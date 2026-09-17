@@ -27,15 +27,20 @@ export const TournamentDetailModal: React.FC<TournamentDetailModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 backdrop-blur-md">
-      <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl border border-crimson/40 bg-surface-100 p-6 sm:p-8 shadow-[0_0_50px_rgba(255,0,60,0.3)]">
-        
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="absolute right-5 top-5 rounded-full p-2 text-slate-400 hover:bg-surface-200 hover:text-white transition-colors"
-        >
-          <X className="h-5 w-5" />
-        </button>
+      <div className="relative w-full max-w-2xl max-h-[90vh] flex flex-col rounded-3xl border border-crimson/40 bg-surface-100 shadow-[0_0_50px_rgba(255,0,60,0.3)]">
+
+        {/* Sticky Close Bar */}
+        <div className="sticky top-0 z-10 flex items-center justify-end px-5 pt-4 pb-2 bg-surface-100 rounded-t-3xl border-b border-white/5">
+          <button
+            onClick={onClose}
+            className="flex items-center gap-1.5 rounded-full bg-surface-200 hover:bg-crimson/20 border border-white/10 hover:border-crimson/40 px-3 py-1.5 text-slate-400 hover:text-white transition-colors text-xs font-bold"
+          >
+            <X className="h-4 w-4" /> Close
+          </button>
+        </div>
+
+        {/* Scrollable Content */}
+        <div className="overflow-y-auto p-6 sm:p-8 pt-4">
 
         {/* Banner image if present */}
         {tournament.bannerImage && (
@@ -243,6 +248,7 @@ export const TournamentDetailModal: React.FC<TournamentDetailModalProps> = ({
             </div>
           )}
         </div>
+        </div>{/* end scrollable content */}
 
       </div>
     </div>

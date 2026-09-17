@@ -78,30 +78,29 @@ export const JoinTournamentModal: React.FC<JoinTournamentModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 backdrop-blur-md">
-      <div className="relative w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-3xl border border-crimson/40 bg-surface-100 p-6 sm:p-8 shadow-[0_0_50px_rgba(255,0,60,0.3)]">
-        
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="absolute right-5 top-5 rounded-full p-2 text-slate-400 hover:bg-surface-200 hover:text-white transition-colors"
-        >
-          <X className="h-5 w-5" />
-        </button>
+      <div className="relative w-full max-w-xl max-h-[90vh] flex flex-col rounded-3xl border border-crimson/40 bg-surface-100 shadow-[0_0_50px_rgba(255,0,60,0.3)]">
 
-        {/* Modal Header */}
-        <div className="flex items-center space-x-3 mb-6">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-crimson/20 text-crimson border border-crimson/40 shrink-0">
-            <Swords className="h-6 w-6" />
+        {/* Sticky Close Bar */}
+        <div className="sticky top-0 z-10 flex items-center justify-between px-5 pt-4 pb-2 bg-surface-100 rounded-t-3xl border-b border-white/5">
+          <div className="flex items-center space-x-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-crimson/20 text-crimson border border-crimson/40 shrink-0">
+              <Swords className="h-5 w-5" />
+            </div>
+            <div>
+              <span className="text-[9px] font-black uppercase text-neon-gold tracking-widest">SLOT RESERVATION & ENTRY</span>
+              <h3 className="text-base font-extrabold text-white uppercase font-display line-clamp-1">{tournament.title}</h3>
+            </div>
           </div>
-          <div>
-            <span className="text-[10px] font-black uppercase text-neon-gold tracking-widest">
-              SLOT RESERVATION &amp; ENTRY CONFIRMATION
-            </span>
-            <h3 className="text-xl font-extrabold text-white uppercase font-display line-clamp-1">
-              {tournament.title}
-            </h3>
-          </div>
+          <button
+            onClick={onClose}
+            className="flex items-center gap-1.5 rounded-full bg-surface-200 hover:bg-crimson/20 border border-white/10 hover:border-crimson/40 px-3 py-1.5 text-slate-400 hover:text-white transition-colors text-xs font-bold ml-2 shrink-0"
+          >
+            <X className="h-4 w-4" /> Close
+          </button>
         </div>
+
+        {/* Scrollable Content */}
+        <div className="overflow-y-auto p-6 sm:p-8 pt-4">
 
         {confirmed ? (
           /* Confirmation Success Screen */
@@ -285,6 +284,7 @@ export const JoinTournamentModal: React.FC<JoinTournamentModalProps> = ({
             </Link>
           </div>
         )}
+        </div>{/* end scrollable content */}
 
       </div>
     </div>
