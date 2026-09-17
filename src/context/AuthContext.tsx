@@ -226,7 +226,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const joinTournament = async (
     tournamentId: string,
     entryFee: number,
-    slotNumber: number
+    slotNumber: number,
+    teamName?: string
   ): Promise<{ success: boolean; error?: string; remainingBalance?: number }> => {
     if (!currentUser) {
       return { success: false, error: 'Please sign in or create an account to join this match.' };
@@ -244,6 +245,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           tournamentId,
           slotNumber,
           userId: currentUser.id,
+          teamName,
         }),
       });
 

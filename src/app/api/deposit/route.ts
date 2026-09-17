@@ -55,6 +55,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // STRICT PAYMENT VERIFICATION RULE:
+    // Easypaisa is DISABLED for deposits. JazzCash is ENABLED.
+    const normalizedMethod = (method || '').toLowerCase();
+    if (normalizedMethod.includes('easypaisa') || normalizedMethod.includes('easy paisa')) {
+      return NextResponse.json(
+        { success: false, error: 'Easypaisa is currently disabled for deposits. Please use JazzCash.' },
+        { status: 400 }
+      );
+    }
+    const finalMethod = 'JazzCash'; // Hard-enforced since it's the only allowed deposit method.
+
     // Save real transaction to PostgreSQL
     const transaction = await prisma.transaction.create({
       data: {
@@ -62,11 +73,11 @@ export async function POST(req: NextRequest) {
         type: 'DEPOSIT',
         amountPKR: cleanAmt,
         status: 'PENDING',
-        method: method || 'JazzCash',
+        method: finalMethod,
         trxId: trxId.trim(),
         accountNumber: accountNumber ? accountNumber.trim() : null,
         proofUrl: screenshotUrl || null,
-        note: `Deposit of PKR ${cleanAmt} via ${method || 'JazzCash'} by ${user.ign} (${user.uid})`,
+        note: `Deposit of PKR ${cleanAmt} via ${finalMethod} by ${user.ign} (${user.uid})`,
       },
     });
 

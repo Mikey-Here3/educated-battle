@@ -25,6 +25,9 @@ model User {
   updatedAt    DateTime      @updatedAt
   slots        Slot[]
   transactions Transaction[]
+  
+  teamsLed         Team[]       @relation("TeamLeader")
+  teamMemberships  TeamMember[]
 
   @@map("users")
 }
@@ -48,8 +51,15 @@ model Tournament {
   winnerPrize     Float?    @default(0)
   perKill         Float     @default(0)
   entryFee        Float     @default(0)
-  totalSlots      Int       @default(48)
+  
+  // New architecture fields
+  entryFeeModel   String    @default("PLAYER_ENTRY") // PLAYER_ENTRY, TEAM_ENTRY
+  matchType       String    @default("SINGLE_MATCH") // SINGLE_MATCH, MULTI_MATCH
+  totalSlots      Int       @default(48) // Total max players
   slotsFilled     Int?      @default(0)
+  maxTeams        Int?      // Null means unbounded or derived from totalSlots/teamSize
+  teamSize        Int       @default(1)
+
   startTime       DateTime
   matchDate       String?
   matchTime       String?
@@ -64,7 +74,10 @@ model Tournament {
   prizesJson      String?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime? @updatedAt
+  
   slots           Slot[]
+  teams           Team[]
+  matches         TournamentMatch[]
 
   @@map("tournaments")
 }
@@ -73,16 +86,82 @@ model Slot {
   id           String     @id @default(cuid())
   tournamentId String
   userId       String
+  teamId       String?
   slotNumber   Int
   ign          String
   uid          String
   createdAt    DateTime   @default(now())
+  
   tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
   user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team         Team?      @relation(fields: [teamId], references: [id], onDelete: Cascade)
 
   @@unique([tournamentId, slotNumber])
   @@unique([tournamentId, userId])
   @@map("slots")
+}
+
+model Team {
+  id                   String     @id @default(cuid())
+  tournamentId         String
+  teamName             String
+  leaderId             String
+  paymentTransactionId String?
+  status               String     @default("REGISTERED")
+  createdAt            DateTime   @default(now())
+
+  tournament           Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  leader               User       @relation("TeamLeader", fields: [leaderId], references: [id], onDelete: Cascade)
+  members              TeamMember[]
+  slots                Slot[]
+
+  @@unique([tournamentId, teamName])
+  @@unique([tournamentId, leaderId])
+  @@map("teams")
+}
+
+model TeamMember {
+  id       String @id @default(cuid())
+  teamId   String
+  userId   String
+  role     String @default("MEMBER")
+
+  team     Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, userId])
+  @@map("team_members")
+}
+
+model TournamentMatch {
+  id           String   @id @default(cuid())
+  tournamentId String
+  matchNumber  Int
+  status       String   @default("PENDING") // PENDING, READY, LIVE, COMPLETED, CANCELLED
+  roomId       String?
+  roomPassword String?
+  winnerId     String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  participants MatchParticipant[]
+
+  @@unique([tournamentId, matchNumber])
+  @@map("tournament_matches")
+}
+
+model MatchParticipant {
+  id       String  @id @default(cuid())
+  matchId  String
+  userId   String?
+  teamId   String?
+  score    Int     @default(0)
+  placement Int?
+
+  match    TournamentMatch @relation(fields: [matchId], references: [id], onDelete: Cascade)
+
+  @@map("match_participants")
 }
 
 model Transaction {

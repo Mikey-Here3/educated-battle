@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma';
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { tournamentId, slotNumber, userId: rawUserId } = body;
+    const { tournamentId, slotNumber, userId: rawUserId, teamName } = body;
 
     // Get user id from body or cookie session
     const sessionUserId = req.cookies.get('eg_session_user_id')?.value;
@@ -97,51 +97,99 @@ export async function POST(req: NextRequest) {
 
       if (entryFee > 0 && availableBalance < entryFee) {
         throw new Error(
-          `Insufficient balance! Match entry fee is PKR ${entryFee}, but your available balance is PKR ${availableBalance.toFixed(0)}. Please add coins to confirm your slot.`
+          `Insufficient balance! Match entry fee is PKR ${entryFee}, but your available balance is PKR ${availableBalance.toFixed(0)}.`
         );
       }
 
-      // 7. Deduct Entry Fee atomically
+      // 8. Deduct Entry Fee atomically (Charged ONCE, whether Solo or Team)
       let updatedUser = user;
       if (entryFee > 0) {
         updatedUser = await tx.user.update({
           where: { id: user.id },
+          data: { balancePKR: { decrement: entryFee } },
+        });
+      }
+
+      let createdTeam = null;
+      let newSlot = null;
+
+      // 9. Registration & Reservation Logic
+      if (tournament.entryFeeModel === 'TEAM_ENTRY') {
+        const tName = body.teamName || `${user.ign}'s Team`;
+        
+        // Prevent duplicate team registration by this leader
+        const existingTeam = await tx.team.findFirst({
+          where: { tournamentId: tournament.id, leaderId: user.id }
+        });
+        if (existingTeam) throw new Error("You have already registered a team for this tournament.");
+
+        // Create Team
+        createdTeam = await tx.team.create({
           data: {
-            balancePKR: { decrement: entryFee },
+            tournamentId: tournament.id,
+            teamName: tName,
+            leaderId: user.id,
+          }
+        });
+
+        // Add leader as member
+        await tx.teamMember.create({
+          data: { teamId: createdTeam.id, userId: user.id, role: 'LEADER' }
+        });
+
+        // We still reserve the initial slot for the team leader
+        newSlot = await tx.slot.create({
+          data: {
+            tournamentId: tournament.id,
+            userId: user.id,
+            slotNumber: slotNum,
+            teamId: createdTeam.id,
+            ign: user.ign,
+            uid: user.uid,
+          },
+        });
+
+        // NOTE: Additional teammates will be added to the TeamMember model 
+        // without incurring additional entry fee charges for this team.
+      } else {
+        // PLAYER_ENTRY logic
+        newSlot = await tx.slot.create({
+          data: {
+            tournamentId: tournament.id,
+            userId: user.id,
+            slotNumber: slotNum,
+            ign: user.ign,
+            uid: user.uid,
           },
         });
       }
 
-      // 8. Create Slot Record (Protected by DB unique constraints)
-      const newSlot = await tx.slot.create({
-        data: {
-          tournamentId: tournament.id,
-          userId: user.id,
-          slotNumber: slotNum,
-          ign: user.ign,
-          uid: user.uid,
-        },
-      });
-
-      // 9. Create Transaction Audit Ledger
+      // 10. Create Transaction Audit Ledger
+      const trxIdStr = `JOIN-${tournament.id.slice(-6)}-S${slotNum}-${Date.now().toString().slice(-6)}`;
       await tx.transaction.create({
         data: {
           userId: user.id,
           type: 'MATCH_FEE',
           amountPKR: entryFee,
           status: 'APPROVED',
-          trxId: `JOIN-${tournament.id.slice(-6)}-S${slotNum}-${Date.now().toString().slice(-6)}`,
+          trxId: trxIdStr,
           tournamentId: tournament.id,
-          note: `Slot #${slotNum} booked for ${tournament.title} (Fee: PKR ${entryFee})`,
+          note: `Slot #${slotNum} booked for ${tournament.title} (${tournament.entryFeeModel}) (Fee: PKR ${entryFee})`,
         },
       });
 
-      // 10. Update tournament slotsFilled count
+      // Link payment to team if applicable
+      if (createdTeam) {
+        await tx.team.update({
+          where: { id: createdTeam.id },
+          data: { paymentTransactionId: trxIdStr }
+        });
+      }
+
+      // 11. Update tournament slotsFilled count
       const updatedTournament = await tx.tournament.update({
         where: { id: tournament.id },
-        data: {
-          slotsFilled: tournament.slots.length + 1,
-        },
+        data: { slotsFilled: tournament.slots.length + 1 },
       });
 
       return {

@@ -25,6 +25,10 @@ export interface Tournament {
   hasPerKill: boolean;
   booyahPrize: number; // PKR — 1st place Booyah prize
   entryFee: number; // PKR (0 = Free)
+  entryFeeModel?: string; // 'PLAYER_ENTRY' | 'TEAM_ENTRY'
+  matchType?: string; // 'SINGLE_MATCH' | 'MULTI_MATCH'
+  maxTeams?: number;
+  teamSize?: number;
   slotsFilled: number;
   totalSlots: number;
   startTime: string;

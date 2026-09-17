@@ -35,6 +35,7 @@ export const JoinTournamentModal: React.FC<JoinTournamentModalProps> = ({
 }) => {
   const { currentUser, joinTournament } = useAuth();
   const [selectedSlot, setSelectedSlot] = useState<number>(tournament?.slotsFilled ? tournament.slotsFilled + 1 : 1);
+  const [teamName, setTeamName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [confirmed, setConfirmed] = useState(false);
@@ -59,13 +60,19 @@ export const JoinTournamentModal: React.FC<JoinTournamentModalProps> = ({
   const occupiedCount = tournament.slotsFilled || 0;
   const bookedSet = new Set<number>((tournament as any).bookedSlots || []);
   const isInsufficientBalance = currentUser ? (tournament.entryFee > 0 && currentUser.balancePKR < tournament.entryFee) : false;
+  const isTeamEntry = tournament.entryFeeModel === 'TEAM_ENTRY';
 
   const handleConfirmJoin = async () => {
     if (!currentUser) return;
+    if (isTeamEntry && !teamName.trim()) {
+      setError('Please enter a team name');
+      return;
+    }
+    
     setLoading(true);
     setError('');
 
-    const res = await joinTournament(tournament.id, tournament.entryFee, selectedSlot);
+    const res = await joinTournament(tournament.id, tournament.entryFee, selectedSlot, isTeamEntry ? teamName.trim() : undefined);
     setLoading(false);
 
     if (res.success) {
@@ -158,6 +165,27 @@ export const JoinTournamentModal: React.FC<JoinTournamentModalProps> = ({
               </div>
             </div>
 
+            {/* Team Name Input for TEAM_ENTRY */}
+            {isTeamEntry && (
+              <div className="rounded-2xl border border-neon-gold/30 bg-neon-gold/5 p-4 space-y-2">
+                <label className="text-xs font-black uppercase text-neon-gold flex justify-between items-center">
+                  <span>Team Name <span className="text-crimson">*</span></span>
+                  <span className="text-[10px] font-normal tracking-normal text-slate-400">Required</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={teamName}
+                  onChange={(e) => setTeamName(e.target.value)}
+                  placeholder="Enter your team name (e.g. Team Alpha)"
+                  className="w-full bg-surface-300 border-white/10 rounded-xl px-4 py-2 text-sm text-white placeholder-slate-500 focus:border-neon-gold focus:ring-1 focus:ring-neon-gold transition-all"
+                />
+                <p className="text-[10px] text-slate-400 leading-relaxed">
+                  As the team leader, you are paying the full team entry fee once. Your teammates will be able to join this registered team without paying an extra entry fee.
+                </p>
+              </div>
+            )}
+
             {/* Interactive Slot Selector Grid (48 Slots) */}
             <div>
               <div className="flex items-center justify-between mb-2">
@@ -206,7 +234,7 @@ export const JoinTournamentModal: React.FC<JoinTournamentModalProps> = ({
                 <span className="font-black text-white font-mono">PKR {currentUser.balancePKR.toLocaleString()}</span>
               </div>
               <div className="flex justify-between items-center border-t border-white/5 pt-2">
-                <span className="text-slate-400 font-bold">Match Entry Fee:</span>
+                <span className="text-slate-400 font-bold">{isTeamEntry ? 'Team Entry Fee:' : 'Match Entry Fee:'}</span>
                 <span className="font-black text-emerald-400 font-mono">
                   {tournament.entryFee === 0 ? 'FREE ENTRY (PKR 0)' : `- PKR ${tournament.entryFee.toLocaleString()}`}
                 </span>
