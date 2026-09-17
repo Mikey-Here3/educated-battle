@@ -251,17 +251,17 @@ export const JoinTournamentModal: React.FC<JoinTournamentModalProps> = ({
               </div>
             )}
 
-            {/* Confirm Registration Button */}
             <button
               onClick={handleConfirmJoin}
               disabled={loading || isInsufficientBalance}
-              className="w-full rounded-xl bg-gradient-to-r from-crimson to-crimson-dark py-4 text-xs font-black uppercase tracking-wider text-white shadow-[0_0_25px_rgba(255,0,60,0.4)] transition hover:shadow-[0_0_35px_rgba(255,0,60,0.6)] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full rounded-xl flex items-center justify-center gap-2 bg-gradient-to-r from-crimson to-crimson-dark py-4 text-sm font-black uppercase tracking-wider text-white shadow-[0_0_25px_rgba(255,0,60,0.4)] transition hover:shadow-[0_0_35px_rgba(255,0,60,0.6)] disabled:opacity-50 disabled:cursor-not-allowed"
             >
+              <CheckCircle2 className="w-5 h-5" />
               {loading 
                 ? 'Processing Slot Lock...' 
                 : tournament.entryFee === 0 
-                ? `Confirm Free Slot #${selectedSlot} with UID ${currentUser.uid}` 
-                : `Pay PKR ${tournament.entryFee} & Lock Slot #${selectedSlot}`}
+                ? `CONFIRM & JOIN SLOT #${selectedSlot}` 
+                : `CONFIRM & JOIN (PAY PKR ${tournament.entryFee})`}
             </button>
 
           </div>

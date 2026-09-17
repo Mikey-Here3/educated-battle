@@ -1144,6 +1144,12 @@ export default function AdminPortalPage() {
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
                       <button
+                        onClick={() => router.push(`/admin/tournaments/${t.id}`)}
+                        className="flex items-center gap-1 bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 px-3 py-1.5 rounded-lg text-xs transition-colors"
+                      >
+                        <Users className="h-3 w-3" /> Players
+                      </button>
+                      <button
                         onClick={() => openEditTourney(t)}
                         className="flex items-center gap-1 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 px-3 py-1.5 rounded-lg text-xs transition-colors"
                       >
@@ -1222,15 +1228,34 @@ export default function AdminPortalPage() {
                           <ImageIcon className="h-6 w-6 text-white/20" />
                         </div>
                       )}
-                      <div className="flex-1 min-w-0 space-y-1">
+                      <div className="flex-1 min-w-0 space-y-2">
                         <div className="flex items-center justify-between flex-wrap gap-1">
                           <p className="text-white font-bold text-sm truncate">{dep.user}</p>
                           <span className="text-[11px] font-mono text-neon-gold bg-neon-gold/10 px-2 py-0.5 rounded border border-neon-gold/20">
                             PKR {dep.amt.toLocaleString()}
                           </span>
                         </div>
-                        <p className="text-xs text-white/50 font-mono">FF UID: {dep.uid}</p>
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-white/40 font-mono">
+                        
+                        <div className="grid grid-cols-2 gap-2 mt-2 p-2 rounded bg-black/20 border border-white/5">
+                          <div>
+                            <p className="text-[10px] text-white/40 uppercase font-bold tracking-wider mb-0.5">User Phone</p>
+                            <p className="text-xs font-mono text-white/80">{dep.phone || 'N/A'}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-white/40 uppercase font-bold tracking-wider mb-0.5">Sender Phone</p>
+                            <div className="flex items-center gap-1.5">
+                              <p className="text-xs font-mono text-white/80">{dep.accountNumber || 'N/A'}</p>
+                              {dep.phone && dep.accountNumber && dep.phone === dep.accountNumber ? (
+                                <CheckCircle2 className="h-3 w-3 text-emerald-400" />
+                              ) : (
+                                <AlertCircle className="h-3 w-3 text-amber-400" />
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-white/40 font-mono mt-1">
+                          <span>UID: {dep.uid}</span>
                           <span>{dep.method}</span>
                           <span>Trx: {dep.trxId}</span>
                           <span>{dep.date}</span>

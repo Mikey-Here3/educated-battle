@@ -40,6 +40,7 @@ export const WalletSection: React.FC<WalletSectionProps> = () => {
   // Deposit form state
   const [amount, setAmount] = useState<number>(100);
   const [trxId, setTrxId] = useState<string>('');
+  const [senderPhone, setSenderPhone] = useState<string>('');
   const [proofImage, setProofImage] = useState<string>('');
   const [imagePreviewName, setImagePreviewName] = useState<string>('');
   const [copiedNum, setCopiedNum] = useState<boolean>(false);
@@ -101,8 +102,8 @@ export const WalletSection: React.FC<WalletSectionProps> = () => {
     e.preventDefault();
     if (!currentUser) return;
 
-    if (amount < 50) {
-      setDepositMsg({ text: 'Minimum deposit is PKR 50.', error: true });
+    if (amount < 100) {
+      setDepositMsg({ text: 'Minimum deposit is PKR 100.', error: true });
       return;
     }
 
@@ -121,6 +122,7 @@ export const WalletSection: React.FC<WalletSectionProps> = () => {
       method: paymentMethod,
       amt: Number(amount),
       trxId: trxId.trim(),
+      accountNumber: senderPhone.trim(),
       proofUrl: proofImage || '',
     });
 

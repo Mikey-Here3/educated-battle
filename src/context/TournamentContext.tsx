@@ -12,6 +12,8 @@ export interface DepositRequest {
   userId?: string;
   user: string;
   uid: string;
+  phone?: string; // User's registered phone
+  accountNumber?: string; // Sender's payment phone (for cross-check)
   method: 'JazzCash' | 'EasyPaisa';
   amt: number;
   trxId: string;
@@ -117,6 +119,8 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
                 userId: tx.userId,
                 user: `${tx.userName || 'Player'} (${tx.ign || 'FF'})`,
                 uid: tx.uid || '',
+                phone: tx.userPhone || '',
+                accountNumber: tx.accountNumber || '',
                 method: (tx.method as any) || 'JazzCash',
                 amt: tx.amountPKR,
                 trxId: tx.trxId || '',

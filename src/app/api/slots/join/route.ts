@@ -75,13 +75,29 @@ export async function POST(req: NextRequest) {
         throw new Error('Tournament is completely FULL. Registration closed.');
       }
 
-      // 6. Financial Integrity & Balance Check
+      // 6. Minimum Deposit Gate — user must have ever deposited ≥ PKR 100 (approved)
+      const hasMinDeposit = await tx.transaction.findFirst({
+        where: {
+          userId: user.id,
+          type: 'DEPOSIT',
+          status: 'APPROVED',
+          amountPKR: { gte: 100 },
+        },
+      });
+
+      if (!hasMinDeposit) {
+        throw new Error(
+          'Please complete a minimum PKR 100 wallet deposit before entering tournaments. Go to Wallet → Deposit to add funds.'
+        );
+      }
+
+      // 7. Financial Integrity & Balance Check
       const availableBalance = user.balancePKR - user.reservedPKR;
       const entryFee = tournament.entryFee || 0;
 
       if (entryFee > 0 && availableBalance < entryFee) {
         throw new Error(
-          `Insufficient balance! Match entry fee is PKR ${entryFee}, but your available balance is PKR ${availableBalance}. Please add coins to confirm your slot.`
+          `Insufficient balance! Match entry fee is PKR ${entryFee}, but your available balance is PKR ${availableBalance.toFixed(0)}. Please add coins to confirm your slot.`
         );
       }
 

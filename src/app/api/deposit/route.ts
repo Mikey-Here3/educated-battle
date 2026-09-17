@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma';
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { amount, method, trxId, screenshotUrl, userId: rawUserId } = body;
+    const { amount, method, trxId, accountNumber, screenshotUrl, userId: rawUserId } = body;
 
     const sessionUserId = req.cookies.get('eg_session_user_id')?.value;
     const userId = rawUserId || sessionUserId;
@@ -24,9 +24,9 @@ export async function POST(req: NextRequest) {
     }
 
     const cleanAmt = Number(amount);
-    if (isNaN(cleanAmt) || cleanAmt < 50) {
+    if (isNaN(cleanAmt) || cleanAmt < 100) {
       return NextResponse.json(
-        { success: false, error: 'Minimum deposit amount is PKR 50.' },
+        { success: false, error: 'Minimum deposit amount is PKR 100.' },
         { status: 400 }
       );
     }
@@ -64,6 +64,7 @@ export async function POST(req: NextRequest) {
         status: 'PENDING',
         method: method || 'JazzCash',
         trxId: trxId.trim(),
+        accountNumber: accountNumber ? accountNumber.trim() : null,
         proofUrl: screenshotUrl || null,
         note: `Deposit of PKR ${cleanAmt} via ${method || 'JazzCash'} by ${user.ign} (${user.uid})`,
       },
