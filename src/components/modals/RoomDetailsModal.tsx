@@ -39,7 +39,7 @@ export const RoomDetailsModal: React.FC<RoomDetailsModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 backdrop-blur-md">
-      <div className="relative w-full max-w-lg rounded-3xl border border-crimson/40 bg-surface-100 p-6 sm:p-8 shadow-[0_0_50px_rgba(255,0,60,0.3)]">
+      <div className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-3xl border border-crimson/40 bg-surface-100 p-6 sm:p-8 shadow-[0_0_50px_rgba(255,0,60,0.3)]">
         
         {/* Close Button */}
         <button
