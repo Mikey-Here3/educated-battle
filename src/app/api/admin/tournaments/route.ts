@@ -9,6 +9,7 @@ export async function POST(req: NextRequest) {
       entryFee, prizePool, winnerPrize, perKill, totalSlots,
       matchDate, matchTime, startTime, bannerUrl, prizesJson,
       isFeatured, roomId, roomPassword,
+      entryFeeModel, matchType, maxTeams, teamSize,
     } = body;
 
     if (!title) {
@@ -44,6 +45,10 @@ export async function POST(req: NextRequest) {
         winnerPrize: Number(winnerPrize) || Number(prizePool) || 0,
         perKill: Number(perKill) || 0,
         entryFee: Number(entryFee) || 0,
+        entryFeeModel: entryFeeModel || "PLAYER_ENTRY",
+        matchType: matchType || "SINGLE_MATCH",
+        maxTeams: maxTeams ? Number(maxTeams) : null,
+        teamSize: teamSize ? Number(teamSize) : 1,
         totalSlots: Number(totalSlots) || 48,
         slotsFilled: 0,
         startTime: parsedStartTime,

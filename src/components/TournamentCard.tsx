@@ -144,6 +144,9 @@ export const TournamentCard: React.FC<TournamentCardProps> = ({
             <span className={`text-xl sm:text-2xl font-black font-display ${tournament.entryFee === 0 ? 'text-emerald-400' : 'text-white'}`}>
               {tournament.entryFee === 0 ? 'FREE' : `PKR ${tournament.entryFee}`}
             </span>
+            {tournament.entryFeeModel === 'TEAM_ENTRY' && tournament.entryFee > 0 && (
+              <span className="text-[10px] text-neon-gold font-bold">/ team</span>
+            )}
           </div>
         </div>
 
@@ -168,16 +171,37 @@ export const TournamentCard: React.FC<TournamentCardProps> = ({
           </div>
         )}
 
-        {/* Slots */}
+        {/* Slots / Capacity Section */}
         <div className="flex flex-col gap-2 mt-1">
-          <div className="flex justify-between items-end">
-            <span className="text-xs font-bold text-slate-300 flex items-center gap-1.5 uppercase tracking-wider">
-              <Users size={14} className="text-slate-400"/> Players
-            </span>
-            <span className={`text-sm font-black ${isFull ? 'text-crimson' : 'text-white'}`}>
-              {tournament.slotsFilled} / {tournament.totalSlots}
-            </span>
-          </div>
+          {tournament.entryFeeModel === 'TEAM_ENTRY' ? (
+            <>
+              <div className="flex justify-between items-end">
+                <span className="text-xs font-bold text-slate-300 flex items-center gap-1.5 uppercase tracking-wider">
+                  <Users size={14} className="text-slate-400"/> Teams
+                </span>
+                <span className={`text-sm font-black ${isFull ? 'text-crimson' : 'text-white'}`}>
+                  {Math.ceil(tournament.slotsFilled / Math.max(tournament.teamSize || 1, 1))} / {tournament.maxTeams || Math.ceil(tournament.totalSlots / Math.max(tournament.teamSize || 1, 1))}
+                </span>
+              </div>
+              <div className="flex justify-between items-end">
+                <span className="text-xs font-bold text-slate-400 flex items-center gap-1.5 uppercase tracking-wider">
+                  Players
+                </span>
+                <span className="text-sm font-bold text-slate-300">
+                  {tournament.slotsFilled} / {tournament.totalSlots}
+                </span>
+              </div>
+            </>
+          ) : (
+            <div className="flex justify-between items-end">
+              <span className="text-xs font-bold text-slate-300 flex items-center gap-1.5 uppercase tracking-wider">
+                <Users size={14} className="text-slate-400"/> Players
+              </span>
+              <span className={`text-sm font-black ${isFull ? 'text-crimson' : 'text-white'}`}>
+                {tournament.slotsFilled} / {tournament.totalSlots}
+              </span>
+            </div>
+          )}
           <div className="h-2.5 w-full bg-surface-300 rounded-full overflow-hidden">
             <div 
               className={`h-full rounded-full transition-all duration-500 ${isFull ? 'bg-crimson' : 'bg-neon-gold'}`}

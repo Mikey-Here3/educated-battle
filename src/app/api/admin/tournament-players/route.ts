@@ -42,9 +42,27 @@ export async function GET(req: NextRequest) {
                 role: true,
               },
             },
+            team: true,
           },
           orderBy: { createdAt: "asc" },
         },
+        teams: {
+          include: {
+            leader: true,
+            members: {
+              include: {
+                user: true
+              }
+            }
+          },
+          orderBy: { createdAt: "asc" }
+        },
+        matches: {
+          include: {
+            participants: true
+          },
+          orderBy: { matchNumber: "asc" }
+        }
       },
     });
 
@@ -78,6 +96,10 @@ export async function GET(req: NextRequest) {
         mode: tournament.mode,
         status: tournament.status,
         entryFee: tournament.entryFee,
+        entryFeeModel: tournament.entryFeeModel,
+        matchType: tournament.matchType,
+        maxTeams: tournament.maxTeams,
+        teamSize: tournament.teamSize,
         totalSlots: tournament.totalSlots,
         slotsFilled: tournament.slots.length,
         slotsRemaining: tournament.totalSlots - tournament.slots.length,
@@ -88,7 +110,40 @@ export async function GET(req: NextRequest) {
         matchTime: tournament.matchTime,
       },
       players,
+      teams: tournament.teams.map((t: any) => ({
+        id: t.id,
+        teamName: t.teamName,
+        leaderId: t.leaderId,
+        leaderName: t.leader?.name || '',
+        leaderIGN: t.leader?.ign || '',
+        leaderPhone: t.leader?.phone || '',
+        memberCount: t.members?.length || 0,
+        members: (t.members || []).map((m: any) => ({
+          userId: m.userId,
+          name: m.user?.name || '',
+          ign: m.user?.ign || '',
+          uid: m.user?.uid || '',
+          phone: m.user?.phone || '',
+          role: m.role,
+        })),
+        status: t.status,
+        paymentTransactionId: t.paymentTransactionId,
+        createdAt: t.createdAt,
+      })),
+      matches: tournament.matches.map((m: any) => ({
+        id: m.id,
+        matchNumber: m.matchNumber,
+        status: m.status,
+        roomId: m.roomId,
+        roomPassword: m.roomPassword,
+        winnerId: m.winnerId,
+        participantCount: m.participants?.length || 0,
+        participants: m.participants || [],
+        createdAt: m.createdAt,
+      })),
       total: players.length,
+      teamTotal: tournament.teams.length,
+      matchTotal: tournament.matches.length,
     });
   } catch (error: any) {
     console.error("Admin tournament players error:", error);
